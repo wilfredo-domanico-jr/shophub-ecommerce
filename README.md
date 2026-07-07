@@ -151,8 +151,11 @@ Make sure `VITE_API_BASE_URL` (front-end `.env`) points at the backend's `/api` 
 ### Option B — Docker
 
 ```bash
+cp .env.example .env    # set your own MySQL/demo-admin credentials
 docker compose up -d --build
 ```
+
+`docker-compose.yml` has no hardcoded credentials — it reads MySQL and demo-admin credentials from a root `.env` (gitignored), which Docker Compose loads automatically. Edit the copied `.env` before starting if you want your own values.
 
 This starts MySQL, the backend API (migrated + seeded automatically), and the frontend dev server:
 

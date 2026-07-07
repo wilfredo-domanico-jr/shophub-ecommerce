@@ -11,6 +11,11 @@ Thumbs.db
 /.zed
 /auth.json
 
+# Root .env (docker-compose MySQL/demo credentials) — see .env.example
+/.env
+/.env.*
+!/.env.example
+
 # ======================
 # FRONTEND (Vue)
 # ======================

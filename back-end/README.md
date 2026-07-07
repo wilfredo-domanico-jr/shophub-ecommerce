@@ -129,6 +129,7 @@ composer run dev
 From the repo root:
 
 ```bash
+cp .env.example .env    # root .env — MySQL + demo-admin credentials, not committed
 docker compose up -d --build backend mysql
 ```
 
@@ -141,7 +142,7 @@ What the backend image does on every container start (`docker-entrypoint.sh`):
 5. Runs `php artisan storage:link`
 6. Starts PHP's built-in server directly (**not** `php artisan serve` — see note below) on `0.0.0.0:8000`
 
-Configuration (DB host/credentials, `FRONTEND_URL`, etc.) is passed via the `environment:` block in the root `docker-compose.yml`, not baked into the image.
+Configuration (DB host/credentials, `FRONTEND_URL`, etc.) is passed via the `environment:` block in the root `docker-compose.yml`, not baked into the image. MySQL/demo credentials specifically come from the root `.env` (via Compose's automatic variable substitution) rather than being hardcoded in `docker-compose.yml`, so nothing sensitive sits in a tracked file.
 
 > **Why not `php artisan serve`?** Laravel's `ServeCommand` deliberately strips most non-allowlisted environment variables from the dev-server process it spawns, so it can reliably detect and reload on `.env` file changes. That means container environment variables like `DB_HOST` get silently ignored in favor of whatever's in the `.env` file. The Dockerfile instead runs PHP's built-in server directly against Laravel's own routing script, which respects the real environment.
 
