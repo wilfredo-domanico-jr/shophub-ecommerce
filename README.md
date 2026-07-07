@@ -1,10 +1,6 @@
-# (UNDER DEVELOPMENT)
-
 # 🛒 ShopHub — E‑Commerce Platform
 
-ShopHub is a modern **e‑commerce web application** built using a **Laravel REST API** and a **Vue.js Single Page Application (SPA)**. The project follows an industry‑standard architecture focused on scalability, clean separation of concerns, and long‑term maintainability.
-
-This system is designed to handle real‑world e‑commerce needs such as product management, user authentication, order processing, and secure transactions.
+ShopHub is a full-stack **e‑commerce web application** built with a **Laravel REST API** and a **Vue 3 SPA**. It's a portfolio project demonstrating a real, working store: a browsable catalog, guest checkout, order tracking, and a full admin panel — built from the ground up with an industry-standard, decoupled architecture.
 
 ---
 
@@ -20,19 +16,21 @@ This system is designed to handle real‑world e‑commerce needs such as produc
 
 ### Backend (API)
 
-- **Laravel** — RESTful API backend
-- **PHP**
+- **Laravel 12** — RESTful API backend (PHP 8.2)
 - **MySQL** — relational database
-- **Laravel Sanctum / JWT** — authentication
+- **Laravel Sanctum** — token-based authentication
 - **Eloquent ORM** — database interaction
+- **Queued Mail** — order confirmation & status-update emails
 
 ### Frontend (SPA)
 
-- **Vue.js 3**
+- **Vue 3** + **TypeScript**
 - **Vite** — build tool
 - **Pinia** — state management
+- **Vue Router** — client-side routing
+- **Tailwind CSS** — styling
 - **Axios** — API communication
-- **Vue Router** — client‑side routing
+- **Chart.js** — admin dashboard analytics
 
 ---
 
@@ -41,7 +39,7 @@ This system is designed to handle real‑world e‑commerce needs such as produc
 ```
 Frontend (Vue SPA)
    │
-   │  Axios (HTTP Requests)
+   │  Axios (HTTP Requests, Bearer token auth)
    ▼
 Backend (Laravel REST API)
    │
@@ -49,64 +47,68 @@ Backend (Laravel REST API)
 Database (MySQL)
 ```
 
-- Frontend and backend are **fully decoupled**
-- API‑driven communication
+- Frontend and backend are **fully decoupled** — the API has no knowledge of how it's rendered
+- Pure token-based auth (Sanctum personal access tokens), no session/cookie coupling
 - Ready for future mobile app integration
 
 ---
 
 ## 🔐 Authentication
 
-ShopHub uses **token‑based authentication**:
+Only **admins** have accounts — the storefront itself is guest-first:
 
-- Laravel Sanctum / JWT for secure login
-- Protected API routes
-- Role‑based access (Admin / Customer)
+- Admins log in at `/admin/login` via Sanctum bearer tokens
+- Customers check out as guests (name, email, phone, address) — no registration required
+- Guest orders are tracked later via **order number + email** lookup
+- Admin routes are gated both by a Laravel middleware (`EnsureUserIsAdmin`) and a Vue Router navigation guard
 
 ---
 
 ## ✨ Core Features
 
-### 👤 User Features
+### 👤 Storefront (Customer-facing)
 
-- User registration & login
-- Browse products by category
-- Product search & filtering
-- Shopping cart management
-- Secure checkout process
-- Order history tracking
+- Home page with hero carousel, flash sale section, dynamic category bar, and trending products
+- Full **product listing page** — search, category filter, sort, pagination
+- **Product detail page** with quantity picker and add-to-cart
+- Live **search autosuggest** in the header
+- Cart → **guest checkout** (Cash on Delivery) → order confirmation with order number
+- **Order tracking** by order number + email, from the header, footer, or a dedicated modal
+- Real content pages: Help Center (FAQ), Returns & Refunds, Shipping Info, Our Story, Careers, Press & Media, Privacy Policy
+- Order confirmation & status-update **emails**, sent via a queued Laravel Mailable
 
-### 🛠 Admin Features
+### 🛠 Admin Panel
 
-- Product CRUD (Create, Read, Update, Delete)
-- Category management
-- Order management
-- User management
-- Inventory tracking
+- Dashboard with real sales/orders/products/customers stats and a 7-day sales chart
+- **Products** — full CRUD, drag-and-drop image upload, search, pagination
+- **Categories** — full CRUD with icon & brand-color pickers
+- **Orders** — searchable/paginated list, inline status updates, full order-detail view
+- **Admins** — manage who can access the admin panel
+- Consistent ShopHub branding throughout (icons, gradients, empty/loading states)
 
 ---
 
 ## 📂 Project Structure
 
-### Backend (Laravel)
+### Backend (Laravel) — see [`back-end/README.md`](back-end/README.md)
 
 ```
-/app
-/routes/api.php
-/app/Http/Controllers
-/app/Models
-/database/migrations
+/app/Http/Controllers/Api      # public, guest, and admin API controllers
+/app/Models                    # User, Category, Product, Order, OrderItem
+/app/Mail                      # order confirmation & status-update Mailables
+/database/migrations           # schema
+/database/seeders              # demo categories, products, admin user
+/routes/api.php                # all API routes
 ```
 
-### Frontend (Vue)
+### Frontend (Vue) — see [`front-end/README.md`](front-end/README.md)
 
 ```
-/src
-  /components
-  /views
-  /router
-  /stores
-  /services
+/src/views                     # Home, Shop, ProductDetail, InfoPage, Admin/*
+/src/components                # common + admin components
+/src/stores                    # Pinia stores (auth, cart)
+/src/services                  # typed API clients
+/src/router                    # routes + auth guard
 ```
 
 ---
@@ -116,48 +118,50 @@ ShopHub uses **token‑based authentication**:
 ### 1️⃣ Backend (Laravel API)
 
 ```bash
+cd back-end
 composer install
 cp .env.example .env
 php artisan key:generate
-php artisan migrate
+# set DB_* in .env, then:
+php artisan migrate --seed
 php artisan serve
 ```
 
 ### 2️⃣ Frontend (Vue SPA)
 
 ```bash
+cd front-end
 npm install
 npm run dev
 ```
 
-Make sure the API base URL is correctly set in Axios.
+Make sure `VITE_API_BASE_URL` (front-end `.env`) points at the backend's `/api` URL, and `FRONTEND_URL` (back-end `.env`) matches the frontend's dev URL for CORS.
 
 ---
 
 ## 🌐 API Communication
 
-- All data exchange is handled via REST endpoints
+- All data exchange is handled via REST endpoints under `/api`
 - JSON request/response format
-- Centralized API service using Axios
+- Centralized Axios client with Bearer token auth for admin routes
 
 ---
 
 ## 📈 Scalability & Best Practices
 
-- Separation of frontend and backend
-- Reusable API for mobile apps
-- Clean code and modular structure
-- Secure authentication flow
+- Clean separation of frontend and backend
+- Reusable API — ready for a future mobile app
+- Modular, typed frontend services per resource (products, orders, categories, admin/*)
+- Admin actions guarded by both middleware and route guards
 
 ---
 
 ## 🧪 Future Enhancements
 
-- Payment gateway integration
+- Real payment gateway integration (currently Cash on Delivery only)
 - Product reviews & ratings
+- Customer accounts (currently guest-only)
 - Discount and voucher system
-- Email notifications
-- Mobile application support
 
 ---
 
