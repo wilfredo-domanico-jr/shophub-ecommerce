@@ -5,6 +5,27 @@
         Login to ShopHub
       </h1>
 
+      <!-- Demo mode -->
+      <div v-if="demoConfig?.demo_mode" class="mb-6 p-4 rounded-lg bg-orange-50 border border-orange-200 text-center">
+        <p class="text-sm text-gray-600 mb-3">
+          This is a portfolio demo — skip the form and explore the admin panel instantly.
+        </p>
+        <button
+          type="button"
+          :disabled="loading"
+          class="w-full gradient-primary text-white py-2 rounded font-semibold hover:opacity-90 transition disabled:opacity-50"
+          @click="handleDemoLogin"
+        >
+          {{ loading ? "Logging in..." : "Try Demo Admin Login" }}
+        </button>
+      </div>
+
+      <div v-if="demoConfig?.demo_mode" class="flex items-center gap-3 mb-6">
+        <div class="flex-1 h-px bg-gray-200"></div>
+        <span class="text-xs text-gray-400 uppercase">or log in manually</span>
+        <div class="flex-1 h-px bg-gray-200"></div>
+      </div>
+
       <!-- Error Message -->
       <div v-if="errorMessage" class="mb-4 text-red-500 text-sm text-center">
         {{ errorMessage }}
@@ -52,6 +73,7 @@
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "../../stores/auth";
+import { getAppConfig, type AppConfig } from "../../services/config";
 import type { AxiosError } from "axios";
 
 const auth = useAuthStore();
@@ -61,12 +83,28 @@ const email = ref("");
 const password = ref("");
 const errorMessage = ref("");
 const loading = ref(false);
+const demoConfig = ref<AppConfig | null>(null);
 
-onMounted(() => {
+onMounted(async () => {
   if (auth.user) {
     router.replace("/admin");
+    return;
+  }
+
+  try {
+    demoConfig.value = await getAppConfig();
+  } catch {
+    demoConfig.value = null;
   }
 });
+
+async function handleDemoLogin() {
+  if (!demoConfig.value?.demo_admin_email || !demoConfig.value.demo_admin_password) return;
+
+  email.value = demoConfig.value.demo_admin_email;
+  password.value = demoConfig.value.demo_admin_password;
+  await handleLogin();
+}
 
 async function handleLogin() {
   errorMessage.value = "";

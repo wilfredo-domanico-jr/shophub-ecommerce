@@ -149,6 +149,20 @@ Rebuild after changing PHP dependencies or the Dockerfile: `docker compose build
 
 ---
 
+## 🎭 Demo Mode
+
+Set these in `.env` (already enabled by default in `docker-compose.yml`) to add a one-click "Try Demo Admin Login" button to the frontend's `/admin/login` page — handy for letting portfolio visitors explore the admin panel without needing credentials:
+
+```
+DEMO_MODE=true
+DEMO_ADMIN_EMAIL=admin@shophub.test
+DEMO_ADMIN_PASSWORD=password
+```
+
+`GET /api/config` is a public endpoint that exposes these values to the frontend **only when `DEMO_MODE=true`** — with it off (the default for `.env.example`), the endpoint just returns `{"demo_mode": false}` and reveals nothing. `AdminUserSeeder` reads the same two env vars, so the seeded admin account always matches whatever demo credentials are configured.
+
+---
+
 ## 🧪 Tests
 
 ```bash

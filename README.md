@@ -166,6 +166,8 @@ Seeded admin login: `admin@shophub.test` / `password`. See [`back-end/README.md`
 
 To stop: `docker compose down` (add `-v` to also wipe the database volume).
 
+**Demo mode:** the Docker Compose setup enables `DEMO_MODE=true` by default, which adds a "Try Demo Admin Login" button to `/admin/login` — one click signs you in as the seeded admin, no credentials needed. See [`back-end/README.md`](back-end/README.md#-demo-mode) to toggle it locally.
+
 ---
 
 ## 🧪 Testing

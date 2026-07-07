@@ -45,7 +45,7 @@ npm install
 
 - Route registration is centralized in `bootstrap/app.php` (Laravel 12's new bootstrap style — there is no `Kernel.php`). API routes live in `routes/api.php`, web routes in `routes/web.php`.
 - All API controllers live under `app/Http/Controllers/Api/` (e.g. `AuthController`). Non-API controllers stay directly under `app/Http/Controllers/`.
-- CORS is configured in `config/cors.php` and allows only `FRONTEND_URL` (default `http://localhost:5174`) with `supports_credentials: true`, required for Sanctum's SPA cookie flow.
+- CORS is configured in `config/cors.php` and allows only `FRONTEND_URL` (default `http://localhost:5173`) with `supports_credentials: true`, required for Sanctum's SPA cookie flow.
 - **Auth is currently in a mixed/inconsistent state**: `AuthController::register` issues a Sanctum bearer token (`createToken(...)->plainTextToken`), but `AuthController::login` uses session-based `Auth::attempt()` + `$request->session()->regenerate()` and returns no token. The frontend's Axios client (`front-end/src/services/api.ts`) always attaches a bearer token from `localStorage` _and_ the auth store hits `/sanctum/csrf-cookie` first, i.e. the code is straddling both Sanctum SPA (cookie/CSRF) and token-based auth. When touching auth, pick one strategy consistently rather than assuming the existing code is the intended pattern.
 - `bootstrap/app.php` force-appends `HandleCors` globally and prepends Sanctum's `EnsureFrontendRequestsAreStateful` to the `api` middleware group — needed for the SPA cookie flow to work at all.
 

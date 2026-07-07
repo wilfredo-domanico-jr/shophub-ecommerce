@@ -13,11 +13,14 @@ class AdminUserSeeder extends Seeder
      */
     public function run(): void
     {
+        $email = config('demo.admin_email');
+        $password = config('demo.admin_password');
+
         User::firstOrCreate(
-            ['email' => 'admin@shophub.test'],
+            ['email' => $email],
             [
                 'name' => 'ShopHub Admin',
-                'password' => Hash::make('password'),
+                'password' => Hash::make($password),
                 'is_admin' => true,
             ]
         );
