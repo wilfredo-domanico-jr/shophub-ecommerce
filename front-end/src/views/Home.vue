@@ -4,7 +4,6 @@
   <FlashSaleSection />
   <ShopByCategorySection />
   <TrendingSection />
-  <Footer />
 </template>
 
 <script lang="ts">

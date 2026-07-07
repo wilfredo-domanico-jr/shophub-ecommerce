@@ -29,22 +29,23 @@
               >
                 {{ slide.subtitle }}
               </p>
-              <button
+              <router-link
+                :to="slide.link"
                 :class="[
-                  'px-8 py-3 rounded-full font-semibold transition animate-scaleIn',
+                  'inline-block px-8 py-3 rounded-full font-semibold transition animate-scaleIn',
                   slide.btnClass,
                 ]"
                 style="animation-delay: 0.4s"
               >
                 {{ slide.buttonText }}
-              </button>
+              </router-link>
             </div>
           </div>
         </div>
       </div>
 
       <button
-        @click="prevBanner"
+        @click="goPrev"
         class="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white p-2 rounded-full transition z-20"
       >
         <svg
@@ -63,7 +64,7 @@
       </button>
 
       <button
-        @click="nextBanner"
+        @click="goNext"
         class="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white p-2 rounded-full transition z-20"
       >
         <svg
@@ -106,6 +107,7 @@ interface Slide {
   gradientClass: string;
   textColor: string;
   btnClass: string;
+  link: string;
 }
 
 // Slide Data
@@ -117,6 +119,7 @@ const slides: Slide[] = [
     gradientClass: "gradient-primary",
     textColor: "text-white",
     btnClass: "bg-white text-orange-500 hover:bg-gray-100",
+    link: "/products?category=electronics",
   },
   {
     title: "Fashion Forward",
@@ -125,6 +128,7 @@ const slides: Slide[] = [
     gradientClass: "gradient-secondary",
     textColor: "text-white",
     btnClass: "bg-white text-purple-600 hover:bg-gray-100",
+    link: "/products?category=fashion",
   },
   {
     title: "Free Shipping",
@@ -133,6 +137,7 @@ const slides: Slide[] = [
     gradientClass: "gradient-accent",
     textColor: "text-gray-900",
     btnClass: "bg-gray-900 text-white hover:bg-gray-800",
+    link: "/products",
   },
 ];
 
@@ -147,6 +152,18 @@ const nextBanner = () => {
 const prevBanner = () => {
   currentBanner.value =
     (currentBanner.value - 1 + slides.length) % slides.length;
+};
+
+// Manual navigation should restart the auto-rotate countdown so it doesn't
+// immediately fight the user's click with another auto-advance.
+const goNext = () => {
+  nextBanner();
+  resetTimer();
+};
+
+const goPrev = () => {
+  prevBanner();
+  resetTimer();
 };
 
 const setBanner = (index: number) => {
