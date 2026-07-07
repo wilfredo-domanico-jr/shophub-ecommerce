@@ -1,6 +1,7 @@
 <template>
-  <div
-    class="product-card group bg-white rounded-xl overflow-hidden shadow-md cursor-pointer"
+  <router-link
+    :to="`/products/${trending.slug}`"
+    class="product-card group bg-white rounded-xl overflow-hidden shadow-md cursor-pointer block"
   >
     <div class="relative overflow-hidden">
       <img
@@ -14,7 +15,7 @@
         -{{ trending.discount }}%
       </div>
       <button
-        @click="addToCart()"
+        @click.prevent.stop="addToCart()"
         class="absolute top-2 right-2 bg-white p-2 rounded-full shadow-lg hover:bg-orange-500 hover:text-white transition opacity-0 group-hover:opacity-100"
       >
         <svg
@@ -49,7 +50,7 @@
         >
       </div>
     </div>
-  </div>
+  </router-link>
 </template>
 
 <script lang="ts" setup>
@@ -61,6 +62,7 @@ const cartStore = useCartStore();
 
 interface TrendingCard {
   id: number;
+  slug: string;
   name: string;
   price: number;
   originalPrice: number;

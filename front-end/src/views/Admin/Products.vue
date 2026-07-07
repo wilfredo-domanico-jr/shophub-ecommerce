@@ -211,7 +211,7 @@ import type { Category } from "../../services/categories";
 import { getAdminProducts, createProduct, updateProduct, deleteProduct } from "../../services/admin/products";
 import { getAdminCategories } from "../../services/admin/categories";
 import ImageDropzone from "../../components/admin/ImageDropzone.vue";
-import Pagination from "../../components/admin/Pagination.vue";
+import Pagination from "../../components/common/Pagination.vue";
 
 const products = ref<Product[]>([]);
 const categories = ref<Category[]>([]);

@@ -1,7 +1,8 @@
 <template>
-  <div
+  <router-link
+    :to="`/products?category=${category.slug}`"
     :class="category.gradientClass"
-    class="rounded-xl p-6 text-white hover:shadow-xl transition cursor-pointer transform hover:scale-105"
+    class="rounded-xl p-6 text-white hover:shadow-xl transition cursor-pointer transform hover:scale-105 block"
   >
     <svg
       class="w-12 h-12 mb-3"
@@ -18,12 +19,13 @@
     </svg>
     <h4 class="font-semibold text-lg mb-1">{{ category.title }}</h4>
     <p class="text-sm opacity-90">{{ category.itemCount }} items</p>
-  </div>
+  </router-link>
 </template>
 
 <script lang="ts" setup>
 interface CategoryCard {
   id: number;
+  slug: string;
   icon: string;
   title: string;
   itemCount: number;

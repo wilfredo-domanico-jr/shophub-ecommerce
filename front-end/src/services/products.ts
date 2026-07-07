@@ -1,4 +1,5 @@
 import api from "./api";
+import type { PaginatedResponse } from "./pagination";
 
 export interface Product {
   id: number;
@@ -19,14 +20,17 @@ export interface Product {
   is_active: boolean;
 }
 
-interface PaginatedResponse<T> {
-  data: T[];
-  current_page: number;
-  last_page: number;
-  total: number;
+export interface ProductQueryParams {
+  search?: string;
+  category?: string;
+  sort?: "price_asc" | "price_desc" | "newest";
+  page?: number;
+  per_page?: number;
+  featured?: boolean;
+  flash_sale?: boolean;
 }
 
-export function getProducts(params: Record<string, string | number | boolean> = {}) {
+export function getProducts(params: ProductQueryParams = {}) {
   return api.get<PaginatedResponse<Product>>("/products", { params }).then((r) => r.data);
 }
 

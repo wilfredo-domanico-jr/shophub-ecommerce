@@ -218,7 +218,7 @@ import {
   updateCategory,
   deleteCategory,
 } from "../../services/admin/categories";
-import Pagination from "../../components/admin/Pagination.vue";
+import Pagination from "../../components/common/Pagination.vue";
 
 const ICON_OPTIONS = [
   { label: "Electronics", icon: "M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" },

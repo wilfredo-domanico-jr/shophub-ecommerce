@@ -21,6 +21,7 @@ import { getCategories } from "../../services/categories";
 
 interface CategoryCard {
   id: number;
+  slug: string;
   icon: string;
   title: string;
   itemCount: number;
@@ -47,6 +48,7 @@ async function fetchCategories() {
     .slice(0, 4)
     .map((c, index) => ({
       id: c.id,
+      slug: c.slug,
       icon: c.icon || FALLBACK_ICON,
       title: c.name,
       itemCount: c.products_count,

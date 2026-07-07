@@ -7,6 +7,8 @@ import AdminLayout from "../layouts/AdminLayout.vue";
 
 // Public Pages
 import Home from "../views/Home.vue";
+import Shop from "../views/Shop.vue";
+import ProductDetail from "../views/ProductDetail.vue";
 
 // Auth
 import Login from "../views/Auth/Login.vue";
@@ -33,6 +35,16 @@ const routes = [
         path: "",
         name: "Home",
         component: Home,
+      },
+      {
+        path: "products",
+        name: "Shop",
+        component: Shop,
+      },
+      {
+        path: "products/:slug",
+        name: "ProductDetail",
+        component: ProductDetail,
       },
     ],
   },

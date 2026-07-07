@@ -167,7 +167,7 @@ import {
   updateAdminUser,
   deleteAdminUser,
 } from "../../services/admin/users";
-import Pagination from "../../components/admin/Pagination.vue";
+import Pagination from "../../components/common/Pagination.vue";
 
 const search = ref("");
 const page = ref(1);

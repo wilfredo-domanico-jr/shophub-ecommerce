@@ -4,8 +4,8 @@
       <h3 class="font-display text-2xl md:text-3xl font-bold text-gray-800">
         Trending Now
       </h3>
-      <a
-        href="#"
+      <router-link
+        to="/products"
         class="text-orange-500 font-medium hover:text-orange-600 transition flex items-center gap-1"
       >
         View All
@@ -22,7 +22,7 @@
             d="M9 5l7 7-7 7"
           ></path>
         </svg>
-      </a>
+      </router-link>
     </div>
 
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -42,6 +42,7 @@ import { getFeaturedProducts } from "../../services/products";
 
 interface TrendingCard {
   id: number;
+  slug: string;
   name: string;
   price: number;
   originalPrice: number;
@@ -62,6 +63,7 @@ async function fetchTrendings() {
 
     return {
       id: p.id,
+      slug: p.slug,
       name: p.name,
       price,
       originalPrice,

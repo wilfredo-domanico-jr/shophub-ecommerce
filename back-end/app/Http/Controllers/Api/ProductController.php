@@ -28,7 +28,14 @@ class ProductController extends Controller
             $query->where('name', 'like', '%' . $request->string('search') . '%');
         }
 
-        return $query->orderBy('name')->paginate($request->integer('per_page', 20));
+        match ($request->string('sort')->toString()) {
+            'price_asc' => $query->orderBy('price', 'asc'),
+            'price_desc' => $query->orderBy('price', 'desc'),
+            'newest' => $query->orderBy('created_at', 'desc'),
+            default => $query->orderBy('name'),
+        };
+
+        return $query->paginate($request->integer('per_page', 20));
     }
 
     public function show(Product $product)

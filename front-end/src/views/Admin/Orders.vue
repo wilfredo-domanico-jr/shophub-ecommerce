@@ -98,7 +98,7 @@
 import { ref, onMounted, watch } from "vue";
 import type { Order } from "../../services/orders";
 import { getAdminOrders, updateOrderStatus } from "../../services/admin/orders";
-import Pagination from "../../components/admin/Pagination.vue";
+import Pagination from "../../components/common/Pagination.vue";
 
 type AdminOrder = Order & { items_count?: number };
 
