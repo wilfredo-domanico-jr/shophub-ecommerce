@@ -59,18 +59,31 @@
               </span>
             </td>
 
-            <td class="text-right p-4 space-x-2">
-              <select
-                :value="order.status"
-                @change="onStatusChange(order, $event)"
-                class="border rounded px-2 py-1 text-xs"
-              >
-                <option value="pending">Pending</option>
-                <option value="processing">Processing</option>
-                <option value="shipped">Shipped</option>
-                <option value="delivered">Delivered</option>
-                <option value="cancelled">Cancelled</option>
-              </select>
+            <td class="text-right p-4">
+              <div class="flex items-center justify-end gap-2">
+                <select
+                  :value="order.status"
+                  @change="onStatusChange(order, $event)"
+                  class="border rounded px-2 py-1 text-xs"
+                >
+                  <option value="pending">Pending</option>
+                  <option value="processing">Processing</option>
+                  <option value="shipped">Shipped</option>
+                  <option value="delivered">Delivered</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+
+                <button
+                  title="View details"
+                  class="w-8 h-8 flex items-center justify-center rounded-lg text-blue-500 bg-blue-50 hover:bg-blue-500 hover:text-white transition shrink-0"
+                  @click="openView(order)"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                </button>
+              </div>
             </td>
           </tr>
 
@@ -91,13 +104,127 @@
         @change="goToPage"
       />
     </div>
+
+    <!-- VIEW ORDER MODAL -->
+    <div
+      v-if="showViewModal"
+      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+    >
+      <div class="bg-white w-full max-w-2xl rounded-xl p-6 space-y-5 max-h-[90vh] overflow-y-auto">
+        <div v-if="viewLoading" class="py-12 text-center text-gray-400">
+          Loading order...
+        </div>
+
+        <template v-else-if="viewingOrder">
+          <!-- Header -->
+          <div class="flex items-start justify-between">
+            <div>
+              <h2 class="text-xl font-bold">{{ viewingOrder.order_number }}</h2>
+              <p class="text-xs text-gray-400 mt-1">
+                Placed {{ new Date(viewingOrder.created_at).toLocaleString() }}
+              </p>
+            </div>
+            <span
+              class="px-2 py-1 text-xs rounded-full font-medium capitalize"
+              :class="statusClass(viewingOrder.status)"
+            >
+              {{ viewingOrder.status }}
+            </span>
+          </div>
+
+          <!-- Customer + Shipping -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-gray-50 rounded-lg p-4">
+              <h3 class="text-xs font-semibold text-gray-500 uppercase mb-2">Customer</h3>
+              <p class="text-sm font-medium">{{ viewingOrder.customer_name }}</p>
+              <p class="text-sm text-gray-600">{{ viewingOrder.customer_email }}</p>
+              <p class="text-sm text-gray-600">{{ viewingOrder.customer_phone }}</p>
+            </div>
+
+            <div class="bg-gray-50 rounded-lg p-4">
+              <h3 class="text-xs font-semibold text-gray-500 uppercase mb-2">Shipping Address</h3>
+              <p class="text-sm text-gray-600 whitespace-pre-line">{{ viewingOrder.shipping_address }}</p>
+            </div>
+          </div>
+
+          <!-- Items -->
+          <div>
+            <h3 class="text-xs font-semibold text-gray-500 uppercase mb-2">Items</h3>
+            <div class="border rounded-lg overflow-hidden">
+              <table class="w-full text-sm">
+                <thead class="bg-gray-50 text-left text-gray-500">
+                  <tr>
+                    <th class="p-3">Product</th>
+                    <th class="p-3">Price</th>
+                    <th class="p-3">Qty</th>
+                    <th class="p-3 text-right">Subtotal</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="item in viewingOrder.items" :key="item.id" class="border-t">
+                    <td class="p-3">{{ item.product_name }}</td>
+                    <td class="p-3">₱{{ Number(item.product_price).toLocaleString() }}</td>
+                    <td class="p-3">{{ item.quantity }}</td>
+                    <td class="p-3 text-right">₱{{ Number(item.subtotal).toLocaleString() }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Summary -->
+          <div class="bg-gray-50 rounded-lg p-4 space-y-1 text-sm">
+            <div class="flex justify-between text-gray-600">
+              <span>Subtotal</span>
+              <span>₱{{ Number(viewingOrder.subtotal).toLocaleString() }}</span>
+            </div>
+            <div class="flex justify-between text-gray-600">
+              <span>Shipping Fee</span>
+              <span>₱{{ Number(viewingOrder.shipping_fee).toLocaleString() }}</span>
+            </div>
+            <div class="flex justify-between font-semibold text-base pt-1 border-t">
+              <span>Total</span>
+              <span>₱{{ Number(viewingOrder.total).toLocaleString() }}</span>
+            </div>
+          </div>
+
+          <!-- Payment -->
+          <div class="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <h3 class="text-xs font-semibold text-gray-500 uppercase mb-1">Payment Method</h3>
+              <p>{{ viewingOrder.payment_method }}</p>
+            </div>
+            <div>
+              <h3 class="text-xs font-semibold text-gray-500 uppercase mb-1">Payment Status</h3>
+              <span
+                class="px-2 py-1 text-xs rounded-full font-medium capitalize"
+                :class="viewingOrder.payment_status === 'paid' ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600'"
+              >
+                {{ viewingOrder.payment_status }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Notes -->
+          <div v-if="viewingOrder.notes">
+            <h3 class="text-xs font-semibold text-gray-500 uppercase mb-1">Notes</h3>
+            <p class="text-sm text-gray-600 whitespace-pre-line">{{ viewingOrder.notes }}</p>
+          </div>
+
+          <!-- Buttons -->
+          <div class="flex justify-end pt-2">
+            <button class="px-4 py-2 text-gray-500" @click="closeView">Close</button>
+          </div>
+        </template>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from "vue";
 import type { Order } from "../../services/orders";
-import { getAdminOrders, updateOrderStatus } from "../../services/admin/orders";
+import { getAdminOrders, getAdminOrder, updateOrderStatus } from "../../services/admin/orders";
 import Pagination from "../../components/common/Pagination.vue";
 
 type AdminOrder = Order & { items_count?: number };
@@ -106,6 +233,26 @@ const search = ref("");
 const page = ref(1);
 const orders = ref<AdminOrder[]>([]);
 const error = ref("");
+
+const showViewModal = ref(false);
+const viewLoading = ref(false);
+const viewingOrder = ref<Order | null>(null);
+
+async function openView(order: AdminOrder) {
+  showViewModal.value = true;
+  viewLoading.value = true;
+  viewingOrder.value = null;
+  try {
+    viewingOrder.value = await getAdminOrder(order.id);
+  } finally {
+    viewLoading.value = false;
+  }
+}
+
+function closeView() {
+  showViewModal.value = false;
+  viewingOrder.value = null;
+}
 
 const meta = ref({ current_page: 1, last_page: 1, total: 0, from: 0 as number | null, to: 0 as number | null });
 
