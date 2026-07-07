@@ -53,7 +53,15 @@
             class="border-b hover:bg-gray-50"
           >
             <!-- Category -->
-            <td class="p-4 font-medium">
+            <td class="p-4 font-medium flex items-center gap-3">
+              <div
+                class="w-9 h-9 rounded-lg flex items-center justify-center text-white shrink-0"
+                :class="c.color_class || 'bg-gray-300'"
+              >
+                <svg v-if="c.icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="c.icon" />
+                </svg>
+              </div>
               {{ c.name }}
             </td>
 
@@ -141,6 +149,42 @@
           />
         </div>
 
+        <!-- Icon -->
+        <div>
+          <label class="block mb-1 text-sm font-medium text-gray-700">Icon</label>
+          <div class="grid grid-cols-6 gap-2">
+            <button
+              v-for="opt in ICON_OPTIONS"
+              :key="opt.icon"
+              type="button"
+              :title="opt.label"
+              class="aspect-square rounded-lg border-2 flex items-center justify-center transition"
+              :class="form.icon === opt.icon ? 'border-orange-500 bg-orange-50' : 'border-gray-200 hover:border-orange-300'"
+              @click="form.icon = opt.icon"
+            >
+              <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="opt.icon" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Color -->
+        <div>
+          <label class="block mb-1 text-sm font-medium text-gray-700">Color</label>
+          <div class="grid grid-cols-4 gap-2">
+            <button
+              v-for="opt in COLOR_OPTIONS"
+              :key="opt.value"
+              type="button"
+              :title="opt.label"
+              class="h-9 rounded-lg border-2 transition"
+              :class="[opt.value, form.color_class === opt.value ? 'border-gray-800' : 'border-transparent']"
+              @click="form.color_class = opt.value"
+            ></button>
+          </div>
+        </div>
+
         <!-- Active -->
         <label class="flex items-center gap-2 text-sm">
           <input type="checkbox" v-model="form.is_active" />
@@ -175,6 +219,22 @@ import {
   deleteCategory,
 } from "../../services/admin/categories";
 import Pagination from "../../components/admin/Pagination.vue";
+
+const ICON_OPTIONS = [
+  { label: "Electronics", icon: "M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" },
+  { label: "Fashion", icon: "M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" },
+  { label: "Home", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
+  { label: "Beauty", icon: "M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" },
+  { label: "Sports", icon: "M13 10V3L4 14h7v7l9-11h-7z" },
+  { label: "Generic", icon: "M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-5 5a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 10V5a2 2 0 012-2z" },
+];
+
+const COLOR_OPTIONS = [
+  { label: "Orange", value: "gradient-primary" },
+  { label: "Pink/Purple", value: "gradient-secondary" },
+  { label: "Teal/Blue", value: "gradient-accent" },
+  { label: "Green", value: "gradient-success" },
+];
 
 const search = ref("");
 const page = ref(1);
@@ -221,21 +281,41 @@ onMounted(loadCategories);
 const showModal = ref(false);
 const isEdit = ref(false);
 
-type CategoryForm = { id: number; name: string; is_active: boolean };
+type CategoryForm = {
+  id: number;
+  name: string;
+  is_active: boolean;
+  icon: string;
+  color_class: string;
+};
 
-const form = ref<CategoryForm>({ id: 0, name: "", is_active: true });
+const emptyForm = (): CategoryForm => ({
+  id: 0,
+  name: "",
+  is_active: true,
+  icon: ICON_OPTIONS[0]!.icon,
+  color_class: COLOR_OPTIONS[0]!.value,
+});
+
+const form = ref<CategoryForm>(emptyForm());
 
 function openAdd() {
   isEdit.value = false;
   formError.value = "";
-  form.value = { id: 0, name: "", is_active: true };
+  form.value = emptyForm();
   showModal.value = true;
 }
 
 function openEdit(cat: Category) {
   isEdit.value = true;
   formError.value = "";
-  form.value = { id: cat.id, name: cat.name, is_active: cat.is_active };
+  form.value = {
+    id: cat.id,
+    name: cat.name,
+    is_active: cat.is_active,
+    icon: cat.icon || ICON_OPTIONS[0]!.icon,
+    color_class: cat.color_class || COLOR_OPTIONS[0]!.value,
+  };
   showModal.value = true;
 }
 
@@ -249,11 +329,18 @@ async function save() {
     return;
   }
 
+  const payload = {
+    name: form.value.name,
+    is_active: form.value.is_active,
+    icon: form.value.icon,
+    color_class: form.value.color_class,
+  };
+
   try {
     if (isEdit.value) {
-      await updateCategory(form.value.id, { name: form.value.name, is_active: form.value.is_active });
+      await updateCategory(form.value.id, payload);
     } else {
-      await createCategory({ name: form.value.name, is_active: form.value.is_active });
+      await createCategory(payload);
     }
     closeModal();
     await loadCategories();

@@ -27,17 +27,31 @@ interface CategoryCard {
   gradientClass: string;
 }
 
+const FALLBACK_GRADIENTS = [
+  "gradient-primary",
+  "gradient-secondary",
+  "gradient-accent",
+  "gradient-success",
+];
+
+const FALLBACK_ICON =
+  "M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-5 5a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 10V5a2 2 0 012-2z";
+
 const categories = ref<CategoryCard[]>([]);
 
 async function fetchCategories() {
   const data = await getCategories();
-  categories.value = data.map((c) => ({
-    id: c.id,
-    icon: c.icon ?? "",
-    title: c.name,
-    itemCount: c.products_count,
-    gradientClass: c.color_class ?? "gradient-primary",
-  }));
+  categories.value = data
+    .slice()
+    .sort((a, b) => b.products_count - a.products_count)
+    .slice(0, 4)
+    .map((c, index) => ({
+      id: c.id,
+      icon: c.icon || FALLBACK_ICON,
+      title: c.name,
+      itemCount: c.products_count,
+      gradientClass: c.color_class || FALLBACK_GRADIENTS[index % FALLBACK_GRADIENTS.length]!,
+    }));
 }
 
 onMounted(() => {
