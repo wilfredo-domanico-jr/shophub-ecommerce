@@ -9,9 +9,15 @@ use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return Product::with('category')->orderBy('name')->get();
+        $query = Product::with('category')->orderBy('name');
+
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->string('search') . '%');
+        }
+
+        return $query->paginate($request->integer('per_page', 10));
     }
 
     public function store(Request $request)

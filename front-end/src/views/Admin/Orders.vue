@@ -10,13 +10,17 @@
       </div>
 
       <!-- Search -->
-      <input
-        v-model="search"
-        type="text"
-        placeholder="Search order number or customer..."
-        class="border px-4 py-2 rounded-lg w-full md:w-72 focus:outline-none focus:border-orange-500"
-        @keyup.enter="loadOrders"
-      />
+      <div class="relative w-full md:w-72">
+        <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <input
+          v-model="search"
+          type="text"
+          placeholder="Search order number or customer..."
+          class="w-full pl-9 pr-4 py-2 border rounded-lg focus:outline-none focus:border-orange-500"
+        />
+      </div>
     </div>
 
     <p v-if="error" class="text-red-500 text-sm">{{ error }}</p>
@@ -77,30 +81,64 @@
           </tr>
         </tbody>
       </table>
+
+      <Pagination
+        :current-page="meta.current_page"
+        :last-page="meta.last_page"
+        :total="meta.total"
+        :from="meta.from"
+        :to="meta.to"
+        @change="goToPage"
+      />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import type { Order } from "../../services/orders";
 import { getAdminOrders, updateOrderStatus } from "../../services/admin/orders";
+import Pagination from "../../components/admin/Pagination.vue";
 
 type AdminOrder = Order & { items_count?: number };
 
 const search = ref("");
+const page = ref(1);
 const orders = ref<AdminOrder[]>([]);
 const error = ref("");
+
+const meta = ref({ current_page: 1, last_page: 1, total: 0, from: 0 as number | null, to: 0 as number | null });
 
 async function loadOrders() {
   error.value = "";
   try {
-    const res = await getAdminOrders(search.value ? { search: search.value } : {});
+    const res = await getAdminOrders({ search: search.value || undefined, page: page.value });
     orders.value = res.data;
+    meta.value = {
+      current_page: res.current_page,
+      last_page: res.last_page,
+      total: res.total,
+      from: res.from,
+      to: res.to,
+    };
   } catch {
     error.value = "Failed to load orders.";
   }
 }
+
+function goToPage(p: number) {
+  page.value = p;
+  loadOrders();
+}
+
+let searchTimeout: ReturnType<typeof setTimeout>;
+watch(search, () => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    page.value = 1;
+    loadOrders();
+  }, 300);
+});
 
 onMounted(loadOrders);
 

@@ -1,4 +1,5 @@
 import api from "../api";
+import type { PaginatedResponse } from "../pagination";
 
 export interface AdminUser {
   id: number;
@@ -8,8 +9,10 @@ export interface AdminUser {
   created_at: string;
 }
 
-export function getAdminUsers() {
-  return api.get<AdminUser[]>("/admin/users").then((r) => r.data);
+export function getAdminUsers(params: { search?: string; page?: number } = {}) {
+  return api
+    .get<PaginatedResponse<AdminUser>>("/admin/users", { params })
+    .then((r) => r.data);
 }
 
 export function createAdminUser(payload: { name: string; email: string; password: string }) {

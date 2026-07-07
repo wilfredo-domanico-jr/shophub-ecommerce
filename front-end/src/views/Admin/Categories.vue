@@ -19,12 +19,17 @@
 
     <!-- Search -->
     <div class="bg-white p-4 rounded-xl shadow">
-      <input
-        v-model="search"
-        type="text"
-        placeholder="Search categories..."
-        class="w-full border px-4 py-2 rounded-lg focus:outline-none focus:border-orange-500"
-      />
+      <div class="relative max-w-sm">
+        <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <input
+          v-model="search"
+          type="text"
+          placeholder="Search categories..."
+          class="w-full pl-9 pr-4 py-2 border rounded-lg focus:outline-none focus:border-orange-500"
+        />
+      </div>
     </div>
 
     <p v-if="error" class="text-red-500 text-sm">{{ error }}</p>
@@ -43,7 +48,7 @@
 
         <tbody>
           <tr
-            v-for="c in filteredCategories"
+            v-for="c in categories"
             :key="c.id"
             class="border-b hover:bg-gray-50"
           >
@@ -70,37 +75,53 @@
             </td>
 
             <!-- Actions -->
-            <td class="text-right p-4 space-x-2">
-              <button
-                class="text-blue-500 hover:underline"
-                @click="openEdit(c)"
-              >
-                Edit
-              </button>
+            <td class="text-right p-4">
+              <div class="flex justify-end gap-2">
+                <button
+                  title="Edit"
+                  class="w-8 h-8 flex items-center justify-center rounded-lg text-blue-500 bg-blue-50 hover:bg-blue-500 hover:text-white transition"
+                  @click="openEdit(c)"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </button>
 
-              <button
-                class="text-red-500 hover:underline"
-                @click="remove(c.id)"
-              >
-                Delete
-              </button>
+                <button
+                  title="Delete"
+                  class="w-8 h-8 flex items-center justify-center rounded-lg text-red-500 bg-red-50 hover:bg-red-500 hover:text-white transition"
+                  @click="remove(c.id)"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
             </td>
           </tr>
 
-          <tr v-if="filteredCategories.length === 0">
+          <tr v-if="categories.length === 0">
             <td colspan="4" class="text-center py-10 text-gray-400">
               No categories found
             </td>
           </tr>
         </tbody>
       </table>
+
+      <Pagination
+        :current-page="meta.current_page"
+        :last-page="meta.last_page"
+        :total="meta.total"
+        :from="meta.from"
+        :to="meta.to"
+        @change="goToPage"
+      />
     </div>
 
     <!-- MODAL -->
     <div
       v-if="showModal"
       class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-      @click.self="closeModal"
     >
       <div class="bg-white w-full max-w-md rounded-xl p-6 space-y-4">
         <h2 class="text-xl font-bold">
@@ -110,12 +131,15 @@
         <p v-if="formError" class="text-red-500 text-sm">{{ formError }}</p>
 
         <!-- Name -->
-        <input
-          v-model="form.name"
-          type="text"
-          placeholder="Category name"
-          class="w-full border p-2 rounded"
-        />
+        <div>
+          <label class="block mb-1 text-sm font-medium text-gray-700">Category Name</label>
+          <input
+            v-model="form.name"
+            type="text"
+            placeholder="e.g. Electronics"
+            class="w-full border p-2 rounded focus:outline-none focus:border-orange-500"
+          />
+        </div>
 
         <!-- Active -->
         <label class="flex items-center gap-2 text-sm">
@@ -142,7 +166,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import type { Category } from "../../services/categories";
 import {
   getAdminCategories,
@@ -150,20 +174,46 @@ import {
   updateCategory,
   deleteCategory,
 } from "../../services/admin/categories";
+import Pagination from "../../components/admin/Pagination.vue";
 
 const search = ref("");
+const page = ref(1);
 const categories = ref<Category[]>([]);
 const error = ref("");
 const formError = ref("");
 
+const meta = ref({ current_page: 1, last_page: 1, total: 0, from: 0 as number | null, to: 0 as number | null });
+
 async function loadCategories() {
   error.value = "";
   try {
-    categories.value = await getAdminCategories();
+    const res = await getAdminCategories({ search: search.value || undefined, page: page.value });
+    categories.value = res.data;
+    meta.value = {
+      current_page: res.current_page,
+      last_page: res.last_page,
+      total: res.total,
+      from: res.from,
+      to: res.to,
+    };
   } catch {
     error.value = "Failed to load categories.";
   }
 }
+
+function goToPage(p: number) {
+  page.value = p;
+  loadCategories();
+}
+
+let searchTimeout: ReturnType<typeof setTimeout>;
+watch(search, () => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    page.value = 1;
+    loadCategories();
+  }, 300);
+});
 
 onMounted(loadCategories);
 
@@ -174,12 +224,6 @@ const isEdit = ref(false);
 type CategoryForm = { id: number; name: string; is_active: boolean };
 
 const form = ref<CategoryForm>({ id: 0, name: "", is_active: true });
-
-const filteredCategories = computed(() => {
-  return categories.value.filter((c) =>
-    c.name.toLowerCase().includes(search.value.toLowerCase()),
-  );
-});
 
 function openAdd() {
   isEdit.value = false;

@@ -15,6 +15,21 @@
       </button>
     </div>
 
+    <!-- Search -->
+    <div class="bg-white p-4 rounded-xl shadow">
+      <div class="relative max-w-sm">
+        <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <input
+          v-model="search"
+          type="text"
+          placeholder="Search products..."
+          class="w-full pl-9 pr-4 py-2 border rounded-lg focus:outline-none focus:border-orange-500"
+        />
+      </div>
+    </div>
+
     <p v-if="error" class="text-red-500 text-sm">{{ error }}</p>
 
     <!-- Table -->
@@ -62,10 +77,28 @@
               </span>
             </td>
 
-            <td class="text-right p-4 space-x-2">
-              <button class="text-blue-500" @click="openEdit(p)">Edit</button>
+            <td class="text-right p-4">
+              <div class="flex justify-end gap-2">
+                <button
+                  title="Edit"
+                  class="w-8 h-8 flex items-center justify-center rounded-lg text-blue-500 bg-blue-50 hover:bg-blue-500 hover:text-white transition"
+                  @click="openEdit(p)"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </button>
 
-              <button class="text-red-500" @click="remove(p.id)">Delete</button>
+                <button
+                  title="Delete"
+                  class="w-8 h-8 flex items-center justify-center rounded-lg text-red-500 bg-red-50 hover:bg-red-500 hover:text-white transition"
+                  @click="remove(p.id)"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
             </td>
           </tr>
 
@@ -76,15 +109,23 @@
           </tr>
         </tbody>
       </table>
+
+      <Pagination
+        :current-page="meta.current_page"
+        :last-page="meta.last_page"
+        :total="meta.total"
+        :from="meta.from"
+        :to="meta.to"
+        @change="goToPage"
+      />
     </div>
 
     <!-- ================= ADD / EDIT MODAL ================= -->
     <div
       v-if="showModal"
       class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-      @click.self="closeModal"
     >
-      <div class="bg-white w-full max-w-md rounded-xl p-6 space-y-4">
+      <div class="bg-white w-full max-w-md rounded-xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
         <h2 class="text-xl font-bold">
           {{ isEdit ? "Edit Product" : "Add Product" }}
         </h2>
@@ -92,44 +133,58 @@
         <p v-if="formError" class="text-red-500 text-sm">{{ formError }}</p>
 
         <!-- Name -->
-        <input
-          v-model="form.name"
-          type="text"
-          placeholder="Product name"
-          class="w-full border p-2 rounded"
-        />
+        <div>
+          <label class="block mb-1 text-sm font-medium text-gray-700">Product Name</label>
+          <input
+            v-model="form.name"
+            type="text"
+            placeholder="e.g. Wireless Bluetooth Earbuds"
+            class="w-full border p-2 rounded focus:outline-none focus:border-orange-500"
+          />
+        </div>
 
         <!-- Category -->
-        <select v-model.number="form.category_id" class="w-full border p-2 rounded">
-          <option :value="0" disabled>Select category</option>
-          <option v-for="c in categories" :key="c.id" :value="c.id">
-            {{ c.name }}
-          </option>
-        </select>
+        <div>
+          <label class="block mb-1 text-sm font-medium text-gray-700">Category</label>
+          <select v-model.number="form.category_id" class="w-full border p-2 rounded focus:outline-none focus:border-orange-500">
+            <option :value="0" disabled>Select category</option>
+            <option v-for="c in categories" :key="c.id" :value="c.id">
+              {{ c.name }}
+            </option>
+          </select>
+        </div>
 
-        <!-- Price -->
-        <input
-          v-model.number="form.price"
-          type="number"
-          placeholder="Price"
-          class="w-full border p-2 rounded"
-        />
+        <div class="grid grid-cols-2 gap-3">
+          <!-- Price -->
+          <div>
+            <label class="block mb-1 text-sm font-medium text-gray-700">Price (₱)</label>
+            <input
+              v-model.number="form.price"
+              type="number"
+              min="0"
+              placeholder="0.00"
+              class="w-full border p-2 rounded focus:outline-none focus:border-orange-500"
+            />
+          </div>
 
-        <!-- Stock -->
-        <input
-          v-model.number="form.stock_quantity"
-          type="number"
-          placeholder="Stock"
-          class="w-full border p-2 rounded"
-        />
+          <!-- Stock -->
+          <div>
+            <label class="block mb-1 text-sm font-medium text-gray-700">Stock Quantity</label>
+            <input
+              v-model.number="form.stock_quantity"
+              type="number"
+              min="0"
+              placeholder="0"
+              class="w-full border p-2 rounded focus:outline-none focus:border-orange-500"
+            />
+          </div>
+        </div>
 
         <!-- Image -->
-        <input
-          v-model="form.image"
-          type="text"
-          placeholder="Image URL"
-          class="w-full border p-2 rounded"
-        />
+        <div>
+          <label class="block mb-1 text-sm font-medium text-gray-700">Product Image</label>
+          <ImageDropzone v-model="form.image" />
+        </div>
 
         <!-- Buttons -->
         <div class="flex justify-end gap-2 pt-2">
@@ -150,23 +205,37 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import type { Product } from "../../services/products";
 import type { Category } from "../../services/categories";
 import { getAdminProducts, createProduct, updateProduct, deleteProduct } from "../../services/admin/products";
 import { getAdminCategories } from "../../services/admin/categories";
+import ImageDropzone from "../../components/admin/ImageDropzone.vue";
+import Pagination from "../../components/admin/Pagination.vue";
 
 const products = ref<Product[]>([]);
 const categories = ref<Category[]>([]);
 const loading = ref(false);
 const error = ref("");
 const formError = ref("");
+const search = ref("");
+const page = ref(1);
+
+const meta = ref({ current_page: 1, last_page: 1, total: 0, from: 0 as number | null, to: 0 as number | null });
 
 async function loadProducts() {
   loading.value = true;
   error.value = "";
   try {
-    products.value = await getAdminProducts();
+    const res = await getAdminProducts({ search: search.value || undefined, page: page.value });
+    products.value = res.data;
+    meta.value = {
+      current_page: res.current_page,
+      last_page: res.last_page,
+      total: res.total,
+      from: res.from,
+      to: res.to,
+    };
   } catch {
     error.value = "Failed to load products.";
   } finally {
@@ -174,8 +243,22 @@ async function loadProducts() {
   }
 }
 
+function goToPage(p: number) {
+  page.value = p;
+  loadProducts();
+}
+
+let searchTimeout: ReturnType<typeof setTimeout>;
+watch(search, () => {
+  clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    page.value = 1;
+    loadProducts();
+  }, 300);
+});
+
 onMounted(async () => {
-  categories.value = await getAdminCategories();
+  categories.value = (await getAdminCategories({ per_page: 100 })).data;
   await loadProducts();
 });
 

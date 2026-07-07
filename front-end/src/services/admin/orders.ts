@@ -1,14 +1,8 @@
 import api from "../api";
 import type { Order } from "../orders";
+import type { PaginatedResponse } from "../pagination";
 
-interface PaginatedResponse<T> {
-  data: T[];
-  current_page: number;
-  last_page: number;
-  total: number;
-}
-
-export function getAdminOrders(params: Record<string, string> = {}) {
+export function getAdminOrders(params: { search?: string; status?: string; page?: number } = {}) {
   return api.get<PaginatedResponse<Order>>("/admin/orders", { params }).then((r) => r.data);
 }
 

@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\Admin\CategoryController as AdminCategoryController
 use App\Http\Controllers\Api\Admin\DashboardController;
 use App\Http\Controllers\Api\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Api\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Api\Admin\UploadController as AdminUploadController;
 use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
@@ -30,6 +31,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::middleware('admin')->prefix('admin')->group(function () {
         Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
+        Route::post('/uploads', [AdminUploadController::class, 'store']);
 
         Route::apiResource('categories', AdminCategoryController::class)->except(['show']);
         Route::apiResource('products', AdminProductController::class)->except(['show']);

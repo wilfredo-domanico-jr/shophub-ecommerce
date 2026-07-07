@@ -1,15 +1,26 @@
 import api from "../api";
 import type { Product } from "../products";
+import type { PaginatedResponse } from "../pagination";
 
-export function getAdminProducts() {
-  return api.get<Product[]>("/admin/products").then((r) => r.data);
+export function getAdminProducts(params: { search?: string; page?: number } = {}) {
+  return api
+    .get<PaginatedResponse<Product>>("/admin/products", { params })
+    .then((r) => r.data);
 }
 
-export function createProduct(payload: Partial<Product>) {
+export interface ProductPayload {
+  name: string;
+  category_id: number;
+  price: number;
+  stock_quantity: number;
+  image: string | null;
+}
+
+export function createProduct(payload: ProductPayload) {
   return api.post<Product>("/admin/products", payload).then((r) => r.data);
 }
 
-export function updateProduct(id: number, payload: Partial<Product>) {
+export function updateProduct(id: number, payload: ProductPayload) {
   return api.put<Product>(`/admin/products/${id}`, payload).then((r) => r.data);
 }
 
