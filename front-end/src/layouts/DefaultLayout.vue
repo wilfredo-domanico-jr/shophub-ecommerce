@@ -15,7 +15,7 @@
     @close-order-tracking="closeOrderTracking"
   />
   <router-view />
-  <Footer />
+  <Footer @open-track-order="openOrderTracking" />
 </template>
 
 <script setup lang="ts">

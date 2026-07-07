@@ -9,6 +9,7 @@ import AdminLayout from "../layouts/AdminLayout.vue";
 import Home from "../views/Home.vue";
 import Shop from "../views/Shop.vue";
 import ProductDetail from "../views/ProductDetail.vue";
+import InfoPage from "../views/InfoPage.vue";
 
 // Auth
 import Login from "../views/Auth/Login.vue";
@@ -45,6 +46,48 @@ const routes = [
         path: "products/:slug",
         name: "ProductDetail",
         component: ProductDetail,
+      },
+      {
+        path: "help-center",
+        name: "HelpCenter",
+        component: InfoPage,
+        props: { slug: "help-center" },
+      },
+      {
+        path: "returns-refunds",
+        name: "ReturnsRefunds",
+        component: InfoPage,
+        props: { slug: "returns-refunds" },
+      },
+      {
+        path: "shipping-info",
+        name: "ShippingInfo",
+        component: InfoPage,
+        props: { slug: "shipping-info" },
+      },
+      {
+        path: "our-story",
+        name: "OurStory",
+        component: InfoPage,
+        props: { slug: "our-story" },
+      },
+      {
+        path: "careers",
+        name: "Careers",
+        component: InfoPage,
+        props: { slug: "careers" },
+      },
+      {
+        path: "press-media",
+        name: "PressMedia",
+        component: InfoPage,
+        props: { slug: "press-media" },
+      },
+      {
+        path: "privacy-policy",
+        name: "PrivacyPolicy",
+        component: InfoPage,
+        props: { slug: "privacy-policy" },
       },
     ],
   },

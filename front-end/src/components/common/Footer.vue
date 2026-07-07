@@ -54,23 +54,23 @@
           <h5 class="font-semibold text-lg mb-4">Customer Service</h5>
           <ul class="space-y-2 text-gray-400 text-sm">
             <li>
-              <a href="#" class="hover:text-orange-500 transition"
-                >Help Center</a
+              <router-link to="/help-center" class="hover:text-orange-500 transition"
+                >Help Center</router-link
               >
             </li>
             <li>
-              <a href="#" class="hover:text-orange-500 transition"
-                >Track Order</a
+              <button class="hover:text-orange-500 transition" @click="emit('open-track-order')">
+                Track Order
+              </button>
+            </li>
+            <li>
+              <router-link to="/returns-refunds" class="hover:text-orange-500 transition"
+                >Returns & Refunds</router-link
               >
             </li>
             <li>
-              <a href="#" class="hover:text-orange-500 transition"
-                >Returns & Refunds</a
-              >
-            </li>
-            <li>
-              <a href="#" class="hover:text-orange-500 transition"
-                >Shipping Info</a
+              <router-link to="/shipping-info" class="hover:text-orange-500 transition"
+                >Shipping Info</router-link
               >
             </li>
           </ul>
@@ -80,19 +80,19 @@
           <h5 class="font-semibold text-lg mb-4">About Us</h5>
           <ul class="space-y-2 text-gray-400 text-sm">
             <li>
-              <a href="#" class="hover:text-orange-500 transition">Our Story</a>
+              <router-link to="/our-story" class="hover:text-orange-500 transition">Our Story</router-link>
             </li>
             <li>
-              <a href="#" class="hover:text-orange-500 transition">Careers</a>
+              <router-link to="/careers" class="hover:text-orange-500 transition">Careers</router-link>
             </li>
             <li>
-              <a href="#" class="hover:text-orange-500 transition"
-                >Press & Media</a
+              <router-link to="/press-media" class="hover:text-orange-500 transition"
+                >Press & Media</router-link
               >
             </li>
             <li>
-              <a href="#" class="hover:text-orange-500 transition"
-                >Privacy Policy</a
+              <router-link to="/privacy-policy" class="hover:text-orange-500 transition"
+                >Privacy Policy</router-link
               >
             </li>
           </ul>
@@ -103,18 +103,29 @@
           <p class="text-gray-400 text-sm mb-4">
             Subscribe to get special offers and updates
           </p>
-          <div class="flex gap-2">
+
+          <form v-if="!subscribed" class="flex gap-2" @submit.prevent="subscribe">
             <input
+              v-model="newsletterEmail"
               type="email"
+              required
               placeholder="Your email"
               class="flex-1 px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 focus:outline-none focus:border-orange-500 text-sm"
             />
             <button
+              type="submit"
               class="gradient-primary px-4 py-2 rounded-lg font-medium hover:opacity-90 transition"
             >
               Subscribe
             </button>
-          </div>
+          </form>
+
+          <p v-else class="text-sm text-green-400 flex items-center gap-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            Thanks for subscribing!
+          </p>
         </div>
       </div>
 
@@ -129,3 +140,18 @@
     </div>
   </footer>
 </template>
+
+<script setup lang="ts">
+import { ref } from "vue";
+
+const emit = defineEmits<{ (e: "open-track-order"): void }>();
+
+const newsletterEmail = ref("");
+const subscribed = ref(false);
+
+function subscribe() {
+  // No backend endpoint for newsletter signups yet — this is a portfolio
+  // placeholder that just confirms the interaction client-side.
+  subscribed.value = true;
+}
+</script>
