@@ -54,9 +54,9 @@ Centralized in `tailwind.config.js` and `src/assets/main.css`:
 src/
   views/                  # Home, Shop, ProductDetail, InfoPage, Auth/Login, Admin/*
   components/
-    common/               # Header, Footer, Cart/Checkout/OrderTracking modals, ProductCard, etc.
+    common/               # Header, Footer, Cart/Checkout/OrderTracking modals, ProductCard, Pagination, etc.
     home/                 # homepage-specific sections
-    admin/                # ImageDropzone, Pagination
+    admin/                # ImageDropzone
   stores/                 # Pinia: auth.ts, cart.ts
   services/               # typed Axios clients: products, categories, orders, admin/*
   router/                 # routes + auth guard
@@ -65,10 +65,11 @@ src/
 
 ---
 
-## ⚙️ Setup
+## ⚙️ Setup (local)
 
 ```bash
 npm install
+cp .env.example .env
 npm run dev
 ```
 
@@ -79,6 +80,32 @@ VITE_API_BASE_URL=http://127.0.0.1:8000/api
 ```
 
 Make sure this matches whatever port Vite actually starts on when you set the backend's `FRONTEND_URL` (for CORS) — if the default port is taken, Vite silently picks the next one.
+
+---
+
+## 🐳 Docker
+
+From the repo root:
+
+```bash
+docker compose up -d --build frontend
+```
+
+Runs `npm ci` then the Vite dev server (with HMR) inside a `node:20-alpine` container, bound to `0.0.0.0:5173` so it's reachable from the host at http://localhost:5173. `VITE_API_BASE_URL` is supplied via `docker-compose.yml`'s `environment:` block rather than a `.env` file.
+
+This image is dev-oriented (matches `npm run dev`), not a production build — for a real deployment you'd build a static bundle (`npm run build`) and serve `dist/` from a static host or an nginx image instead.
+
+---
+
+## 🧪 Testing
+
+```bash
+npm run test            # run once (Vitest)
+npm run test:watch      # watch mode
+npm run test:coverage   # with coverage (v8)
+```
+
+Tests live alongside the code they cover, in `__tests__/` folders (e.g. `src/stores/__tests__/cart.spec.ts`). Currently covers the `cart` and `auth` Pinia stores and the `StarRating`/`Pagination` components.
 
 ---
 

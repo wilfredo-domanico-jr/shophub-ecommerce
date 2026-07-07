@@ -111,11 +111,22 @@ Only **admins** have accounts — the storefront itself is guest-first:
 /src/router                    # routes + auth guard
 ```
 
+### Root
+
+```
+/docker-compose.yml             # MySQL + backend + frontend, one command to run everything
+/.github/workflows              # backend.yml + frontend.yml CI
+```
+
 ---
 
 ## ⚙️ Setup Instructions
 
-### 1️⃣ Backend (Laravel API)
+There are two ways to run ShopHub: natively on your machine, or via Docker Compose (no PHP/Node/MySQL install required). Pick one.
+
+### Option A — Local (native)
+
+**1️⃣ Backend (Laravel API)**
 
 ```bash
 cd back-end
@@ -127,7 +138,7 @@ php artisan migrate --seed
 php artisan serve
 ```
 
-### 2️⃣ Frontend (Vue SPA)
+**2️⃣ Frontend (Vue SPA)**
 
 ```bash
 cd front-end
@@ -136,6 +147,40 @@ npm run dev
 ```
 
 Make sure `VITE_API_BASE_URL` (front-end `.env`) points at the backend's `/api` URL, and `FRONTEND_URL` (back-end `.env`) matches the frontend's dev URL for CORS.
+
+### Option B — Docker
+
+```bash
+docker compose up -d --build
+```
+
+This starts MySQL, the backend API (migrated + seeded automatically), and the frontend dev server:
+
+| Service  | URL                          |
+| -------- | ----------------------------- |
+| Frontend | http://localhost:5173         |
+| Backend  | http://localhost:8000         |
+| MySQL    | localhost:3307                |
+
+Seeded admin login: `admin@shophub.test` / `password`. See [`back-end/README.md`](back-end/README.md#-docker) and [`front-end/README.md`](front-end/README.md#-docker) for details on what each container does.
+
+To stop: `docker compose down` (add `-v` to also wipe the database volume).
+
+---
+
+## 🧪 Testing
+
+```bash
+cd back-end && php artisan test     # 50+ feature & unit tests (auth, catalog, admin CRUD, checkout, tracking)
+cd front-end && npm run test        # Vitest: Pinia stores + components
+```
+
+## ⚙️ Continuous Integration
+
+Two GitHub Actions workflows ([`.github/workflows`](.github/workflows)) run on every push/PR that touches their respective folder:
+
+- **`backend.yml`** — installs Composer dependencies, runs the full PHPUnit suite (SQLite in-memory, no external services needed)
+- **`frontend.yml`** — installs npm dependencies, runs Vitest, then type-checks and builds
 
 ---
 

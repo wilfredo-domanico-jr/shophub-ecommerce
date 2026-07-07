@@ -96,7 +96,7 @@ MAIL_FROM_NAME="ShopHub"
 
 ---
 
-## ⚙️ Setup
+## ⚙️ Setup (local)
 
 ```bash
 composer install
@@ -124,13 +124,46 @@ composer run dev
 
 ---
 
+## 🐳 Docker
+
+From the repo root:
+
+```bash
+docker compose up -d --build backend mysql
+```
+
+What the backend image does on every container start (`docker-entrypoint.sh`):
+
+1. Copies `.env.example` → `.env` if no `.env` is present
+2. Generates an `APP_KEY`
+3. Waits for MySQL to accept connections, then runs `php artisan migrate --force`
+4. Runs `php artisan db:seed --force` (idempotent — safe to run every start)
+5. Runs `php artisan storage:link`
+6. Starts PHP's built-in server directly (**not** `php artisan serve` — see note below) on `0.0.0.0:8000`
+
+Configuration (DB host/credentials, `FRONTEND_URL`, etc.) is passed via the `environment:` block in the root `docker-compose.yml`, not baked into the image.
+
+> **Why not `php artisan serve`?** Laravel's `ServeCommand` deliberately strips most non-allowlisted environment variables from the dev-server process it spawns, so it can reliably detect and reload on `.env` file changes. That means container environment variables like `DB_HOST` get silently ignored in favor of whatever's in the `.env` file. The Dockerfile instead runs PHP's built-in server directly against Laravel's own routing script, which respects the real environment.
+
+Rebuild after changing PHP dependencies or the Dockerfile: `docker compose build backend`.
+
+---
+
 ## 🧪 Tests
 
 ```bash
 php artisan test
 ```
 
-Feature tests cover guest checkout (including stock-locking against overselling) and order tracking.
+50+ feature and unit tests covering:
+- Auth (login/logout/me, admin-vs-guest access to admin routes)
+- Public catalog (category/product filtering, search, sort, active-only visibility)
+- Admin CRUD (categories, products, admin users) including validation and authorization
+- Dashboard stats aggregation
+- Guest checkout (including stock-locking against overselling) and order tracking
+- Model behavior (`Order` number generation/uniqueness, `Product` scopes)
+
+Tests run against an in-memory SQLite database (configured in `phpunit.xml`), so no database setup is needed to run them — including in CI.
 
 ---
 
