@@ -56,6 +56,10 @@
 <script lang="ts" setup>
 import { ref, onMounted, onUnmounted } from "vue";
 import FlashSaleProductCard from "../common/FlashSaleProductCard.vue";
+import { getFlashSaleProducts } from "../../services/products";
+import { useCartStore } from "../../stores/cart";
+
+const cartStore = useCartStore();
 
 interface Product {
   id: number;
@@ -70,65 +74,25 @@ interface Product {
 
 const products = ref<Product[]>([]);
 
-// ** Simulate fetching from API **
-function fetchProducts() {
-  products.value = [
-    {
-      id: 1,
-      name: "Wireless Bluetooth Earbuds Pro",
-      price: 499,
-      originalPrice: 1999,
-      sold: 35,
-      discount: 75,
-      image:
-        "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=300&h=300&fit=crop",
-      progress: 65,
-    },
-    {
-      id: 2,
-      name: "Smart Watch Fitness Tracker",
-      price: 799,
-      originalPrice: 1999,
-      sold: 48,
-      discount: 60,
-      image:
-        "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&h=300&fit=crop",
-      progress: 80,
-    },
-    {
-      id: 3,
-      name: "Premium Wireless Headphones",
-      price: 1499,
-      originalPrice: 2999,
-      sold: 27,
-      discount: 50,
-      image:
-        "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=300&fit=crop",
-      progress: 45,
-    },
-    {
-      id: 4,
-      name: "Running Shoes Athletic Sport",
-      price: 899,
-      originalPrice: 2999,
-      sold: 54,
-      discount: 70,
-      image:
-        "https://images.unsplash.com/photo-1585386959984-a4155224a1ad?w=300&h=300&fit=crop",
-      progress: 90,
-    },
-    {
-      id: 5,
-      name: "Laptop Stand Aluminum",
-      price: 449,
-      originalPrice: 999,
-      sold: 43,
-      discount: 55,
-      image:
-        "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=300&h=300&fit=crop",
-      progress: 72,
-    },
-  ];
+async function fetchProducts() {
+  const res = await getFlashSaleProducts();
+  products.value = res.data.map((p) => {
+    const price = Number(p.price);
+    const originalPrice = Number(p.original_price ?? p.price);
+    const discount = originalPrice > 0 ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0;
+    const goal = p.flash_sale_goal ?? Math.max(p.sold_count, 1) * 1.5;
+
+    return {
+      id: p.id,
+      name: p.name,
+      price,
+      originalPrice,
+      sold: p.sold_count,
+      discount,
+      image: p.image ?? "",
+      progress: Math.min(100, Math.round((p.sold_count / goal) * 100)),
+    };
+  });
 }
 
 // ** Countdown Timer **
@@ -156,7 +120,7 @@ function updateTimer() {
 }
 
 function onProductSelect(product: Product) {
-  console.log("Selected product:", product);
+  cartStore.addItem(product);
 }
 
 onMounted(() => {

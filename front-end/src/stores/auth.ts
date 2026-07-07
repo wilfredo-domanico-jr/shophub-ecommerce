@@ -6,54 +6,53 @@ interface User {
   id: number;
   name: string;
   email: string;
+  is_admin: boolean;
 }
 
 export const useAuthStore = defineStore("auth", () => {
   const user = ref<User | null>(null);
-  const token = ref<string | null>(localStorage.getItem("token"));
+  const initialized = ref(false);
 
-  const isLoggedIn = computed(() => !!token.value);
+  const isLoggedIn = computed(() => !!user.value);
+  const isAdmin = computed(() => !!user.value?.is_admin);
 
-  async function login(credentials: {
-    email: string;
-    password: string;
-  }) {
-
-    
-
-    const res = await api.post<{ user: User; token: string }>("/login", {
-      email: credentials.email,
-      password: credentials.password,
-    });
-
-    user.value = res.data.user;
-    token.value = res.data.token;
-
-    localStorage.setItem("token", res.data.token);
-  }
-
-  function logout() {
-    user.value = null;
-    token.value = null;
-    localStorage.removeItem("token");
+  async function login(credentials: { email: string; password: string }) {
+    const { data } = await api.post("/login", credentials);
+    localStorage.setItem("token", data.token);
+    user.value = data.user;
   }
 
   async function fetchUser() {
+    if (!localStorage.getItem("token")) {
+      user.value = null;
+      return;
+    }
 
-  if (!token.value) return;
-
-  try {
-    const res = await api.get<User>("/me");
-    user.value = res.data;
-  } catch {
-    logout();
+    try {
+      const { data } = await api.get<User>("/me");
+      user.value = data;
+    } catch {
+      localStorage.removeItem("token");
+      user.value = null;
+    } finally {
+      initialized.value = true;
+    }
   }
-}
+
+  async function logout() {
+    try {
+      await api.post("/logout");
+    } finally {
+      localStorage.removeItem("token");
+      user.value = null;
+    }
+  }
 
   return {
     user,
-    token,
+    initialized,
     isLoggedIn,
+    isAdmin,
     login,
     logout,
     fetchUser,

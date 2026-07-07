@@ -139,6 +139,10 @@ body {
   background: linear-gradient(135deg, #06ffa5 0%, #00d4ff 100%);
 }
 
+.gradient-success {
+  background: linear-gradient(135deg, #22c55e 0%, #10b981 100%);
+}
+
 /* Gradient Text */
 
 .text-gradient-primary {

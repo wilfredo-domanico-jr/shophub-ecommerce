@@ -37,37 +37,55 @@
         <!-- Input -->
         <div>
           <label class="text-sm font-medium text-gray-700">
-            Tracking / Reference Number
+            Order Number
           </label>
 
           <input
             v-model="trackingNumber"
             type="text"
-            placeholder="e.g. SHP-123456789"
+            placeholder="e.g. SHP-20260707153012-4F2A"
+            class="w-full mt-2 px-4 py-3 border rounded-lg focus:outline-none focus:border-orange-500"
+          />
+        </div>
+
+        <div>
+          <label class="text-sm font-medium text-gray-700">
+            Email used at checkout
+          </label>
+
+          <input
+            v-model="email"
+            type="email"
+            placeholder="you@example.com"
             class="w-full mt-2 px-4 py-3 border rounded-lg focus:outline-none focus:border-orange-500"
           />
         </div>
 
         <!-- Button -->
         <button
-          @click="trackOrder"
+          @click="track"
           class="w-full gradient-primary text-white py-3 rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50"
-          :disabled="!trackingNumber"
+          :disabled="!trackingNumber || !email || loading"
         >
-          Track Order
+          {{ loading ? "Tracking..." : "Track Order" }}
         </button>
 
         <!-- Result -->
-        <div v-if="result" class="mt-4 p-4 border rounded-lg bg-gray-50">
+        <div v-if="result" class="mt-4 p-4 border rounded-lg bg-gray-50 space-y-2">
           <p class="font-semibold text-sm">Order Status:</p>
-
-          <p class="text-orange-500 font-bold mt-1">
+          <p class="text-orange-500 font-bold mt-1 capitalize">
             {{ result.status }}
           </p>
-
-          <p class="text-xs text-gray-500 mt-1">
-            Last update: {{ result.updatedAt }}
+          <p class="text-xs text-gray-500">
+            Placed: {{ new Date(result.created_at).toLocaleString() }}
           </p>
+          <ul class="text-sm divide-y">
+            <li v-for="item in result.items" :key="item.id" class="py-1 flex justify-between">
+              <span>{{ item.product_name }} × {{ item.quantity }}</span>
+              <span>₱{{ item.subtotal }}</span>
+            </li>
+          </ul>
+          <p class="text-sm font-semibold text-right">Total: ₱{{ result.total }}</p>
         </div>
 
         <!-- Error -->
@@ -81,31 +99,34 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
+import { trackOrder as trackOrderApi, type Order } from "../../services/orders";
 
 const emit = defineEmits<{ (e: "close-order-tracking"): void }>();
 
 const trackingNumber = ref("");
-const result = ref<any>(null);
+const email = ref("");
+const result = ref<Order | null>(null);
 const error = ref("");
+const loading = ref(false);
 
 function close() {
   emit("close-order-tracking");
 }
 
-// Mock tracking function (replace with API later)
-function trackOrder() {
+async function track() {
   error.value = "";
   result.value = null;
+  loading.value = true;
 
-  if (!trackingNumber.value) {
-    error.value = "Please enter a tracking number.";
-    return;
+  try {
+    result.value = await trackOrderApi({
+      order_number: trackingNumber.value,
+      email: email.value,
+    });
+  } catch (e: any) {
+    error.value = e?.response?.data?.message ?? "No matching order found.";
+  } finally {
+    loading.value = false;
   }
-
-  // fake response (replace with backend call)
-  result.value = {
-    status: "In Transit 🚚",
-    updatedAt: new Date().toLocaleString(),
-  };
 }
 </script>

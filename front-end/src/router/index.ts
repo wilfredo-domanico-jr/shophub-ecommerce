@@ -58,6 +58,7 @@ const routes = [
   {
     path: "/admin",
     component: AdminLayout,
+    meta: { requiresAdmin: true },
     children: [
       {
         path: "",
@@ -101,6 +102,32 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
+});
+
+router.beforeEach(async (to) => {
+  const requiresAdmin = to.matched.some((record) => record.meta.requiresAdmin);
+  const isLoginPage = to.name === "Login";
+
+  if (!requiresAdmin && !isLoginPage) {
+    return true;
+  }
+
+  const { useAuthStore } = await import("../stores/auth");
+  const auth = useAuthStore();
+
+  if (!auth.initialized) {
+    await auth.fetchUser();
+  }
+
+  if (requiresAdmin && !auth.isAdmin) {
+    return { name: "Login" };
+  }
+
+  if (isLoginPage && auth.isAdmin) {
+    return { name: "AdminDashboard" };
+  }
+
+  return true;
 });
 
 export default router;

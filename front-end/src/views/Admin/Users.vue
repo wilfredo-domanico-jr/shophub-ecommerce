@@ -5,28 +5,37 @@
       class="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
     >
       <div>
-        <h1 class="text-2xl font-bold">Users</h1>
-        <p class="text-gray-500 text-sm">Manage registered users</p>
+        <h1 class="text-2xl font-bold">Admins</h1>
+        <p class="text-gray-500 text-sm">
+          Manage who can access this admin panel
+        </p>
       </div>
 
-      <!-- Search -->
-      <input
-        v-model="search"
-        type="text"
-        placeholder="Search name or email..."
-        class="border px-4 py-2 rounded-lg w-full md:w-72 focus:outline-none focus:border-orange-500"
-      />
+      <button
+        @click="openAdd"
+        class="bg-orange-500 text-white px-4 py-2 rounded-lg hover:opacity-90"
+      >
+        + Add Admin
+      </button>
     </div>
+
+    <!-- Search -->
+    <input
+      v-model="search"
+      type="text"
+      placeholder="Search name or email..."
+      class="border px-4 py-2 rounded-lg w-full md:w-72 focus:outline-none focus:border-orange-500"
+    />
+
+    <p v-if="error" class="text-red-500 text-sm">{{ error }}</p>
 
     <!-- Table -->
     <div class="bg-white rounded-xl shadow overflow-x-auto">
-      <table class="w-full text-sm min-w-[700px]">
+      <table class="w-full text-sm min-w-[600px]">
         <thead class="text-left text-gray-500 border-b">
           <tr>
-            <th class="p-4">User</th>
+            <th class="p-4">Name</th>
             <th>Email</th>
-            <th>Role</th>
-            <th>Status</th>
             <th class="text-right p-4">Actions</th>
           </tr>
         </thead>
@@ -37,127 +46,112 @@
             :key="user.id"
             class="border-b hover:bg-gray-50"
           >
-            <!-- User -->
-            <td class="p-4 flex items-center gap-3">
-              <img
-                :src="user.avatar"
-                class="w-10 h-10 rounded-full object-cover"
-              />
-              <div>
-                <p class="font-medium">{{ user.name }}</p>
-                <p class="text-xs text-gray-400">ID: {{ user.id }}</p>
-              </div>
-            </td>
-
-            <!-- Email -->
+            <td class="p-4 font-medium">{{ user.name }}</td>
             <td>{{ user.email }}</td>
 
-            <!-- Role -->
-            <td>
-              <span
-                class="px-2 py-1 text-xs rounded-full font-medium"
-                :class="
-                  user.role === 'Admin'
-                    ? 'bg-purple-100 text-purple-600'
-                    : 'bg-gray-100 text-gray-600'
-                "
-              >
-                {{ user.role }}
-              </span>
-            </td>
-
-            <!-- Status -->
-            <td>
-              <span
-                class="px-2 py-1 text-xs rounded-full font-medium"
-                :class="
-                  user.status === 'Active'
-                    ? 'bg-green-100 text-green-600'
-                    : 'bg-red-100 text-red-600'
-                "
-              >
-                {{ user.status }}
-              </span>
-            </td>
-
-            <!-- Actions -->
             <td class="text-right p-4 space-x-2">
               <button
                 class="text-blue-500 hover:underline"
-                @click="viewUser(user)"
+                @click="openEdit(user)"
               >
-                View
-              </button>
-
-              <button
-                class="text-orange-500 hover:underline"
-                @click="toggleRole(user.id)"
-              >
-                Role
+                Edit
               </button>
 
               <button
                 class="text-red-500 hover:underline"
-                @click="toggleStatus(user.id)"
+                @click="remove(user.id)"
               >
-                Suspend
+                Remove
               </button>
             </td>
           </tr>
 
           <tr v-if="filteredUsers.length === 0">
-            <td colspan="5" class="text-center py-10 text-gray-400">
-              No users found
+            <td colspan="3" class="text-center py-10 text-gray-400">
+              No admins found
             </td>
           </tr>
         </tbody>
       </table>
     </div>
+
+    <!-- MODAL -->
+    <div
+      v-if="showModal"
+      class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+      @click.self="closeModal"
+    >
+      <div class="bg-white w-full max-w-md rounded-xl p-6 space-y-4">
+        <h2 class="text-xl font-bold">
+          {{ isEdit ? "Edit Admin" : "Add Admin" }}
+        </h2>
+
+        <p v-if="formError" class="text-red-500 text-sm">{{ formError }}</p>
+
+        <input
+          v-model="form.name"
+          type="text"
+          placeholder="Full name"
+          class="w-full border p-2 rounded"
+        />
+
+        <input
+          v-model="form.email"
+          type="email"
+          placeholder="Email"
+          class="w-full border p-2 rounded"
+        />
+
+        <input
+          v-model="form.password"
+          type="password"
+          :placeholder="isEdit ? 'New password (leave blank to keep)' : 'Password'"
+          class="w-full border p-2 rounded"
+        />
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button class="px-4 py-2 text-gray-500" @click="closeModal">
+            Cancel
+          </button>
+
+          <button
+            class="bg-orange-500 text-white px-4 py-2 rounded"
+            @click="save"
+          >
+            {{ isEdit ? "Update" : "Add" }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
-
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  role: "Admin" | "Customer";
-  status: "Active" | "Suspended";
-  avatar: string;
-}
+import { ref, computed, onMounted } from "vue";
+import type { AdminUser } from "../../services/admin/users";
+import {
+  getAdminUsers,
+  createAdminUser,
+  updateAdminUser,
+  deleteAdminUser,
+} from "../../services/admin/users";
 
 const search = ref("");
+const users = ref<AdminUser[]>([]);
+const error = ref("");
+const formError = ref("");
 
-const users = ref<User[]>([
-  {
-    id: 1,
-    name: "Juan Dela Cruz",
-    email: "juan@example.com",
-    role: "Customer",
-    status: "Active",
-    avatar: "https://i.pravatar.cc/100?img=1",
-  },
-  {
-    id: 2,
-    name: "Maria Santos",
-    email: "maria@example.com",
-    role: "Admin",
-    status: "Active",
-    avatar: "https://i.pravatar.cc/100?img=2",
-  },
-  {
-    id: 3,
-    name: "John Doe",
-    email: "john@example.com",
-    role: "Customer",
-    status: "Suspended",
-    avatar: "https://i.pravatar.cc/100?img=3",
-  },
-]);
+async function loadUsers() {
+  error.value = "";
+  try {
+    users.value = await getAdminUsers();
+  } catch {
+    error.value = "Failed to load admins.";
+  }
+}
 
-// SEARCH
+onMounted(loadUsers);
+
 const filteredUsers = computed(() => {
   return users.value.filter(
     (u) =>
@@ -166,22 +160,70 @@ const filteredUsers = computed(() => {
   );
 });
 
-// ACTIONS
-function viewUser(user: User) {
-  console.log("View user:", user);
+const showModal = ref(false);
+const isEdit = ref(false);
+
+type UserForm = { id: number; name: string; email: string; password: string };
+
+const form = ref<UserForm>({ id: 0, name: "", email: "", password: "" });
+
+function openAdd() {
+  isEdit.value = false;
+  formError.value = "";
+  form.value = { id: 0, name: "", email: "", password: "" };
+  showModal.value = true;
 }
 
-function toggleRole(id: number) {
-  const user = users.value.find((u) => u.id === id);
-  if (!user) return;
-
-  user.role = user.role === "Admin" ? "Customer" : "Admin";
+function openEdit(user: AdminUser) {
+  isEdit.value = true;
+  formError.value = "";
+  form.value = { id: user.id, name: user.name, email: user.email, password: "" };
+  showModal.value = true;
 }
 
-function toggleStatus(id: number) {
-  const user = users.value.find((u) => u.id === id);
-  if (!user) return;
+function closeModal() {
+  showModal.value = false;
+}
 
-  user.status = user.status === "Active" ? "Suspended" : "Active";
+async function save() {
+  if (!form.value.name || !form.value.email) {
+    formError.value = "Name and email are required.";
+    return;
+  }
+
+  if (!isEdit.value && !form.value.password) {
+    formError.value = "Password is required for new admins.";
+    return;
+  }
+
+  try {
+    if (isEdit.value) {
+      await updateAdminUser(form.value.id, {
+        name: form.value.name,
+        email: form.value.email,
+        password: form.value.password || undefined,
+      });
+    } else {
+      await createAdminUser({
+        name: form.value.name,
+        email: form.value.email,
+        password: form.value.password,
+      });
+    }
+    closeModal();
+    await loadUsers();
+  } catch (e: any) {
+    formError.value = e?.response?.data?.message ?? "Failed to save admin.";
+  }
+}
+
+async function remove(id: number) {
+  if (!confirm("Remove this admin?")) return;
+  try {
+    await deleteAdminUser(id);
+    await loadUsers();
+  } catch (e: any) {
+    error.value = e?.response?.data?.message ?? "Failed to remove admin.";
+  }
 }
 </script>

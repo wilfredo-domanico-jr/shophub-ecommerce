@@ -13,17 +13,20 @@
       <input
         v-model="search"
         type="text"
-        placeholder="Search order ID or customer..."
+        placeholder="Search order number or customer..."
         class="border px-4 py-2 rounded-lg w-full md:w-72 focus:outline-none focus:border-orange-500"
+        @keyup.enter="loadOrders"
       />
     </div>
+
+    <p v-if="error" class="text-red-500 text-sm">{{ error }}</p>
 
     <!-- Table -->
     <div class="bg-white rounded-xl shadow overflow-x-auto">
       <table class="w-full text-sm min-w-[700px]">
         <thead class="text-left text-gray-500 border-b">
           <tr>
-            <th class="p-4">Order ID</th>
+            <th class="p-4">Order #</th>
             <th>Customer</th>
             <th>Items</th>
             <th>Total</th>
@@ -34,60 +37,40 @@
 
         <tbody>
           <tr
-            v-for="order in filteredOrders"
+            v-for="order in orders"
             :key="order.id"
             class="border-b hover:bg-gray-50"
           >
-            <!-- Order ID -->
-            <td class="p-4 font-medium">#{{ order.id }}</td>
+            <td class="p-4 font-medium">{{ order.order_number }}</td>
+            <td>{{ order.customer_name }}</td>
+            <td>{{ order.items_count ?? order.items?.length ?? 0 }} item(s)</td>
+            <td class="font-semibold">₱{{ Number(order.total).toLocaleString() }}</td>
 
-            <!-- Customer -->
-            <td>
-              {{ order.customer }}
-            </td>
-
-            <!-- Items -->
-            <td>{{ order.items }} item(s)</td>
-
-            <!-- Total -->
-            <td class="font-semibold">₱{{ order.total.toLocaleString() }}</td>
-
-            <!-- Status -->
             <td>
               <span
-                class="px-2 py-1 text-xs rounded-full font-medium"
+                class="px-2 py-1 text-xs rounded-full font-medium capitalize"
                 :class="statusClass(order.status)"
               >
                 {{ order.status }}
               </span>
             </td>
 
-            <!-- Actions -->
             <td class="text-right p-4 space-x-2">
-              <button
-                class="text-blue-500 hover:underline"
-                @click="viewOrder(order)"
+              <select
+                :value="order.status"
+                @change="onStatusChange(order, $event)"
+                class="border rounded px-2 py-1 text-xs"
               >
-                View
-              </button>
-
-              <button
-                class="text-green-500 hover:underline"
-                @click="markShipped(order.id)"
-              >
-                Ship
-              </button>
-
-              <button
-                class="text-red-500 hover:underline"
-                @click="cancelOrder(order.id)"
-              >
-                Cancel
-              </button>
+                <option value="pending">Pending</option>
+                <option value="processing">Processing</option>
+                <option value="shipped">Shipped</option>
+                <option value="delivered">Delivered</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
             </td>
           </tr>
 
-          <tr v-if="filteredOrders.length === 0">
+          <tr v-if="orders.length === 0">
             <td colspan="6" class="text-center py-10 text-gray-400">
               No orders found
             </td>
@@ -99,80 +82,54 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, onMounted } from "vue";
+import type { Order } from "../../services/orders";
+import { getAdminOrders, updateOrderStatus } from "../../services/admin/orders";
 
-interface Order {
-  id: number;
-  customer: string;
-  items: number;
-  total: number;
-  status: "Pending" | "Shipped" | "Delivered" | "Cancelled";
-}
+type AdminOrder = Order & { items_count?: number };
 
 const search = ref("");
+const orders = ref<AdminOrder[]>([]);
+const error = ref("");
 
-const orders = ref<Order[]>([
-  {
-    id: 1001,
-    customer: "Juan Dela Cruz",
-    items: 2,
-    total: 2500,
-    status: "Delivered",
-  },
-  {
-    id: 1002,
-    customer: "Maria Santos",
-    items: 1,
-    total: 1200,
-    status: "Pending",
-  },
-  { id: 1003, customer: "John Doe", items: 3, total: 3800, status: "Shipped" },
-  {
-    id: 1004,
-    customer: "Ana Reyes",
-    items: 1,
-    total: 900,
-    status: "Cancelled",
-  },
-]);
+async function loadOrders() {
+  error.value = "";
+  try {
+    const res = await getAdminOrders(search.value ? { search: search.value } : {});
+    orders.value = res.data;
+  } catch {
+    error.value = "Failed to load orders.";
+  }
+}
 
-// FILTER SEARCH
-const filteredOrders = computed(() => {
-  return orders.value.filter(
-    (o) =>
-      o.customer.toLowerCase().includes(search.value.toLowerCase()) ||
-      o.id.toString().includes(search.value),
-  );
-});
+onMounted(loadOrders);
 
-// STATUS STYLE
 function statusClass(status: string) {
   switch (status) {
-    case "Pending":
+    case "pending":
       return "bg-yellow-100 text-yellow-600";
-    case "Shipped":
+    case "processing":
+      return "bg-purple-100 text-purple-600";
+    case "shipped":
       return "bg-blue-100 text-blue-600";
-    case "Delivered":
+    case "delivered":
       return "bg-green-100 text-green-600";
-    case "Cancelled":
+    case "cancelled":
       return "bg-red-100 text-red-600";
     default:
       return "bg-gray-100 text-gray-600";
   }
 }
 
-// ACTIONS
-function viewOrder(order: Order) {
-  console.log("View order:", order);
-}
-
-function markShipped(id: number) {
-  const order = orders.value.find((o) => o.id === id);
-  if (order) order.status = "Shipped";
-}
-
-function cancelOrder(id: number) {
-  const order = orders.value.find((o) => o.id === id);
-  if (order) order.status = "Cancelled";
+async function onStatusChange(order: AdminOrder, event: Event) {
+  const status = (event.target as HTMLSelectElement).value as Order["status"];
+  const previous = order.status;
+  order.status = status;
+  try {
+    await updateOrderStatus(order.id, status);
+  } catch {
+    order.status = previous;
+    error.value = "Failed to update order status.";
+  }
 }
 </script>

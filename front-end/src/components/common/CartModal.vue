@@ -115,6 +115,7 @@
         <button
           class="w-full gradient-primary text-white py-3 rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
           :disabled="cartStore.count() === 0"
+          @click="checkout"
         >
           Proceed to Checkout
         </button>
@@ -128,10 +129,14 @@ import { computed } from "vue";
 import { useCartStore } from "../../stores/cart";
 
 const cartStore = useCartStore();
-const emit = defineEmits<{ (e: "close-cart"): void }>();
+const emit = defineEmits<{ (e: "close-cart"): void; (e: "open-checkout"): void }>();
 
 function close() {
   emit("close-cart");
+}
+
+function checkout() {
+  emit("open-checkout");
 }
 
 // Computed total price

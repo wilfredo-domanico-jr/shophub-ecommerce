@@ -27,6 +27,8 @@
       />
     </div>
 
+    <p v-if="error" class="text-red-500 text-sm">{{ error }}</p>
+
     <!-- Table -->
     <div class="bg-white rounded-xl shadow overflow-x-auto">
       <table class="w-full text-sm min-w-[600px]">
@@ -51,19 +53,19 @@
             </td>
 
             <!-- Product count -->
-            <td>{{ c.products }} items</td>
+            <td>{{ c.products_count }} items</td>
 
             <!-- Status -->
             <td>
               <span
                 class="px-2 py-1 text-xs rounded-full"
                 :class="
-                  c.active
+                  c.is_active
                     ? 'bg-green-100 text-green-600'
                     : 'bg-gray-100 text-gray-500'
                 "
               >
-                {{ c.active ? "Active" : "Inactive" }}
+                {{ c.is_active ? "Active" : "Inactive" }}
               </span>
             </td>
 
@@ -105,6 +107,8 @@
           {{ isEdit ? "Edit Category" : "Add Category" }}
         </h2>
 
+        <p v-if="formError" class="text-red-500 text-sm">{{ formError }}</p>
+
         <!-- Name -->
         <input
           v-model="form.name"
@@ -115,7 +119,7 @@
 
         <!-- Active -->
         <label class="flex items-center gap-2 text-sm">
-          <input type="checkbox" v-model="form.active" />
+          <input type="checkbox" v-model="form.is_active" />
           Active
         </label>
 
@@ -138,79 +142,89 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
-
-interface Category {
-  id: number;
-  name: string;
-  products: number;
-  active: boolean;
-}
+import { ref, computed, onMounted } from "vue";
+import type { Category } from "../../services/categories";
+import {
+  getAdminCategories,
+  createCategory,
+  updateCategory,
+  deleteCategory,
+} from "../../services/admin/categories";
 
 const search = ref("");
+const categories = ref<Category[]>([]);
+const error = ref("");
+const formError = ref("");
 
-const categories = ref<Category[]>([
-  { id: 1, name: "Shoes", products: 12, active: true },
-  { id: 2, name: "Shirts", products: 8, active: true },
-  { id: 3, name: "Accessories", products: 5, active: false },
-]);
+async function loadCategories() {
+  error.value = "";
+  try {
+    categories.value = await getAdminCategories();
+  } catch {
+    error.value = "Failed to load categories.";
+  }
+}
+
+onMounted(loadCategories);
 
 // modal
 const showModal = ref(false);
 const isEdit = ref(false);
 
-const form = ref<Category>({
-  id: 0,
-  name: "",
-  products: 0,
-  active: true,
-});
+type CategoryForm = { id: number; name: string; is_active: boolean };
 
-// FILTER
+const form = ref<CategoryForm>({ id: 0, name: "", is_active: true });
+
 const filteredCategories = computed(() => {
   return categories.value.filter((c) =>
     c.name.toLowerCase().includes(search.value.toLowerCase()),
   );
 });
 
-// OPEN ADD
 function openAdd() {
   isEdit.value = false;
-  form.value = { id: 0, name: "", products: 0, active: true };
+  formError.value = "";
+  form.value = { id: 0, name: "", is_active: true };
   showModal.value = true;
 }
 
-// OPEN EDIT
 function openEdit(cat: Category) {
   isEdit.value = true;
-  form.value = { ...cat };
+  formError.value = "";
+  form.value = { id: cat.id, name: cat.name, is_active: cat.is_active };
   showModal.value = true;
 }
 
-// CLOSE
 function closeModal() {
   showModal.value = false;
 }
 
-// SAVE
-function save() {
-  if (!form.value.name) return;
-
-  if (isEdit.value) {
-    const i = categories.value.findIndex((c) => c.id === form.value.id);
-    if (i !== -1) categories.value[i] = { ...form.value };
-  } else {
-    categories.value.push({
-      ...form.value,
-      id: Date.now(),
-    });
+async function save() {
+  if (!form.value.name) {
+    formError.value = "Name is required.";
+    return;
   }
 
-  closeModal();
+  try {
+    if (isEdit.value) {
+      await updateCategory(form.value.id, { name: form.value.name, is_active: form.value.is_active });
+    } else {
+      await createCategory({ name: form.value.name, is_active: form.value.is_active });
+    }
+    closeModal();
+    await loadCategories();
+  } catch {
+    formError.value = "Failed to save category.";
+  }
 }
 
-// DELETE
-function remove(id: number) {
-  categories.value = categories.value.filter((c) => c.id !== id);
+async function remove(id: number) {
+  if (!confirm("Delete this category?")) return;
+  try {
+    await deleteCategory(id);
+    await loadCategories();
+  } catch (e: any) {
+    error.value = e?.response?.data?.message ?? "Failed to delete category.";
+  }
 }
 </script>
