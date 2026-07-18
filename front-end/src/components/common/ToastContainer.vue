@@ -1,6 +1,6 @@
 <template>
   <div
-    class="fixed top-4 right-4 z-[100] flex w-80 max-w-[calc(100vw-2rem)] flex-col gap-2"
+    class="fixed bottom-4 right-4 z-[100] flex w-80 max-w-[calc(100vw-2rem)] flex-col gap-2"
     aria-live="polite"
   >
     <TransitionGroup name="toast">
@@ -44,7 +44,7 @@ const typeClasses: Record<ToastType, string> = {
 }
 .toast-enter-from {
   opacity: 0;
-  transform: translateY(-0.5rem);
+  transform: translateY(0.5rem);
 }
 .toast-leave-to {
   opacity: 0;
