@@ -24,7 +24,6 @@ class User extends Authenticatable
         'phone',
         'default_shipping_address',
         'password',
-        'is_admin',
     ];
 
     /**

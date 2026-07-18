@@ -16,13 +16,16 @@ class AdminUserSeeder extends Seeder
         $email = config('demo.admin_email');
         $password = config('demo.admin_password');
 
-        User::firstOrCreate(
+        $user = User::firstOrCreate(
             ['email' => $email],
             [
                 'name' => 'ShopHub Admin',
                 'password' => Hash::make($password),
-                'is_admin' => true,
             ]
         );
+
+        if (!$user->is_admin) {
+            $user->forceFill(['is_admin' => true])->save();
+        }
     }
 }

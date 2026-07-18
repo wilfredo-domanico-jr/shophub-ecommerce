@@ -36,12 +36,13 @@ class UserController extends Controller
             'password' => ['required', 'string', 'min:6'],
         ]);
 
-        $user = User::create([
+        $user = new User([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
-            'is_admin' => true,
         ]);
+        $user->is_admin = true;
+        $user->save();
 
         return response()->json($user, 201);
     }

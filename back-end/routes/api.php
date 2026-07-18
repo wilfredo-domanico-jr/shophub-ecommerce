@@ -26,8 +26,8 @@ Route::get('/products/{product:slug}', [ProductController::class, 'show']);
 Route::post('/orders/track', [OrderController::class, 'track']);
 
 // Auth
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 Route::post('/forgot-password', [PasswordResetController::class, 'forgot'])->middleware('throttle:5,1');
 Route::post('/reset-password', [PasswordResetController::class, 'reset'])->middleware('throttle:5,1');
 
