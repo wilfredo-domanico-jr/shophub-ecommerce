@@ -98,13 +98,11 @@
 import { ref, computed, watch, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { getProduct, type Product } from "../services/products";
-import { useCartStore } from "../stores/cart";
-import { useToastStore } from "../stores/toast";
+import { useAddToCart } from "../composables/useAddToCart";
 import StarRating from "../components/common/StarRating.vue";
 
 const route = useRoute();
-const cartStore = useCartStore();
-const toast = useToastStore();
+const { addToCart: addItem } = useAddToCart();
 
 const product = ref<Product | null>(null);
 const loading = ref(false);
@@ -131,10 +129,10 @@ async function loadProduct() {
   }
 }
 
-function addToCart() {
+async function addToCart() {
   if (!product.value) return;
 
-  cartStore.addItem(
+  const ok = await addItem(
     {
       id: product.value.id,
       name: product.value.name,
@@ -143,10 +141,10 @@ function addToCart() {
     },
     quantity.value
   );
+  if (!ok) return;
 
   added.value = true;
   setTimeout(() => (added.value = false), 1500);
-  toast.success(`${product.value.name} added to cart.`);
 }
 
 watch(() => route.params.slug, loadProduct);

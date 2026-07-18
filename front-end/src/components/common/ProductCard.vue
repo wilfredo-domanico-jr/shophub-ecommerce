@@ -58,13 +58,11 @@
 <script lang="ts" setup>
 import { computed } from "vue";
 import StarRating from "./StarRating.vue";
-import { useCartStore } from "../../stores/cart";
-import { useToastStore } from "../../stores/toast";
+import { useAddToCart } from "../../composables/useAddToCart";
 import type { Product } from "../../services/products";
 
 const props = defineProps<{ product: Product }>();
-const cartStore = useCartStore();
-const toast = useToastStore();
+const { addToCart: addItem } = useAddToCart();
 
 const discount = computed(() => {
   const price = Number(props.product.price);
@@ -73,12 +71,11 @@ const discount = computed(() => {
 });
 
 function addToCart() {
-  cartStore.addItem({
+  addItem({
     id: props.product.id,
     name: props.product.name,
     price: Number(props.product.price),
     image: props.product.image ?? "",
   });
-  toast.success(`${props.product.name} added to cart.`);
 }
 </script>

@@ -56,11 +56,9 @@
 <script lang="ts" setup>
 import StarRating from "../common/StarRating.vue";
 
-import { useCartStore } from "../../stores/cart";
-import { useToastStore } from "../../stores/toast";
+import { useAddToCart } from "../../composables/useAddToCart";
 
-const cartStore = useCartStore();
-const toast = useToastStore();
+const { addToCart: addItem } = useAddToCart();
 
 interface TrendingCard {
   id: number;
@@ -79,7 +77,6 @@ const props = defineProps<{
 }>();
 
 function addToCart() {
-  cartStore.addItem(props.trending);
-  toast.success(`${props.trending.name} added to cart.`);
+  addItem(props.trending);
 }
 </script>
