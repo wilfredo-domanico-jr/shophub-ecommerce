@@ -75,4 +75,35 @@ describe("cart store", () => {
 
     expect(cart.total()).toBe(350);
   });
+
+  it("checkoutItems() returns the cart when no buy-now item is set", () => {
+    const cart = useCartStore();
+    cart.addItem({ id: 1, name: "Widget", price: 100 });
+
+    expect(cart.checkoutItems()).toEqual(cart.items);
+  });
+
+  it("buy-now checks out only that item, without touching the cart", () => {
+    const cart = useCartStore();
+    cart.addItem({ id: 1, name: "Widget", price: 100 }, 2);
+    cart.setBuyNow({ id: 2, name: "Gadget", price: 50 }, 3);
+
+    expect(cart.checkoutItems()).toHaveLength(1);
+    expect(cart.checkoutItems()[0]).toMatchObject({ id: 2, quantity: 3 });
+    expect(cart.checkoutTotal()).toBe(150);
+    expect(cart.items).toHaveLength(1); // cart untouched
+    expect(cart.total()).toBe(200);
+  });
+
+  it("clearBuyNow() falls back to checking out the cart", () => {
+    const cart = useCartStore();
+    cart.addItem({ id: 1, name: "Widget", price: 100 });
+    cart.setBuyNow({ id: 2, name: "Gadget", price: 50 });
+
+    cart.clearBuyNow();
+
+    expect(cart.buyNowItem).toBeNull();
+    expect(cart.checkoutItems()).toEqual(cart.items);
+    expect(cart.checkoutTotal()).toBe(100);
+  });
 });

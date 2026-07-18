@@ -12,9 +12,7 @@ export function useAddToCart() {
   const route = useRoute();
   const router = useRouter();
 
-  async function addToCart<T extends { id: number; name: string }>(
-    product: T,
-    quantity = 1,
+  async function ensureSignedIn(
     guestMessage = "Sign in to add items to your cart."
   ): Promise<boolean> {
     if (!auth.initialized) {
@@ -30,10 +28,22 @@ export function useAddToCart() {
       return false;
     }
 
+    return true;
+  }
+
+  async function addToCart<T extends { id: number; name: string }>(
+    product: T,
+    quantity = 1,
+    guestMessage = "Sign in to add items to your cart."
+  ): Promise<boolean> {
+    if (!(await ensureSignedIn(guestMessage))) {
+      return false;
+    }
+
     cartStore.addItem(product, quantity);
     toast.success(`${product.name} added to cart.`);
     return true;
   }
 
-  return { addToCart };
+  return { addToCart, ensureSignedIn };
 }

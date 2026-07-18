@@ -80,7 +80,7 @@
         <div class="bg-gray-50 border rounded-lg p-3 text-sm">
           <div class="flex justify-between font-semibold">
             <span>Total</span>
-            <span class="text-orange-500">₱{{ cartStore.total().toLocaleString() }}</span>
+            <span class="text-orange-500">₱{{ cartStore.checkoutTotal().toLocaleString() }}</span>
           </div>
           <p class="text-xs text-gray-500 mt-1">Payment: Cash on Delivery</p>
         </div>
@@ -142,16 +142,25 @@ async function submit() {
   submitting.value = true;
 
   try {
+    const wasBuyNow = !!cartStore.buyNowItem;
+
     const order = await createOrder({
       ...form.value,
-      items: cartStore.items.map((item) => ({
+      items: cartStore.checkoutItems().map((item) => ({
         product_id: item.id,
         quantity: item.quantity || 1,
       })),
     });
 
     placedOrder.value = order;
-    cartStore.items = [];
+
+    // Only clear what was purchased: a buy-now order leaves the cart intact.
+    if (wasBuyNow) {
+      cartStore.clearBuyNow();
+    } else {
+      cartStore.items = [];
+    }
+
     emit("order-placed");
   } catch (e: any) {
     error.value =

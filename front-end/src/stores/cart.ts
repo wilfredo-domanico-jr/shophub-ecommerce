@@ -4,6 +4,25 @@ import { ref } from 'vue';
 export const useCartStore = defineStore('cart', () => {
   const items = ref<any[]>([]); // Cart items
 
+  // "Buy now" checks out a single item without touching the cart.
+  const buyNowItem = ref<any | null>(null);
+
+  function setBuyNow(product: any, quantity = 1) {
+    buyNowItem.value = { ...product, quantity };
+  }
+
+  function clearBuyNow() {
+    buyNowItem.value = null;
+  }
+
+  function checkoutItems() {
+    return buyNowItem.value ? [buyNowItem.value] : items.value;
+  }
+
+  function checkoutTotal() {
+    return checkoutItems().reduce((sum, item) => sum + item.price * (item.quantity || 1), 0);
+  }
+
   function addItem(product: any, quantity = 1) {
     const existing = items.value.find(i => i.id === product.id);
     if (existing) {
@@ -30,5 +49,17 @@ export const useCartStore = defineStore('cart', () => {
     return items.value.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0);
   }
 
-  return { items, addItem, removeItem, updateQuantity, count, total };
+  return {
+    items,
+    buyNowItem,
+    setBuyNow,
+    clearBuyNow,
+    checkoutItems,
+    checkoutTotal,
+    addItem,
+    removeItem,
+    updateQuantity,
+    count,
+    total,
+  };
 });

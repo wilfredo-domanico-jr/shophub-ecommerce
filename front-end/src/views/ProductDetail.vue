@@ -106,11 +106,13 @@ import { ref, computed, watch, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { getProduct, type Product } from "../services/products";
 import { useAddToCart } from "../composables/useAddToCart";
+import { useCartStore } from "../stores/cart";
 import StarRating from "../components/common/StarRating.vue";
 
 const route = useRoute();
 const router = useRouter();
-const { addToCart: addItem } = useAddToCart();
+const cartStore = useCartStore();
+const { addToCart: addItem, ensureSignedIn } = useAddToCart();
 
 const product = ref<Product | null>(null);
 const loading = ref(false);
@@ -157,8 +159,10 @@ async function addToCart() {
 
 async function buyNow() {
   if (!product.value) return;
+  if (!(await ensureSignedIn("Sign in to buy this item."))) return;
 
-  const ok = await addItem(
+  // Buy-now checks out only this item, without touching the cart.
+  cartStore.setBuyNow(
     {
       id: product.value.id,
       name: product.value.name,
@@ -167,7 +171,6 @@ async function buyNow() {
     },
     quantity.value
   );
-  if (!ok) return;
 
   // ?checkout=1 is picked up by DefaultLayout, which opens the checkout modal.
   router.push({ path: route.path, query: { checkout: "1" } });

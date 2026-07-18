@@ -67,11 +67,14 @@ function openCheckout() {
     return;
   }
 
+  // Cart-initiated checkout must not pick up a stale buy-now item.
+  cartStore.clearBuyNow();
   showCheckoutModal.value = true;
 }
 
 function closeCheckout() {
   showCheckoutModal.value = false;
+  cartStore.clearBuyNow();
 }
 
 watch(
@@ -79,7 +82,7 @@ watch(
   (flag) => {
     if (flag !== "1") return;
 
-    if (auth.isLoggedIn && cartStore.items.length > 0) {
+    if (auth.isLoggedIn && (cartStore.buyNowItem || cartStore.items.length > 0)) {
       showCheckoutModal.value = true;
     }
 
