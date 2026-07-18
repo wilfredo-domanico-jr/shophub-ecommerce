@@ -1,6 +1,6 @@
 # 🛒 ShopHub — E‑Commerce Platform
 
-ShopHub is a full-stack **e‑commerce web application** built with a **Laravel REST API** and a **Vue 3 SPA**. It's a portfolio project demonstrating a real, working store: a browsable catalog, guest checkout, order tracking, and a full admin panel — built from the ground up with an industry-standard, decoupled architecture.
+ShopHub is a full-stack **e‑commerce web application** built with a **Laravel REST API** and a **Vue 3 SPA**. It's a portfolio project demonstrating a real, working store: a browsable catalog, customer accounts with cart and checkout, order tracking, and a full admin panel — built from the ground up with an industry-standard, decoupled architecture.
 
 ---
 
@@ -55,12 +55,14 @@ Database (MySQL)
 
 ## 🔐 Authentication
 
-Only **admins** have accounts — the storefront itself is guest-first:
+Both **customers** and **admins** have accounts, authenticated with Sanctum bearer tokens:
 
-- Admins log in at `/admin/login` via Sanctum bearer tokens
-- Customers check out as guests (name, email, phone, address) — no registration required
-- Guest orders are tracked later via **order number + email** lookup
-- Admin routes are gated both by a Laravel middleware (`EnsureUserIsAdmin`) and a Vue Router navigation guard
+- Customers register and sign in at `/login`; adding to cart and checking out require an account (guests are redirected to login and resume where they left off — including reopening checkout)
+- Customer account area: profile with saved contact number & default shipping address (pre-fills checkout), password change, and order history at `/account`
+- **Password reset** via an emailed link — single-use, hashed, expiring tokens
+- Auth endpoints (`login`, `register`, `forgot/reset-password`) are **rate-limited** against brute force and enumeration
+- Admins log in at `/admin/login`; admin routes are gated both by a Laravel middleware (`EnsureUserIsAdmin`) and a Vue Router navigation guard
+- Legacy guest orders remain trackable via **order number + email** lookup (the tracking response is deliberately trimmed to status + items — no personal details)
 
 ---
 
@@ -70,12 +72,14 @@ Only **admins** have accounts — the storefront itself is guest-first:
 
 - Home page with hero carousel, flash sale section, dynamic category bar, and trending products
 - Full **product listing page** — search, category filter, sort, pagination
-- **Product detail page** with quantity picker and add-to-cart
+- **Product detail page** with quantity picker, add-to-cart, and **Buy Now** (single-item express checkout that leaves the cart untouched)
 - Live **search autosuggest** in the header
-- Cart → **guest checkout** (Cash on Delivery) → order confirmation with order number
-- **Order tracking** by order number + email, from the header, footer, or a dedicated modal
+- **Customer accounts** — registration, login, password reset via email, profile with saved contact & shipping details, and a My Orders history
+- Cart → **checkout** (Cash on Delivery, sign-in required, form pre-filled from the profile) → order confirmation with order number
+- **Toast notifications** for cart, auth, and admin actions
+- **Order tracking** by order number + email for guests and legacy orders (header button shown to guests only — signed-in customers use My Orders)
 - Real content pages: Help Center (FAQ), Returns & Refunds, Shipping Info, Our Story, Careers, Press & Media, Privacy Policy
-- Order confirmation & status-update **emails**, sent via a queued Laravel Mailable
+- Order confirmation, status-update & password-reset **emails**, sent via queued Laravel Mailables
 
 ### 🛠 Admin Panel
 
@@ -83,7 +87,7 @@ Only **admins** have accounts — the storefront itself is guest-first:
 - **Products** — full CRUD, drag-and-drop image upload, search, pagination
 - **Categories** — full CRUD with icon & brand-color pickers
 - **Orders** — searchable/paginated list, inline status updates, full order-detail view
-- **Admins** — manage who can access the admin panel
+- **Users** — searchable admin/customer list with role filter; create, edit, and remove accounts
 - Consistent ShopHub branding throughout (icons, gradients, empty/loading states)
 
 ---
@@ -93,22 +97,23 @@ Only **admins** have accounts — the storefront itself is guest-first:
 ### Backend (Laravel) — see [`back-end/README.md`](back-end/README.md)
 
 ```
-/app/Http/Controllers/Api      # public, guest, and admin API controllers
+/app/Http/Controllers/Api      # public, auth/profile, and admin API controllers
 /app/Models                    # User, Category, Product, Order, OrderItem
-/app/Mail                      # order confirmation & status-update Mailables
+/app/Mail                      # order, status-update & password-reset Mailables
 /database/migrations           # schema
-/database/seeders              # demo categories, products, admin user
+/database/seeders              # demo categories, products, admin (+ demo customer)
 /routes/api.php                # all API routes
 ```
 
 ### Frontend (Vue) — see [`front-end/README.md`](front-end/README.md)
 
 ```
-/src/views                     # Home, Shop, ProductDetail, InfoPage, Admin/*
-/src/components                # common + admin components
-/src/stores                    # Pinia stores (auth, cart)
+/src/views                     # Home, Shop, ProductDetail, Auth/*, Account/*, Admin/*
+/src/components                # common + account + admin components
+/src/stores                    # Pinia stores (auth, cart, toast)
+/src/composables               # shared logic (auth-gated add-to-cart)
 /src/services                  # typed API clients
-/src/router                    # routes + auth guard
+/src/router                    # routes + auth guards
 ```
 
 ### Root
@@ -169,15 +174,15 @@ Seeded admin login: `admin@shophub.test` / `password`. See [`back-end/README.md`
 
 To stop: `docker compose down` (add `-v` to also wipe the database volume).
 
-**Demo mode:** the Docker Compose setup enables `DEMO_MODE=true` by default, which adds a "Try Demo Admin Login" button to `/admin/login` — one click signs you in as the seeded admin, no credentials needed. See [`back-end/README.md`](back-end/README.md#-demo-mode) to toggle it locally.
+**Demo mode:** set `DEMO_MODE=true` in the root `.env` (it's **off by default**) to add one-click "Try Demo Admin Login" and "Try Demo Customer Login" buttons to `/admin/login` and `/login` — portfolio visitors can explore both sides of the app without credentials. The demo customer account is only seeded while demo mode is on. See [`back-end/README.md`](back-end/README.md#-demo-mode) for details.
 
 ---
 
 ## 🧪 Testing
 
 ```bash
-cd back-end && php artisan test     # 50+ feature & unit tests (auth, catalog, admin CRUD, checkout, tracking)
-cd front-end && npm run test        # Vitest: Pinia stores + components
+cd back-end && php artisan test     # 75+ feature & unit tests (auth, accounts, password reset, catalog, admin CRUD, checkout, tracking)
+cd front-end && npm run test        # Vitest: Pinia stores (auth, cart incl. buy-now) + components
 ```
 
 ## ⚙️ Continuous Integration
@@ -210,7 +215,7 @@ Two GitHub Actions workflows ([`.github/workflows`](.github/workflows)) run on e
 
 - Real payment gateway integration (currently Cash on Delivery only)
 - Product reviews & ratings
-- Customer accounts (currently guest-only)
+- Wishlist / saved items
 - Discount and voucher system
 
 ---

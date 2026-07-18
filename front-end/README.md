@@ -8,7 +8,7 @@ This is the Vue 3 storefront and admin panel for [ShopHub](../README.md) — a f
 
 - **Vue 3** + **TypeScript** (`<script setup>`)
 - **Vite** — build tool
-- **Pinia** — state management (auth, cart)
+- **Pinia** — state management (auth, cart, toasts)
 - **Vue Router** — routing + admin auth guard
 - **Tailwind CSS** — styling, with a centralized brand theme
 - **Axios** — typed API service layer
@@ -31,10 +31,13 @@ Centralized in `tailwind.config.js` and `src/assets/main.css`:
 
 - Home — hero carousel, flash sale, dynamic category bar, shop-by-category, trending products
 - `/products` — searchable, filterable, sortable, paginated product listing
-- `/products/:slug` — product detail with quantity picker & add-to-cart
+- `/products/:slug` — product detail with quantity picker, add-to-cart & **Buy Now** (single-item checkout, cart untouched)
 - Live search autosuggest in the header (`SearchAutosuggest.vue`)
-- Cart → guest checkout (`CheckoutModal.vue`) → order confirmation
-- Order tracking modal (order number + email)
+- **Customer accounts** — `/login`, `/register`, `/forgot-password`, `/reset-password`, plus `/account` (profile) and `/account/orders` (order history), all backed by router guards (`requiresAuth` / `guestOnly`)
+- Add-to-cart and checkout require sign-in — guests are redirected to `/login?redirect=...` and resume where they left off (a pending checkout reopens automatically via `?checkout=1`)
+- Cart → checkout (`CheckoutModal.vue`, pre-filled from the saved profile) → order confirmation
+- Global **toast notifications** (`stores/toast.ts` + `ToastContainer.vue`) for cart, auth, and admin feedback
+- Order tracking modal (order number + email) — header entry point shown to guests only
 - Content pages: `/help-center`, `/returns-refunds`, `/shipping-info`, `/our-story`, `/careers`, `/press-media`, `/privacy-policy` (driven by `src/data/infoPages.ts`)
 
 ### Admin panel (`/admin`)
@@ -44,7 +47,7 @@ Centralized in `tailwind.config.js` and `src/assets/main.css`:
 - Products — CRUD, drag-and-drop image upload, search, pagination
 - Categories — CRUD with icon/color pickers
 - Orders — searchable/paginated list, inline status updates, full order-detail modal
-- Admins — manage who can log in to the admin panel
+- Users — searchable admin/customer list with role filter; create, edit, remove
 
 ---
 
@@ -52,14 +55,16 @@ Centralized in `tailwind.config.js` and `src/assets/main.css`:
 
 ```
 src/
-  views/                  # Home, Shop, ProductDetail, InfoPage, Auth/Login, Admin/*
+  views/                  # Home, Shop, ProductDetail, InfoPage, Auth/*, Account/*, Admin/*
   components/
-    common/               # Header, Footer, Cart/Checkout/OrderTracking modals, ProductCard, Pagination, etc.
+    common/               # Header, Footer, Cart/Checkout/OrderTracking modals, ToastContainer, ProductCard, etc.
     home/                 # homepage-specific sections
+    account/              # AccountNav
     admin/                # ImageDropzone
-  stores/                 # Pinia: auth.ts, cart.ts
-  services/               # typed Axios clients: products, categories, orders, admin/*
-  router/                 # routes + auth guard
+  stores/                 # Pinia: auth.ts, cart.ts (incl. buy-now), toast.ts
+  composables/            # useAddToCart (auth-gated add-to-cart / buy-now guard)
+  services/               # typed Axios clients: products, categories, orders, account, config, admin/*
+  router/                 # routes + auth guards (requiresAuth, requiresAdmin, guestOnly)
   data/                   # static content (info pages)
 ```
 
@@ -105,7 +110,7 @@ npm run test:watch      # watch mode
 npm run test:coverage   # with coverage (v8)
 ```
 
-Tests live alongside the code they cover, in `__tests__/` folders (e.g. `src/stores/__tests__/cart.spec.ts`). Currently covers the `cart` and `auth` Pinia stores and the `StarRating`/`Pagination` components.
+Tests live alongside the code they cover, in `__tests__/` folders (e.g. `src/stores/__tests__/cart.spec.ts`). Currently covers the `cart` (including buy-now semantics) and `auth` Pinia stores and the `StarRating`/`Pagination` components.
 
 ---
 

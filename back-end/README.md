@@ -16,7 +16,12 @@ This is the Laravel REST API powering [ShopHub](../README.md) — it serves JSON
 
 ## 🔐 Authentication
 
-Only admins have accounts. Login issues a Sanctum personal access token, sent as a `Bearer` header on every authenticated request. Admin-only routes are additionally gated by an `EnsureUserIsAdmin` middleware.
+Customers and admins share one `users` table (an `is_admin` flag separates them). Login and registration issue a Sanctum personal access token, sent as a `Bearer` header on every authenticated request. Admin-only routes are additionally gated by an `EnsureUserIsAdmin` middleware.
+
+- Auth endpoints (`login`, `register`, `forgot-password`, `reset-password`) are throttled (5/min)
+- Password reset uses hashed, single-use, expiring tokens; a successful reset revokes all of the user's tokens
+- Changing the password revokes every token except the current session's
+- `is_admin` is **not** mass-assignable — it's set explicitly in the few places allowed to grant it
 
 ---
 
@@ -31,19 +36,30 @@ GET  /api/products                 # ?search=&category=&sort=&featured=&flash_sa
 GET  /api/products/{slug}
 ```
 
-### Guest checkout & tracking
+### Order tracking (public, for guests & legacy orders)
 
 ```
-POST /api/orders                   # create order from cart (stock-locked, sends confirmation email)
-POST /api/orders/track             # lookup by order_number + email
+POST /api/orders/track             # lookup by order_number + email — returns status + items only, no personal details
 ```
 
-### Auth
+### Auth (throttled)
 
 ```
+POST /api/register
 POST /api/login
-POST /api/logout                   # auth:sanctum
-GET  /api/me                       # auth:sanctum
+POST /api/forgot-password          # emails a reset link; response never reveals whether the email exists
+POST /api/reset-password
+```
+
+### Customer account (`auth:sanctum`)
+
+```
+POST  /api/logout
+GET   /api/me
+POST  /api/orders                  # checkout (stock-locked, server-side totals, sends confirmation email)
+GET   /api/my/orders               # paginated order history
+PATCH /api/profile                 # name, email, phone, default shipping address
+PATCH /api/profile/password        # requires current password
 ```
 
 ### Admin (`auth:sanctum` + `admin` middleware)
@@ -66,10 +82,10 @@ PATCH  /api/admin/orders/{order}/status   # also sends status-update email
 ## 🗄 Data Model
 
 ```
-User        — is_admin flag; only admins have accounts
+User        — customers & admins (is_admin flag); phone + default shipping address
 Category    — name, slug, icon, color_class (brand gradient), product count
 Product     — belongs to Category; price, original_price, stock, flash-sale/featured flags
-Order       — guest customer details, order_number, status, payment method/status, totals
+Order       — belongs to User (nullable — legacy guest orders); order_number, status, payment, totals
 OrderItem   — snapshot of product name/price at time of order
 ```
 
@@ -77,7 +93,7 @@ OrderItem   — snapshot of product name/price at time of order
 
 ## 📧 Email
 
-Order confirmation and status-update emails are sent via queued Laravel Mailables (`app/Mail/OrderConfirmationMail.php`, `OrderStatusUpdatedMail.php`) rendered from Markdown Blade templates.
+Order confirmation, status-update, and password-reset emails are sent via queued Laravel Mailables (`app/Mail/OrderConfirmationMail.php`, `OrderStatusUpdatedMail.php`, `PasswordResetMail.php`) rendered from Markdown Blade templates.
 
 By default `MAIL_MAILER=log` — emails are written to `storage/logs/laravel.log` instead of actually sending. To send real email (e.g. via Gmail SMTP), set in `.env`:
 
@@ -111,6 +127,7 @@ php artisan serve
 
 `php artisan migrate --seed` creates:
 - One admin user (`admin@shophub.test` / `password`)
+- A demo customer (`customer@shophub.test` / `password`) — **only when `DEMO_MODE=true`**
 - 20 demo categories
 - ~15 demo products (some featured, some flash-sale)
 
@@ -152,15 +169,19 @@ Rebuild after changing PHP dependencies or the Dockerfile: `docker compose build
 
 ## 🎭 Demo Mode
 
-Set these in `.env` (already enabled by default in `docker-compose.yml`) to add a one-click "Try Demo Admin Login" button to the frontend's `/admin/login` page — handy for letting portfolio visitors explore the admin panel without needing credentials:
+Set these in `.env` (**off by default** — everywhere, including `docker-compose.yml`) to add one-click "Try Demo Admin Login" / "Try Demo Customer Login" buttons to the frontend's `/admin/login` and `/login` pages — handy for letting portfolio visitors explore both sides of the app without needing credentials:
 
 ```
 DEMO_MODE=true
 DEMO_ADMIN_EMAIL=admin@shophub.test
 DEMO_ADMIN_PASSWORD=password
+DEMO_CUSTOMER_EMAIL=customer@shophub.test
+DEMO_CUSTOMER_PASSWORD=password
 ```
 
-`GET /api/config` is a public endpoint that exposes these values to the frontend **only when `DEMO_MODE=true`** — with it off (the default for `.env.example`), the endpoint just returns `{"demo_mode": false}` and reveals nothing. `AdminUserSeeder` reads the same two env vars, so the seeded admin account always matches whatever demo credentials are configured.
+`GET /api/config` is a public endpoint that exposes these values to the frontend **only when `DEMO_MODE=true`** — with it off, the endpoint just returns `{"demo_mode": false}` and reveals nothing. `AdminUserSeeder` and `DemoCustomerSeeder` read the same env vars, so the seeded demo accounts always match whatever credentials are configured (the demo customer is only seeded while demo mode is on).
+
+> ⚠️ Demo mode publishes working credentials on a public endpoint by design. Never enable it on a deployment whose admin account can reach real data.
 
 ---
 
@@ -170,12 +191,13 @@ DEMO_ADMIN_PASSWORD=password
 php artisan test
 ```
 
-50+ feature and unit tests covering:
-- Auth (login/logout/me, admin-vs-guest access to admin routes)
+75+ feature and unit tests covering:
+- Auth (register/login/logout/me, admin-vs-customer access to admin routes)
+- Customer accounts (profile updates, password change, password reset flow, order history isolation)
 - Public catalog (category/product filtering, search, sort, active-only visibility)
-- Admin CRUD (categories, products, admin users) including validation and authorization
+- Admin CRUD (categories, products, users) including validation and authorization
 - Dashboard stats aggregation
-- Guest checkout (including stock-locking against overselling) and order tracking
+- Checkout (including stock-locking against overselling) and order tracking (including its trimmed, PII-free response)
 - Model behavior (`Order` number generation/uniqueness, `Product` scopes)
 
 Tests run against an in-memory SQLite database (configured in `phpunit.xml`), so no database setup is needed to run them — including in CI.
