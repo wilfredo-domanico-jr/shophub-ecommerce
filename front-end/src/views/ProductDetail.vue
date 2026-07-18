@@ -82,10 +82,17 @@
             </div>
 
             <button
-              class="flex-1 gradient-primary text-white py-3 rounded-lg font-semibold hover:opacity-90 transition"
+              class="flex-1 border-2 border-orange-500 text-orange-500 py-3 rounded-lg font-semibold hover:bg-orange-50 transition"
               @click="addToCart"
             >
               {{ added ? "Added! ✓" : "Add to Cart" }}
+            </button>
+
+            <button
+              class="flex-1 gradient-primary text-white py-3 rounded-lg font-semibold hover:opacity-90 transition"
+              @click="buyNow"
+            >
+              Buy Now
             </button>
           </div>
         </div>
@@ -96,12 +103,13 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { getProduct, type Product } from "../services/products";
 import { useAddToCart } from "../composables/useAddToCart";
 import StarRating from "../components/common/StarRating.vue";
 
 const route = useRoute();
+const router = useRouter();
 const { addToCart: addItem } = useAddToCart();
 
 const product = ref<Product | null>(null);
@@ -145,6 +153,24 @@ async function addToCart() {
 
   added.value = true;
   setTimeout(() => (added.value = false), 1500);
+}
+
+async function buyNow() {
+  if (!product.value) return;
+
+  const ok = await addItem(
+    {
+      id: product.value.id,
+      name: product.value.name,
+      price: Number(product.value.price),
+      image: product.value.image ?? "",
+    },
+    quantity.value
+  );
+  if (!ok) return;
+
+  // ?checkout=1 is picked up by DefaultLayout, which opens the checkout modal.
+  router.push({ path: route.path, query: { checkout: "1" } });
 }
 
 watch(() => route.params.slug, loadProduct);
