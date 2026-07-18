@@ -73,6 +73,7 @@
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "../../stores/auth";
+import { useToastStore } from "../../stores/toast";
 import { getAppConfig, type AppConfig } from "../../services/config";
 import type { AxiosError } from "axios";
 
@@ -116,8 +117,9 @@ async function handleLogin() {
       password: password.value,
     });
 
+    useToastStore().success(`Welcome back, ${auth.user?.name ?? "admin"}!`);
     router.push("/admin");
-  } catch (error: any) {
+  } catch (error) {
     const err = error as AxiosError<{ message?: string }>;
 
     errorMessage.value =
@@ -127,11 +129,3 @@ async function handleLogin() {
   }
 }
 </script>
-
-<style scoped>
-.text-gradient-primary {
-  background: linear-gradient(135deg, #ff6b35 0%, #ff8c42 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-</style>

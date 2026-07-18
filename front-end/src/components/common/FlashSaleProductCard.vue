@@ -10,8 +10,7 @@
         class="w-full h-32 object-cover rounded-lg"
       />
       <div
-        class="absolute top-2 left-2 text-white text-xs font-bold px-2 py-1 rounded badge-wiggle"
-        :class="badgeClass"
+        class="absolute top-2 left-2 text-white text-xs font-bold px-2 py-1 rounded badge-wiggle bg-red-500"
       >
         -{{ product.discount }}%
       </div>
@@ -30,8 +29,7 @@
 
     <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
       <div
-        class="h-2 rounded-full"
-        :class="progressClass"
+        class="h-2 rounded-full bg-gradient-to-r from-orange-400 to-red-500"
         :style="{ width: product.progress + '%' }"
       ></div>
     </div>
@@ -54,17 +52,11 @@ interface Product {
 
 const props = defineProps<{
   product: Product;
-  badgeColor?: string; // optional badge color
-  progressColor?: string; // optional progress bar color
 }>();
 
 const emit = defineEmits<{
   (e: "select", product: Product): void;
 }>();
-
-const badgeClass = props.badgeColor || "bg-red-500";
-const progressClass =
-  props.progressColor || "bg-gradient-to-r from-orange-400 to-red-500";
 
 function handleClick() {
   emit("select", props.product);

@@ -150,6 +150,7 @@
 import { computed, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "../stores/auth";
+import { useToastStore } from "../stores/toast";
 
 const route = useRoute();
 const router = useRouter();
@@ -180,7 +181,7 @@ const navItems = [
   },
   {
     to: "/admin/users",
-    label: "Admins",
+    label: "Users",
     icon: "M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-4-4",
   },
 ];
@@ -213,6 +214,7 @@ function isActive(path: string) {
 
 async function logout() {
   await auth.logout();
+  useToastStore().info("You have been signed out.");
   router.push("/admin/login");
 }
 </script>

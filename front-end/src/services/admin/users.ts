@@ -9,7 +9,9 @@ export interface AdminUser {
   created_at: string;
 }
 
-export function getAdminUsers(params: { search?: string; page?: number } = {}) {
+export function getAdminUsers(
+  params: { search?: string; page?: number; role?: "admin" | "customer" } = {}
+) {
   return api
     .get<PaginatedResponse<AdminUser>>("/admin/users", { params })
     .then((r) => r.data);

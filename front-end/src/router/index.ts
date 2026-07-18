@@ -13,6 +13,14 @@ import InfoPage from "../views/InfoPage.vue";
 
 // Auth
 import Login from "../views/Auth/Login.vue";
+import CustomerLogin from "../views/Auth/CustomerLogin.vue";
+import Register from "../views/Auth/Register.vue";
+import ForgotPassword from "../views/Auth/ForgotPassword.vue";
+import ResetPassword from "../views/Auth/ResetPassword.vue";
+
+// Account Pages
+import AccountProfile from "../views/Account/Profile.vue";
+import MyOrders from "../views/Account/MyOrders.vue";
 
 // Admin Pages
 import AdminDashboard from "../views/Admin/Dashboard.vue";
@@ -89,6 +97,45 @@ const routes = [
         component: InfoPage,
         props: { slug: "privacy-policy" },
       },
+
+      // Customer auth
+      {
+        path: "login",
+        name: "CustomerLogin",
+        component: CustomerLogin,
+        meta: { guestOnly: true, minimalChrome: true },
+      },
+      {
+        path: "register",
+        name: "Register",
+        component: Register,
+        meta: { guestOnly: true },
+      },
+      {
+        path: "forgot-password",
+        name: "ForgotPassword",
+        component: ForgotPassword,
+        meta: { guestOnly: true },
+      },
+      {
+        path: "reset-password",
+        name: "ResetPassword",
+        component: ResetPassword,
+      },
+
+      // Customer account
+      {
+        path: "account",
+        name: "AccountProfile",
+        component: AccountProfile,
+        meta: { requiresAuth: true },
+      },
+      {
+        path: "account/orders",
+        name: "MyOrders",
+        component: MyOrders,
+        meta: { requiresAuth: true },
+      },
     ],
   },
 
@@ -161,9 +208,11 @@ const router = createRouter({
 
 router.beforeEach(async (to) => {
   const requiresAdmin = to.matched.some((record) => record.meta.requiresAdmin);
-  const isLoginPage = to.name === "Login";
+  const requiresAuth = to.matched.some((record) => record.meta.requiresAuth);
+  const guestOnly = to.matched.some((record) => record.meta.guestOnly);
+  const isAdminLoginPage = to.name === "Login";
 
-  if (!requiresAdmin && !isLoginPage) {
+  if (!requiresAdmin && !requiresAuth && !guestOnly && !isAdminLoginPage) {
     return true;
   }
 
@@ -178,8 +227,16 @@ router.beforeEach(async (to) => {
     return { name: "Login" };
   }
 
-  if (isLoginPage && auth.isAdmin) {
+  if (isAdminLoginPage && auth.isAdmin) {
     return { name: "AdminDashboard" };
+  }
+
+  if (requiresAuth && !auth.isLoggedIn) {
+    return { name: "CustomerLogin", query: { redirect: to.fullPath } };
+  }
+
+  if (guestOnly && auth.isLoggedIn) {
+    return { name: "AccountProfile" };
   }
 
   return true;

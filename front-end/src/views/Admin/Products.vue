@@ -120,7 +120,7 @@
       />
     </div>
 
-    <!-- ================= ADD / EDIT MODAL ================= -->
+    <!-- Add / edit modal -->
     <div
       v-if="showModal"
       class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
@@ -132,7 +132,6 @@
 
         <p v-if="formError" class="text-red-500 text-sm">{{ formError }}</p>
 
-        <!-- Name -->
         <div>
           <label class="block mb-1 text-sm font-medium text-gray-700">Product Name</label>
           <input
@@ -143,7 +142,6 @@
           />
         </div>
 
-        <!-- Category -->
         <div>
           <label class="block mb-1 text-sm font-medium text-gray-700">Category</label>
           <select v-model.number="form.category_id" class="w-full border p-2 rounded focus:outline-none focus:border-orange-500">
@@ -155,7 +153,6 @@
         </div>
 
         <div class="grid grid-cols-2 gap-3">
-          <!-- Price -->
           <div>
             <label class="block mb-1 text-sm font-medium text-gray-700">Price (₱)</label>
             <input
@@ -167,7 +164,6 @@
             />
           </div>
 
-          <!-- Stock -->
           <div>
             <label class="block mb-1 text-sm font-medium text-gray-700">Stock Quantity</label>
             <input
@@ -180,13 +176,11 @@
           </div>
         </div>
 
-        <!-- Image -->
         <div>
           <label class="block mb-1 text-sm font-medium text-gray-700">Product Image</label>
           <ImageDropzone v-model="form.image" />
         </div>
 
-        <!-- Buttons -->
         <div class="flex justify-end gap-2 pt-2">
           <button class="px-4 py-2 text-gray-500" @click="closeModal">
             Cancel
@@ -212,6 +206,9 @@ import { getAdminProducts, createProduct, updateProduct, deleteProduct } from ".
 import { getAdminCategories } from "../../services/admin/categories";
 import ImageDropzone from "../../components/admin/ImageDropzone.vue";
 import Pagination from "../../components/common/Pagination.vue";
+import { useToastStore } from "../../stores/toast";
+
+const toast = useToastStore();
 
 const products = ref<Product[]>([]);
 const categories = ref<Category[]>([]);
@@ -328,8 +325,10 @@ async function saveProduct() {
   try {
     if (isEdit.value) {
       await updateProduct(form.value.id, payload);
+      toast.success("Product updated.");
     } else {
       await createProduct(payload);
+      toast.success("Product created.");
     }
     closeModal();
     await loadProducts();
@@ -340,7 +339,12 @@ async function saveProduct() {
 
 async function remove(id: number) {
   if (!confirm("Delete this product?")) return;
-  await deleteProduct(id);
-  await loadProducts();
+  try {
+    await deleteProduct(id);
+    await loadProducts();
+    toast.success("Product deleted.");
+  } catch (e: any) {
+    toast.error(e?.response?.data?.message ?? "Failed to delete product.");
+  }
 }
 </script>

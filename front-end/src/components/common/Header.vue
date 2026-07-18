@@ -11,7 +11,7 @@
       </div>
 
       <!-- Desktop Search Bar -->
-      <div class="hidden md:flex flex-1 max-w-2xl mx-8">
+      <div v-if="!hideSearch" class="hidden md:flex flex-1 max-w-2xl mx-8">
         <SearchAutosuggest />
       </div>
 
@@ -69,23 +69,134 @@
             {{ cartStore.count() }}
           </span>
         </button>
+
+        <!-- Account -->
+        <template v-if="auth.initialized">
+          <router-link
+            v-if="!auth.isLoggedIn"
+            to="/login"
+            class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-orange-50 hover:text-orange-600 transition"
+            aria-label="Sign In"
+          >
+            <svg
+              class="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+              />
+            </svg>
+            <span class="text-sm font-medium whitespace-nowrap">Sign In</span>
+          </router-link>
+
+          <div v-else ref="accountMenuRef" class="relative">
+            <button
+              @click="showAccountMenu = !showAccountMenu"
+              class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-orange-50 hover:text-orange-600 transition"
+              aria-label="Account Menu"
+            >
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
+              </svg>
+              <span class="text-sm font-medium whitespace-nowrap max-w-[10rem] truncate">
+                {{ auth.user?.name }}
+              </span>
+            </button>
+
+            <div
+              v-if="showAccountMenu"
+              class="absolute right-0 mt-2 w-48 bg-white border rounded-lg shadow-lg py-1 z-50"
+            >
+              <router-link
+                to="/account"
+                class="block px-4 py-2 text-sm hover:bg-orange-50 hover:text-orange-600"
+                @click="showAccountMenu = false"
+              >
+                Profile
+              </router-link>
+              <router-link
+                to="/account/orders"
+                class="block px-4 py-2 text-sm hover:bg-orange-50 hover:text-orange-600"
+                @click="showAccountMenu = false"
+              >
+                My Orders
+              </router-link>
+              <router-link
+                v-if="auth.isAdmin"
+                to="/admin"
+                class="block px-4 py-2 text-sm hover:bg-orange-50 hover:text-orange-600"
+                @click="showAccountMenu = false"
+              >
+                Admin Dashboard
+              </router-link>
+              <button
+                class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                @click="handleLogout"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </template>
       </div>
     </div>
 
     <!-- Mobile Search -->
-    <div class="md:hidden mt-3 px-4">
+    <div v-if="!hideSearch" class="md:hidden mt-3 px-4">
       <SearchAutosuggest placeholder="Search products..." />
     </div>
   </header>
 </template>
 
 <script setup lang="ts">
+import { onBeforeUnmount, onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 import { useCartStore } from "../../stores/cart";
+import { useAuthStore } from "../../stores/auth";
+import { useToastStore } from "../../stores/toast";
 import SearchAutosuggest from "./SearchAutosuggest.vue";
 
+defineProps<{ hideSearch?: boolean }>();
+
 const cartStore = useCartStore();
+const auth = useAuthStore();
+const router = useRouter();
 const emit = defineEmits<{
   (e: "open-cart"): void;
   (e: "open-track-order"): void;
 }>();
+
+const showAccountMenu = ref(false);
+const accountMenuRef = ref<HTMLElement | null>(null);
+
+function handleClickOutside(event: MouseEvent) {
+  if (accountMenuRef.value && !accountMenuRef.value.contains(event.target as Node)) {
+    showAccountMenu.value = false;
+  }
+}
+
+onMounted(() => document.addEventListener("click", handleClickOutside));
+onBeforeUnmount(() => document.removeEventListener("click", handleClickOutside));
+
+async function handleLogout() {
+  showAccountMenu.value = false;
+  await auth.logout();
+  useToastStore().info("You have been signed out.");
+  router.push("/");
+}
 </script>

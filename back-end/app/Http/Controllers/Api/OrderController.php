@@ -26,7 +26,9 @@ class OrderController extends Controller
             'items.*.quantity' => ['required', 'integer', 'min:1'],
         ]);
 
-        $order = DB::transaction(function () use ($validated) {
+        $userId = $request->user()->id;
+
+        $order = DB::transaction(function () use ($validated, $userId) {
             $productIds = collect($validated['items'])->pluck('product_id');
 
             $products = Product::query()
@@ -67,6 +69,7 @@ class OrderController extends Controller
             $total = $subtotal + $shippingFee;
 
             $order = Order::create([
+                'user_id' => $userId,
                 'customer_name' => $validated['customer_name'],
                 'customer_email' => $validated['customer_email'],
                 'customer_phone' => $validated['customer_phone'],
@@ -100,6 +103,15 @@ class OrderController extends Controller
         Mail::to($order->customer_email)->queue(new OrderConfirmationMail($order));
 
         return response()->json($order, 201);
+    }
+
+    public function myOrders(Request $request)
+    {
+        return $request->user()
+            ->orders()
+            ->with('items')
+            ->latest()
+            ->paginate($request->integer('per_page', 10));
     }
 
     public function track(Request $request)

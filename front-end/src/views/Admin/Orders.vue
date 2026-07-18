@@ -226,6 +226,9 @@ import { ref, onMounted, watch } from "vue";
 import type { Order } from "../../services/orders";
 import { getAdminOrders, getAdminOrder, updateOrderStatus } from "../../services/admin/orders";
 import Pagination from "../../components/common/Pagination.vue";
+import { useToastStore } from "../../stores/toast";
+
+const toast = useToastStore();
 
 type AdminOrder = Order & { items_count?: number };
 
@@ -312,9 +315,10 @@ async function onStatusChange(order: AdminOrder, event: Event) {
   order.status = status;
   try {
     await updateOrderStatus(order.id, status);
+    toast.success(`Order #${order.id} marked as ${status}.`);
   } catch {
     order.status = previous;
-    error.value = "Failed to update order status.";
+    toast.error("Failed to update order status.");
   }
 }
 </script>

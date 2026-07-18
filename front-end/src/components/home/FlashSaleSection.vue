@@ -55,11 +55,18 @@
 
 <script lang="ts" setup>
 import { ref, onMounted, onUnmounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import FlashSaleProductCard from "../common/FlashSaleProductCard.vue";
 import { getFlashSaleProducts } from "../../services/products";
 import { useCartStore } from "../../stores/cart";
+import { useAuthStore } from "../../stores/auth";
+import { useToastStore } from "../../stores/toast";
 
 const cartStore = useCartStore();
+const auth = useAuthStore();
+const toast = useToastStore();
+const route = useRoute();
+const router = useRouter();
 
 interface Product {
   id: number;
@@ -119,8 +126,22 @@ function updateTimer() {
   seconds.value = s.toString().padStart(2, "0");
 }
 
-function onProductSelect(product: Product) {
+async function onProductSelect(product: Product) {
+  if (!auth.initialized) {
+    await auth.fetchUser();
+  }
+
+  if (!auth.isLoggedIn) {
+    toast.info("Sign in to grab flash sale deals.");
+    router.push({
+      name: "CustomerLogin",
+      query: { redirect: route.fullPath },
+    });
+    return;
+  }
+
   cartStore.addItem(product);
+  toast.success(`${product.name} added to cart.`);
 }
 
 onMounted(() => {

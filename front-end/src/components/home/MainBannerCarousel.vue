@@ -110,7 +110,6 @@ interface Slide {
   link: string;
 }
 
-// Slide Data
 const slides: Slide[] = [
   {
     title: "Mega Sale Season",
@@ -144,7 +143,6 @@ const slides: Slide[] = [
 const currentBanner = ref(0);
 let timer: ReturnType<typeof setInterval> | null = null;
 
-// Logic functions
 const nextBanner = () => {
   currentBanner.value = (currentBanner.value + 1) % slides.length;
 };
@@ -171,7 +169,6 @@ const setBanner = (index: number) => {
   resetTimer();
 };
 
-// Lifecycle management
 const startTimer = () => {
   timer = setInterval(nextBanner, 5000);
 };

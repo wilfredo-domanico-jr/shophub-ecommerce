@@ -46,6 +46,17 @@
       <form v-else class="p-4 space-y-4" @submit.prevent="submit">
         <p v-if="error" class="text-red-500 text-sm">{{ error }}</p>
 
+        <p
+          v-if="profileIncomplete"
+          class="text-xs text-gray-500 bg-orange-50 border border-orange-200 rounded-lg p-3"
+        >
+          Tip: save your contact number and shipping address in
+          <router-link to="/account" class="text-orange-600 underline" @click="close">
+            your profile
+          </router-link>
+          so they're filled in automatically next time.
+        </p>
+
         <div>
           <label class="text-sm font-medium text-gray-700">Full Name</label>
           <input v-model="form.customer_name" type="text" required class="w-full mt-1 px-4 py-2 border rounded-lg focus:outline-none focus:border-orange-500" />
@@ -87,18 +98,25 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { useCartStore } from "../../stores/cart";
+import { useAuthStore } from "../../stores/auth";
 import { createOrder, type Order } from "../../services/orders";
 
 const cartStore = useCartStore();
+const auth = useAuthStore();
 const emit = defineEmits<{ (e: "close-checkout"): void; (e: "order-placed"): void }>();
 
+const profileIncomplete = computed(
+  () => !auth.user?.phone || !auth.user?.default_shipping_address
+);
+
+// Modal is v-if-mounted, so pre-filling at setup picks up the logged-in user
 const form = ref({
-  customer_name: "",
-  customer_email: "",
-  customer_phone: "",
-  shipping_address: "",
+  customer_name: auth.user?.name ?? "",
+  customer_email: auth.user?.email ?? "",
+  customer_phone: auth.user?.phone ?? "",
+  shipping_address: auth.user?.default_shipping_address ?? "",
 });
 
 const submitting = ref(false);
@@ -111,6 +129,16 @@ function close() {
 
 async function submit() {
   error.value = "";
+
+  if (
+    !form.value.customer_name.trim() ||
+    !form.value.customer_phone.trim() ||
+    !form.value.shipping_address.trim()
+  ) {
+    error.value = "Please complete your name, contact number, and shipping address.";
+    return;
+  }
+
   submitting.value = true;
 
   try {

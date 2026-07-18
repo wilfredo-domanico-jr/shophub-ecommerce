@@ -5,9 +5,9 @@
       class="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
     >
       <div>
-        <h1 class="text-2xl font-bold">Admins</h1>
+        <h1 class="text-2xl font-bold">Users</h1>
         <p class="text-gray-500 text-sm">
-          Manage who can access this admin panel
+          Manage admin and customer accounts
         </p>
       </div>
 
@@ -19,9 +19,9 @@
       </button>
     </div>
 
-    <!-- Search -->
-    <div class="bg-white p-4 rounded-xl shadow">
-      <div class="relative max-w-sm">
+    <!-- Search + Role filter -->
+    <div class="bg-white p-4 rounded-xl shadow flex flex-col sm:flex-row gap-3">
+      <div class="relative max-w-sm flex-1">
         <svg class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
@@ -32,6 +32,15 @@
           class="w-full pl-9 pr-4 py-2 border rounded-lg focus:outline-none focus:border-orange-500"
         />
       </div>
+
+      <select
+        v-model="roleFilter"
+        class="border rounded-lg px-3 py-2 focus:outline-none focus:border-orange-500"
+      >
+        <option value="">All roles</option>
+        <option value="admin">Admins</option>
+        <option value="customer">Customers</option>
+      </select>
     </div>
 
     <p v-if="error" class="text-red-500 text-sm">{{ error }}</p>
@@ -43,6 +52,7 @@
           <tr>
             <th class="p-4">Name</th>
             <th>Email</th>
+            <th>Role</th>
             <th class="text-right p-4">Actions</th>
           </tr>
         </thead>
@@ -55,6 +65,14 @@
           >
             <td class="p-4 font-medium">{{ user.name }}</td>
             <td>{{ user.email }}</td>
+            <td>
+              <span
+                class="px-2.5 py-1 rounded-full text-xs font-semibold"
+                :class="user.is_admin ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600'"
+              >
+                {{ user.is_admin ? "Admin" : "Customer" }}
+              </span>
+            </td>
 
             <td class="text-right p-4">
               <div class="flex justify-end gap-2">
@@ -82,8 +100,8 @@
           </tr>
 
           <tr v-if="users.length === 0">
-            <td colspan="3" class="text-center py-10 text-gray-400">
-              No admins found
+            <td colspan="4" class="text-center py-10 text-gray-400">
+              No users found
             </td>
           </tr>
         </tbody>
@@ -168,8 +186,12 @@ import {
   deleteAdminUser,
 } from "../../services/admin/users";
 import Pagination from "../../components/common/Pagination.vue";
+import { useToastStore } from "../../stores/toast";
+
+const toast = useToastStore();
 
 const search = ref("");
+const roleFilter = ref<"" | "admin" | "customer">("");
 const page = ref(1);
 const users = ref<AdminUser[]>([]);
 const error = ref("");
@@ -180,7 +202,11 @@ const meta = ref({ current_page: 1, last_page: 1, total: 0, from: 0 as number | 
 async function loadUsers() {
   error.value = "";
   try {
-    const res = await getAdminUsers({ search: search.value || undefined, page: page.value });
+    const res = await getAdminUsers({
+      search: search.value || undefined,
+      role: roleFilter.value || undefined,
+      page: page.value,
+    });
     users.value = res.data;
     meta.value = {
       current_page: res.current_page,
@@ -190,7 +216,7 @@ async function loadUsers() {
       to: res.to,
     };
   } catch {
-    error.value = "Failed to load admins.";
+    error.value = "Failed to load users.";
   }
 }
 
@@ -206,6 +232,11 @@ watch(search, () => {
     page.value = 1;
     loadUsers();
   }, 300);
+});
+
+watch(roleFilter, () => {
+  page.value = 1;
+  loadUsers();
 });
 
 onMounted(loadUsers);
@@ -253,12 +284,14 @@ async function save() {
         email: form.value.email,
         password: form.value.password || undefined,
       });
+      toast.success("Admin updated.");
     } else {
       await createAdminUser({
         name: form.value.name,
         email: form.value.email,
         password: form.value.password,
       });
+      toast.success("Admin created.");
     }
     closeModal();
     await loadUsers();
@@ -268,12 +301,13 @@ async function save() {
 }
 
 async function remove(id: number) {
-  if (!confirm("Remove this admin?")) return;
+  if (!confirm("Remove this user?")) return;
   try {
     await deleteAdminUser(id);
     await loadUsers();
+    toast.success("User removed.");
   } catch (e: any) {
-    error.value = e?.response?.data?.message ?? "Failed to remove admin.";
+    toast.error(e?.response?.data?.message ?? "Failed to remove user.");
   }
 }
 </script>

@@ -52,7 +52,6 @@
             :key="c.id"
             class="border-b hover:bg-gray-50"
           >
-            <!-- Category -->
             <td class="p-4 font-medium flex items-center gap-3">
               <div
                 class="w-9 h-9 rounded-lg flex items-center justify-center text-white shrink-0"
@@ -65,10 +64,8 @@
               {{ c.name }}
             </td>
 
-            <!-- Product count -->
             <td>{{ c.products_count }} items</td>
 
-            <!-- Status -->
             <td>
               <span
                 class="px-2 py-1 text-xs rounded-full"
@@ -82,7 +79,6 @@
               </span>
             </td>
 
-            <!-- Actions -->
             <td class="text-right p-4">
               <div class="flex justify-end gap-2">
                 <button
@@ -138,7 +134,6 @@
 
         <p v-if="formError" class="text-red-500 text-sm">{{ formError }}</p>
 
-        <!-- Name -->
         <div>
           <label class="block mb-1 text-sm font-medium text-gray-700">Category Name</label>
           <input
@@ -149,7 +144,6 @@
           />
         </div>
 
-        <!-- Icon -->
         <div>
           <label class="block mb-1 text-sm font-medium text-gray-700">Icon</label>
           <div class="grid grid-cols-6 gap-2">
@@ -169,7 +163,6 @@
           </div>
         </div>
 
-        <!-- Color -->
         <div>
           <label class="block mb-1 text-sm font-medium text-gray-700">Color</label>
           <div class="grid grid-cols-4 gap-2">
@@ -185,13 +178,11 @@
           </div>
         </div>
 
-        <!-- Active -->
         <label class="flex items-center gap-2 text-sm">
           <input type="checkbox" v-model="form.is_active" />
           Active
         </label>
 
-        <!-- Buttons -->
         <div class="flex justify-end gap-2 pt-2">
           <button class="px-4 py-2 text-gray-500" @click="closeModal">
             Cancel
@@ -219,6 +210,9 @@ import {
   deleteCategory,
 } from "../../services/admin/categories";
 import Pagination from "../../components/common/Pagination.vue";
+import { useToastStore } from "../../stores/toast";
+
+const toast = useToastStore();
 
 const ICON_OPTIONS = [
   { label: "Electronics", icon: "M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" },
@@ -339,8 +333,10 @@ async function save() {
   try {
     if (isEdit.value) {
       await updateCategory(form.value.id, payload);
+      toast.success("Category updated.");
     } else {
       await createCategory(payload);
+      toast.success("Category created.");
     }
     closeModal();
     await loadCategories();
@@ -354,8 +350,9 @@ async function remove(id: number) {
   try {
     await deleteCategory(id);
     await loadCategories();
+    toast.success("Category deleted.");
   } catch (e: any) {
-    error.value = e?.response?.data?.message ?? "Failed to delete category.";
+    toast.error(e?.response?.data?.message ?? "Failed to delete category.");
   }
 }
 </script>

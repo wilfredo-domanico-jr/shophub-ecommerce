@@ -6,10 +6,6 @@
   </div>
 </template>
 
-<script setup lang="ts">
-// No script logic needed for now
-</script>
-
 <style scoped>
 .not-found-page {
   display: flex;
@@ -24,7 +20,7 @@
 .not-found-page h1 {
   font-size: 6rem;
   margin-bottom: 1rem;
-  color: #ff6b35; /* matches your primary gradient */
+  color: #ff6b35;
 }
 
 .not-found-page p {

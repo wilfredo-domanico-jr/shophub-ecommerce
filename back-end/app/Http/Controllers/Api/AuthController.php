@@ -9,7 +9,29 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
-    // Login
+    public function register(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => $validated['password'],
+            'is_admin' => false,
+        ]);
+
+        $token = $user->createToken('vue-token')->plainTextToken;
+
+        return response()->json([
+            'user' => $user,
+            'token' => $token,
+        ], 201);
+    }
+
     public function login(Request $request)
     {
         $credentials = $request->validate([
@@ -31,7 +53,6 @@ class AuthController extends Controller
         ]);
     }
 
-    // Logout
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
@@ -41,7 +62,6 @@ class AuthController extends Controller
         ]);
     }
 
-    // Get Authenticated User
     public function me(Request $request)
     {
         return response()->json($request->user());

@@ -21,6 +21,10 @@ class UserController extends Controller
             });
         }
 
+        if ($request->filled('role')) {
+            $query->where('is_admin', $request->string('role') == 'admin');
+        }
+
         return $query->paginate($request->integer('per_page', 10));
     }
 
@@ -70,6 +74,6 @@ class UserController extends Controller
 
         $user->delete();
 
-        return response()->json(['message' => 'Admin removed']);
+        return response()->json(['message' => 'User removed']);
     }
 }

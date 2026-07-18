@@ -57,8 +57,10 @@
 import StarRating from "../common/StarRating.vue";
 
 import { useCartStore } from "../../stores/cart";
+import { useToastStore } from "../../stores/toast";
 
 const cartStore = useCartStore();
+const toast = useToastStore();
 
 interface TrendingCard {
   id: number;
@@ -78,19 +80,6 @@ const props = defineProps<{
 
 function addToCart() {
   cartStore.addItem(props.trending);
-  showNotification("Added to cart!");
-}
-
-function showNotification(message: string) {
-  const notification = document.createElement("div");
-  notification.className =
-    "fixed top-24 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-slideDown transition-opacity duration-300";
-  notification.textContent = message;
-  document.body.appendChild(notification);
-
-  setTimeout(() => {
-    notification.style.opacity = "0"; // fade out
-    setTimeout(() => notification.remove(), 300);
-  }, 2000);
+  toast.success(`${props.trending.name} added to cart.`);
 }
 </script>

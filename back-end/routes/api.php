@@ -10,7 +10,9 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ConfigController;
 use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 // Public storefront
@@ -20,16 +22,24 @@ Route::get('/categories/{category:slug}', [CategoryController::class, 'show']);
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{product:slug}', [ProductController::class, 'show']);
 
-// Guest checkout & order tracking
-Route::post('/orders', [OrderController::class, 'store']);
+// Order tracking (public — works for orders placed before accounts existed)
 Route::post('/orders/track', [OrderController::class, 'track']);
 
 // Auth
+Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/forgot-password', [PasswordResetController::class, 'forgot'])->middleware('throttle:5,1');
+Route::post('/reset-password', [PasswordResetController::class, 'reset'])->middleware('throttle:5,1');
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
+
+    // Customer account
+    Route::post('/orders', [OrderController::class, 'store']);
+    Route::patch('/profile', [ProfileController::class, 'update']);
+    Route::patch('/profile/password', [ProfileController::class, 'updatePassword']);
+    Route::get('/my/orders', [OrderController::class, 'myOrders']);
 
     Route::middleware('admin')->prefix('admin')->group(function () {
         Route::get('/dashboard/stats', [DashboardController::class, 'stats']);

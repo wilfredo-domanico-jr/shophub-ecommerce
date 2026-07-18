@@ -139,12 +139,10 @@ function checkout() {
   emit("open-checkout");
 }
 
-// Computed total price
 const totalPrice = computed(() => {
   return cartStore.total().toLocaleString();
 });
 
-// Increase / Decrease quantity
 function increase(item: any) {
   cartStore.updateQuantity(item.id, item.quantity + 1);
 }
@@ -152,7 +150,6 @@ function decrease(item: any) {
   cartStore.updateQuantity(item.id, item.quantity - 1);
 }
 
-// Remove item
 function remove(id: number) {
   cartStore.removeItem(id);
 }

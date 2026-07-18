@@ -59,10 +59,12 @@
 import { computed } from "vue";
 import StarRating from "./StarRating.vue";
 import { useCartStore } from "../../stores/cart";
+import { useToastStore } from "../../stores/toast";
 import type { Product } from "../../services/products";
 
 const props = defineProps<{ product: Product }>();
 const cartStore = useCartStore();
+const toast = useToastStore();
 
 const discount = computed(() => {
   const price = Number(props.product.price);
@@ -77,5 +79,6 @@ function addToCart() {
     price: Number(props.product.price),
     image: props.product.image ?? "",
   });
+  toast.success(`${props.product.name} added to cart.`);
 }
 </script>
