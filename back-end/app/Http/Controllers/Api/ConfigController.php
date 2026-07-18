@@ -14,6 +14,8 @@ class ConfigController extends Controller
             'demo_mode' => $enabled,
             'demo_admin_email' => $enabled ? config('demo.admin_email') : null,
             'demo_admin_password' => $enabled ? config('demo.admin_password') : null,
+            'demo_customer_email' => $enabled ? config('demo.customer_email') : null,
+            'demo_customer_password' => $enabled ? config('demo.customer_password') : null,
         ]);
     }
 }

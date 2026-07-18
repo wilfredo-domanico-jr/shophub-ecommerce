@@ -4,6 +4,8 @@ export interface AppConfig {
   demo_mode: boolean;
   demo_admin_email: string | null;
   demo_admin_password: string | null;
+  demo_customer_email: string | null;
+  demo_customer_password: string | null;
 }
 
 export function getAppConfig() {

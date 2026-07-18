@@ -12,6 +12,33 @@
         Password reset successful — sign in with your new password.
       </div>
 
+      <!-- Demo mode -->
+      <div
+        v-if="demoConfig?.demo_mode && demoConfig.demo_customer_email"
+        class="mb-6 p-4 rounded-lg bg-orange-50 border border-orange-200 text-center"
+      >
+        <p class="text-sm text-gray-600 mb-3">
+          This is a portfolio demo — skip the form and start shopping instantly.
+        </p>
+        <button
+          type="button"
+          :disabled="loading"
+          class="w-full gradient-primary text-white py-2 rounded font-semibold hover:opacity-90 transition disabled:opacity-50"
+          @click="handleDemoLogin"
+        >
+          {{ loading ? "Signing in..." : "Try Demo Customer Login" }}
+        </button>
+      </div>
+
+      <div
+        v-if="demoConfig?.demo_mode && demoConfig.demo_customer_email"
+        class="flex items-center gap-3 mb-6"
+      >
+        <div class="flex-1 h-px bg-gray-200"></div>
+        <span class="text-xs text-gray-400 uppercase">or sign in manually</span>
+        <div class="flex-1 h-px bg-gray-200"></div>
+      </div>
+
       <div v-if="errorMessage" class="mb-4 text-red-500 text-sm text-center">
         {{ errorMessage }}
       </div>
@@ -69,10 +96,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "../../stores/auth";
 import { useToastStore } from "../../stores/toast";
+import { getAppConfig, type AppConfig } from "../../services/config";
 import type { AxiosError } from "axios";
 
 const auth = useAuthStore();
@@ -84,6 +112,23 @@ const email = ref("");
 const password = ref("");
 const errorMessage = ref("");
 const loading = ref(false);
+const demoConfig = ref<AppConfig | null>(null);
+
+onMounted(async () => {
+  try {
+    demoConfig.value = await getAppConfig();
+  } catch {
+    demoConfig.value = null;
+  }
+});
+
+async function handleDemoLogin() {
+  if (!demoConfig.value?.demo_customer_email || !demoConfig.value.demo_customer_password) return;
+
+  email.value = demoConfig.value.demo_customer_email;
+  password.value = demoConfig.value.demo_customer_password;
+  await handleLogin();
+}
 
 async function handleLogin() {
   errorMessage.value = "";

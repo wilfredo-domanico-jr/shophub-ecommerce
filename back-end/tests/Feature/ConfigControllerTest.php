@@ -17,6 +17,8 @@ class ConfigControllerTest extends TestCase
             'demo_mode' => false,
             'demo_admin_email' => null,
             'demo_admin_password' => null,
+            'demo_customer_email' => null,
+            'demo_customer_password' => null,
         ]);
     }
 
@@ -26,6 +28,8 @@ class ConfigControllerTest extends TestCase
             'demo.enabled' => true,
             'demo.admin_email' => 'demo@example.com',
             'demo.admin_password' => 'demo-pass',
+            'demo.customer_email' => 'demo-customer@example.com',
+            'demo.customer_password' => 'demo-customer-pass',
         ]);
 
         $response = $this->getJson('/api/config');
@@ -35,6 +39,8 @@ class ConfigControllerTest extends TestCase
             'demo_mode' => true,
             'demo_admin_email' => 'demo@example.com',
             'demo_admin_password' => 'demo-pass',
+            'demo_customer_email' => 'demo-customer@example.com',
+            'demo_customer_password' => 'demo-customer-pass',
         ]);
     }
 }

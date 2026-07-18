@@ -43,6 +43,8 @@ services:
       DEMO_MODE: ${DEMO_MODE:-false}
       DEMO_ADMIN_EMAIL: ${DEMO_ADMIN_EMAIL}
       DEMO_ADMIN_PASSWORD: ${DEMO_ADMIN_PASSWORD}
+      DEMO_CUSTOMER_EMAIL: ${DEMO_CUSTOMER_EMAIL}
+      DEMO_CUSTOMER_PASSWORD: ${DEMO_CUSTOMER_PASSWORD}
     depends_on:
       mysql:
         condition: service_healthy
