@@ -131,6 +131,19 @@ class OrderController extends Controller
             return response()->json(['message' => 'No matching order found.'], 404);
         }
 
-        return $order;
+        // Tracking only proves knowledge of order number + email, so keep the
+        // payload to status info — no phone, address, or notes.
+        return response()->json([
+            'order_number' => $order->order_number,
+            'status' => $order->status,
+            'created_at' => $order->created_at,
+            'total' => $order->total,
+            'items' => $order->items->map(fn ($item) => [
+                'id' => $item->id,
+                'product_name' => $item->product_name,
+                'quantity' => $item->quantity,
+                'subtotal' => $item->subtotal,
+            ])->values(),
+        ]);
     }
 }

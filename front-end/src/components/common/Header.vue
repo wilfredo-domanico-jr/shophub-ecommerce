@@ -17,8 +17,9 @@
 
       <!-- Desktop Header Icons / Account -->
       <div class="flex items-center gap-3">
-        <!-- Track Order -->
+        <!-- Track Order: guests only — signed-in users have My Orders -->
         <button
+          v-if="auth.initialized && !auth.isLoggedIn"
           @click="emit('open-track-order')"
           class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-orange-50 hover:text-orange-600 transition"
           aria-label="Track My Order"

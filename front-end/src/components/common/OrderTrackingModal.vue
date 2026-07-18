@@ -99,13 +99,13 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
-import { trackOrder as trackOrderApi, type Order } from "../../services/orders";
+import { trackOrder as trackOrderApi, type TrackedOrder } from "../../services/orders";
 
 const emit = defineEmits<{ (e: "close-order-tracking"): void }>();
 
 const trackingNumber = ref("");
 const email = ref("");
-const result = ref<Order | null>(null);
+const result = ref<TrackedOrder | null>(null);
 const error = ref("");
 const loading = ref(false);
 

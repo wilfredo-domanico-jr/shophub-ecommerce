@@ -41,6 +41,14 @@ export function createOrder(payload: CreateOrderPayload) {
   return api.post<Order>("/orders", payload).then((r) => r.data);
 }
 
+export interface TrackedOrder {
+  order_number: string;
+  status: Order["status"];
+  created_at: string;
+  total: string;
+  items: Pick<OrderItem, "id" | "product_name" | "quantity" | "subtotal">[];
+}
+
 export function trackOrder(payload: { order_number: string; email: string }) {
-  return api.post<Order>("/orders/track", payload).then((r) => r.data);
+  return api.post<TrackedOrder>("/orders/track", payload).then((r) => r.data);
 }
