@@ -81,7 +81,11 @@
           </p>
           <ul class="text-sm divide-y">
             <li v-for="item in result.items" :key="item.id" class="py-1 flex justify-between">
-              <span>{{ item.product_name }} × {{ item.quantity }}</span>
+              <span>
+                {{ item.product_name }}
+                <span v-if="item.variant_label" class="text-gray-400">({{ item.variant_label }})</span>
+                × {{ item.quantity }}
+              </span>
               <span>₱{{ item.subtotal }}</span>
             </li>
           </ul>

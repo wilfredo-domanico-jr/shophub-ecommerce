@@ -162,7 +162,10 @@
                 </thead>
                 <tbody>
                   <tr v-for="item in viewingOrder.items" :key="item.id" class="border-t">
-                    <td class="p-3">{{ item.product_name }}</td>
+                    <td class="p-3">
+                      {{ item.product_name }}
+                      <span v-if="item.variant_label" class="text-gray-400 text-xs block">{{ item.variant_label }}</span>
+                    </td>
                     <td class="p-3">₱{{ Number(item.product_price).toLocaleString() }}</td>
                     <td class="p-3">{{ item.quantity }}</td>
                     <td class="p-3 text-right">₱{{ Number(item.subtotal).toLocaleString() }}</td>

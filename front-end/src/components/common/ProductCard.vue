@@ -57,11 +57,13 @@
 
 <script lang="ts" setup>
 import { computed } from "vue";
+import { useRouter } from "vue-router";
 import StarRating from "./StarRating.vue";
 import { useAddToCart } from "../../composables/useAddToCart";
 import type { Product } from "../../services/products";
 
 const props = defineProps<{ product: Product }>();
+const router = useRouter();
 const { addToCart: addItem } = useAddToCart();
 
 const discount = computed(() => {
@@ -71,6 +73,12 @@ const discount = computed(() => {
 });
 
 function addToCart() {
+  // Variant products need options picked first — quick-add opens the detail page.
+  if (props.product.variants_count) {
+    router.push(`/products/${props.product.slug}`);
+    return;
+  }
+
   addItem({
     id: props.product.id,
     name: props.product.name,
