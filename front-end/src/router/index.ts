@@ -17,6 +17,7 @@ import CustomerLogin from "../views/Auth/CustomerLogin.vue";
 import Register from "../views/Auth/Register.vue";
 import ForgotPassword from "../views/Auth/ForgotPassword.vue";
 import ResetPassword from "../views/Auth/ResetPassword.vue";
+import AuthCallback from "../views/Auth/AuthCallback.vue";
 
 // Account Pages
 import AccountProfile from "../views/Account/Profile.vue";
@@ -121,6 +122,14 @@ const routes = [
         path: "reset-password",
         name: "ResetPassword",
         component: ResetPassword,
+      },
+      {
+        // Social login lands here with ?token= or ?error= from the backend.
+        // No guestOnly — the guard must never race the token handling.
+        path: "auth/callback",
+        name: "AuthCallback",
+        component: AuthCallback,
+        meta: { minimalChrome: true },
       },
 
       // Customer account

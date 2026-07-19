@@ -56,6 +56,15 @@ export const useAuthStore = defineStore("auth", () => {
     }
   }
 
+  // Social login lands with a ready-made token instead of credentials.
+  async function loginWithToken(token: string) {
+    localStorage.setItem("token", token);
+    await fetchUser(); // clears the token itself if it's invalid
+    if (!user.value) {
+      throw new Error("Token login failed");
+    }
+  }
+
   function setUser(updated: User) {
     user.value = updated;
   }
@@ -77,6 +86,7 @@ export const useAuthStore = defineStore("auth", () => {
     isLoggedIn,
     isAdmin,
     login,
+    loginWithToken,
     register,
     logout,
     fetchUser,

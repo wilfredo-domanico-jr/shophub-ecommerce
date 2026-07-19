@@ -5,6 +5,14 @@
         Create Your Account
       </h1>
 
+      <SocialLoginButtons :providers="socialProviders" />
+
+      <div v-if="socialProviders.length" class="flex items-center gap-3 mb-6">
+        <div class="flex-1 h-px bg-gray-200"></div>
+        <span class="text-xs text-gray-400 uppercase">or continue with email</span>
+        <div class="flex-1 h-px bg-gray-200"></div>
+      </div>
+
       <div v-if="errorMessage" class="mb-4 text-red-500 text-sm text-center">
         {{ errorMessage }}
       </div>
@@ -84,14 +92,26 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "../../stores/auth";
 import { useToastStore } from "../../stores/toast";
 import { firstValidationError } from "../../services/account";
+import { getAppConfig } from "../../services/config";
+import SocialLoginButtons from "../../components/auth/SocialLoginButtons.vue";
 
 const auth = useAuthStore();
 const router = useRouter();
+
+const socialProviders = ref<string[]>([]);
+
+onMounted(async () => {
+  try {
+    socialProviders.value = (await getAppConfig()).social_providers ?? [];
+  } catch {
+    socialProviders.value = [];
+  }
+});
 
 const form = ref({
   name: "",

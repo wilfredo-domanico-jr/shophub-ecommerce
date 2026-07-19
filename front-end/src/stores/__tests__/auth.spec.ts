@@ -84,6 +84,29 @@ describe("auth store", () => {
     expect(auth.user).toBeNull();
   });
 
+  it("loginWithToken stores the token and hydrates the user", async () => {
+    mockedApi.get.mockResolvedValueOnce({
+      data: { id: 3, name: "Social User", email: "social@example.com", is_admin: false },
+    });
+
+    const auth = useAuthStore();
+    await auth.loginWithToken("social-token");
+
+    expect(localStorage.getItem("token")).toBe("social-token");
+    expect(auth.isLoggedIn).toBe(true);
+    expect(auth.user?.email).toBe("social@example.com");
+  });
+
+  it("loginWithToken throws and clears the token when /me fails", async () => {
+    mockedApi.get.mockRejectedValueOnce(new Error("401"));
+
+    const auth = useAuthStore();
+
+    await expect(auth.loginWithToken("bad-token")).rejects.toThrow();
+    expect(localStorage.getItem("token")).toBeNull();
+    expect(auth.user).toBeNull();
+  });
+
   it("logout also empties the cart", async () => {
     mockedApi.post.mockResolvedValueOnce({ data: {} });
     const auth = useAuthStore();

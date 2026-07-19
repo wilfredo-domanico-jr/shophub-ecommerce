@@ -39,6 +39,17 @@
         <div class="flex-1 h-px bg-gray-200"></div>
       </div>
 
+      <SocialLoginButtons :providers="demoConfig?.social_providers ?? []" />
+
+      <div
+        v-if="demoConfig?.social_providers?.length"
+        class="flex items-center gap-3 mb-6"
+      >
+        <div class="flex-1 h-px bg-gray-200"></div>
+        <span class="text-xs text-gray-400 uppercase">or continue with email</span>
+        <div class="flex-1 h-px bg-gray-200"></div>
+      </div>
+
       <div v-if="errorMessage" class="mb-4 text-red-500 text-sm text-center">
         {{ errorMessage }}
       </div>
@@ -101,6 +112,7 @@ import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "../../stores/auth";
 import { useToastStore } from "../../stores/toast";
 import { getAppConfig, type AppConfig } from "../../services/config";
+import SocialLoginButtons from "../../components/auth/SocialLoginButtons.vue";
 import type { AxiosError } from "axios";
 
 const auth = useAuthStore();

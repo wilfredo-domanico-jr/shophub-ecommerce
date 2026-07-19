@@ -6,6 +6,7 @@ export interface AppConfig {
   demo_admin_password: string | null;
   demo_customer_email: string | null;
   demo_customer_password: string | null;
+  social_providers: string[];
 }
 
 export function getAppConfig() {
