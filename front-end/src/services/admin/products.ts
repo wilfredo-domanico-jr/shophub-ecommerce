@@ -22,8 +22,13 @@ export interface ProductPayload {
   name: string;
   category_id: number;
   price: number;
+  original_price: number | null;
   stock_quantity: number;
   image: string | null;
+  is_featured: boolean;
+  is_flash_sale: boolean;
+  flash_sale_goal: number | null;
+  is_active: boolean;
   options?: { name: string; values: string[] }[] | null;
   variants?: VariantPayload[];
 }

@@ -173,6 +173,20 @@
           </div>
 
           <div>
+            <label class="block mb-1 text-sm font-medium text-gray-700">Original Price (₱, optional)</label>
+            <input
+              v-model.number="form.original_price"
+              type="number"
+              min="0"
+              placeholder="No compare-at price"
+              class="w-full border p-2 rounded focus:outline-none focus:border-orange-500"
+            />
+            <p class="text-xs text-gray-400 mt-1">Shown struck-through; drives the discount %.</p>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
             <label class="block mb-1 text-sm font-medium text-gray-700">Stock Quantity</label>
             <input
               :value="hasVariants ? variantStockTotal : form.stock_quantity"
@@ -190,6 +204,40 @@
         <div>
           <label class="block mb-1 text-sm font-medium text-gray-700">Product Image</label>
           <ImageDropzone v-model="form.image" />
+        </div>
+
+        <!-- Flags -->
+        <div class="space-y-2 border-t pt-4">
+          <label class="flex items-center gap-2 text-sm cursor-pointer">
+            <input v-model="form.is_featured" type="checkbox" class="accent-orange-500" />
+            Featured (shown in the homepage trending section)
+          </label>
+
+          <label class="flex items-center gap-2 text-sm cursor-pointer">
+            <input
+              v-model="form.is_flash_sale"
+              type="checkbox"
+              class="accent-orange-500"
+              @change="!form.is_flash_sale ? (form.flash_sale_goal = null) : null"
+            />
+            Flash sale item (shown during scheduled flash sales)
+          </label>
+
+          <div v-if="form.is_flash_sale" class="pl-6">
+            <label class="block mb-1 text-xs text-gray-500">Sale goal (units, optional — drives the "sold" progress bar)</label>
+            <input
+              v-model.number="form.flash_sale_goal"
+              type="number"
+              min="1"
+              placeholder="Auto"
+              class="w-40 border p-2 rounded text-sm focus:outline-none focus:border-orange-500"
+            />
+          </div>
+
+          <label class="flex items-center gap-2 text-sm cursor-pointer">
+            <input v-model="form.is_active" type="checkbox" class="accent-orange-500" />
+            Active (visible in the store)
+          </label>
         </div>
 
         <!-- Variations -->
@@ -394,8 +442,13 @@ type ProductForm = {
   category_id: number;
   name: string;
   price: number;
+  original_price: number | "" | null;
   stock_quantity: number;
   image: string;
+  is_featured: boolean;
+  is_flash_sale: boolean;
+  flash_sale_goal: number | "" | null;
+  is_active: boolean;
 };
 
 const emptyForm = (): ProductForm => ({
@@ -403,9 +456,17 @@ const emptyForm = (): ProductForm => ({
   category_id: 0,
   name: "",
   price: 0,
+  original_price: null,
   stock_quantity: 0,
   image: "",
+  is_featured: false,
+  is_flash_sale: false,
+  flash_sale_goal: null,
+  is_active: true,
 });
+
+const numberOrNull = (value: number | "" | null) =>
+  value === "" || value === null ? null : Number(value);
 
 const form = ref<ProductForm>(emptyForm());
 
@@ -506,8 +567,13 @@ function openEdit(product: Product) {
     category_id: product.category_id,
     name: product.name,
     price: Number(product.price),
+    original_price: product.original_price !== null ? Number(product.original_price) : null,
     stock_quantity: product.stock_quantity,
     image: product.image ?? "",
+    is_featured: product.is_featured,
+    is_flash_sale: product.is_flash_sale,
+    flash_sale_goal: product.flash_sale_goal,
+    is_active: product.is_active,
   };
   resetVariantState(product);
   showModal.value = true;
@@ -527,8 +593,13 @@ async function saveProduct() {
     name: form.value.name,
     category_id: form.value.category_id,
     price: form.value.price,
+    original_price: numberOrNull(form.value.original_price),
     stock_quantity: form.value.stock_quantity,
     image: form.value.image || null,
+    is_featured: form.value.is_featured,
+    is_flash_sale: form.value.is_flash_sale,
+    flash_sale_goal: form.value.is_flash_sale ? numberOrNull(form.value.flash_sale_goal) : null,
+    is_active: form.value.is_active,
   };
 
   if (hasVariants.value) {
