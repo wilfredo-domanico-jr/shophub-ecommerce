@@ -197,6 +197,29 @@ class VoucherCheckoutTest extends TestCase
         $response->assertJsonPath('voucher_code', null);
     }
 
+    public function test_confirmation_email_shows_the_discount_row(): void
+    {
+        Voucher::factory()->create(['code' => 'SAVE10', 'type' => 'percent', 'value' => 10]);
+
+        $this->checkout($this->payload('SAVE10'))->assertCreated();
+
+        $order = \App\Models\Order::with('items')->latest('id')->first();
+        $html = (new \App\Mail\OrderConfirmationMail($order))->render();
+
+        $this->assertStringContainsString('Discount (SAVE10)', $html);
+        $this->assertStringContainsString('100.00', $html);
+    }
+
+    public function test_confirmation_email_has_no_discount_row_without_a_voucher(): void
+    {
+        $this->checkout($this->payload())->assertCreated();
+
+        $order = \App\Models\Order::with('items')->latest('id')->first();
+        $html = (new \App\Mail\OrderConfirmationMail($order))->render();
+
+        $this->assertStringNotContainsString('Discount', $html);
+    }
+
     public function test_preview_returns_discounted_totals_without_redeeming(): void
     {
         $voucher = Voucher::factory()->create(['code' => 'SAVE10', 'type' => 'percent', 'value' => 10]);
