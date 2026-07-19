@@ -109,6 +109,28 @@
             </button>
           </div>
           <p v-if="voucherError" class="text-red-500 text-xs mt-1">{{ voucherError }}</p>
+
+          <!-- Publicly listed vouchers — tap to apply -->
+          <div v-if="!appliedVoucher && availableVouchers.length" class="mt-2 space-y-1.5">
+            <p class="text-xs text-gray-500">Available vouchers:</p>
+            <button
+              v-for="voucher in availableVouchers"
+              :key="voucher.code"
+              type="button"
+              class="w-full flex items-center justify-between gap-2 border border-dashed border-orange-300 rounded-lg px-3 py-2 text-left hover:bg-orange-50 transition disabled:opacity-50"
+              :disabled="applyingVoucher"
+              @click="useVoucher(voucher.code)"
+            >
+              <span class="text-sm">
+                <span class="font-mono font-bold text-orange-600">{{ voucher.code }}</span>
+                <span class="text-gray-600"> — {{ voucherSummary(voucher) }}</span>
+                <span v-if="voucher.min_spend" class="text-gray-400 text-xs block">
+                  Min spend ₱{{ Number(voucher.min_spend).toLocaleString() }}
+                </span>
+              </span>
+              <span class="text-xs font-semibold text-orange-500 shrink-0">Use</span>
+            </button>
+          </div>
         </div>
 
         <div class="bg-gray-50 border rounded-lg p-3 text-sm">
@@ -163,7 +185,13 @@ import { useCartStore } from "../../stores/cart";
 import { useAuthStore } from "../../stores/auth";
 import { useDemoAccount } from "../../composables/useDemoAccount";
 import { createOrder, type Order } from "../../services/orders";
-import { previewVoucher, type VoucherPreview } from "../../services/vouchers";
+import {
+  getPublicVouchers,
+  previewVoucher,
+  voucherSummary,
+  type PublicVoucher,
+  type VoucherPreview,
+} from "../../services/vouchers";
 
 const cartStore = useCartStore();
 const auth = useAuthStore();
@@ -232,6 +260,17 @@ function removeVoucher() {
   appliedVoucher.value = null;
   voucherCode.value = "";
   voucherError.value = "";
+}
+
+// The modal is v-if-mounted, so this fetches fresh on every checkout open.
+const availableVouchers = ref<PublicVoucher[]>([]);
+getPublicVouchers()
+  .then((vouchers) => (availableVouchers.value = vouchers))
+  .catch(() => {}); // discovery is optional — checkout works without it
+
+function useVoucher(code: string) {
+  voucherCode.value = code;
+  applyVoucher();
 }
 
 function close() {

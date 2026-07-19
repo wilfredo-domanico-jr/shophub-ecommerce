@@ -69,6 +69,11 @@
               >
             </li>
             <li>
+              <router-link to="/vouchers" class="hover:text-orange-500 transition"
+                >Vouchers</router-link
+              >
+            </li>
+            <li>
               <router-link to="/shipping-info" class="hover:text-orange-500 transition"
                 >Shipping Info</router-link
               >

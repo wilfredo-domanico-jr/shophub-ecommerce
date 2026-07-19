@@ -68,6 +68,7 @@
               >
                 {{ voucher.is_active ? "Active" : "Disabled" }}
               </span>
+              <p v-if="voucher.is_public" class="text-xs text-gray-400 mt-1">Public</p>
             </td>
 
             <td class="text-right p-4">
@@ -229,6 +230,11 @@
           Active
         </label>
 
+        <label class="flex items-center gap-2 text-sm">
+          <input type="checkbox" v-model="form.is_public" />
+          Publicly listed (shown on the Vouchers page and in checkout)
+        </label>
+
         <div class="flex justify-end gap-2 pt-2">
           <button class="px-4 py-2 text-gray-500" @click="closeModal">
             Cancel
@@ -310,6 +316,7 @@ type VoucherForm = {
   usage_limit: number | "" | null;
   oncePerCustomer: boolean;
   is_active: boolean;
+  is_public: boolean;
 };
 
 const emptyForm = (): VoucherForm => ({
@@ -325,6 +332,7 @@ const emptyForm = (): VoucherForm => ({
   usage_limit: null,
   oncePerCustomer: false,
   is_active: true,
+  is_public: true,
 });
 
 const form = ref<VoucherForm>(emptyForm());
@@ -355,6 +363,7 @@ function openEdit(voucher: Voucher) {
     usage_limit: voucher.usage_limit,
     oncePerCustomer: !!voucher.per_customer_limit,
     is_active: voucher.is_active,
+    is_public: voucher.is_public,
   };
   showModal.value = true;
 }
@@ -384,6 +393,7 @@ async function save() {
     usage_limit: numberOrNull(form.value.usage_limit),
     per_customer_limit: form.value.oncePerCustomer ? 1 : null,
     is_active: form.value.is_active,
+    is_public: form.value.is_public,
   };
 
   try {

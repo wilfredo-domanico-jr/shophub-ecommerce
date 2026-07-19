@@ -14,6 +14,7 @@ export interface Voucher {
   per_customer_limit: number | null;
   used_count: number;
   is_active: boolean;
+  is_public: boolean;
 }
 
 export interface VoucherPayload {
@@ -28,6 +29,7 @@ export interface VoucherPayload {
   usage_limit: number | null;
   per_customer_limit: number | null;
   is_active: boolean;
+  is_public: boolean;
 }
 
 export function getAdminVouchers() {

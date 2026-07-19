@@ -9,6 +9,7 @@ import AdminLayout from "../layouts/AdminLayout.vue";
 import Home from "../views/Home.vue";
 import Shop from "../views/Shop.vue";
 import ProductDetail from "../views/ProductDetail.vue";
+import Vouchers from "../views/Vouchers.vue";
 import InfoPage from "../views/InfoPage.vue";
 
 // Auth
@@ -59,6 +60,11 @@ const routes = [
         path: "products/:slug",
         name: "ProductDetail",
         component: ProductDetail,
+      },
+      {
+        path: "vouchers",
+        name: "Vouchers",
+        component: Vouchers,
       },
       {
         path: "help-center",
