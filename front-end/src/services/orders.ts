@@ -3,7 +3,9 @@ import api from "./api";
 export interface OrderItem {
   id: number;
   product_id: number | null;
+  product_variant_id: number | null;
   product_name: string;
+  variant_label: string | null;
   product_price: string;
   quantity: number;
   subtotal: string;
@@ -34,7 +36,7 @@ export interface CreateOrderPayload {
   customer_phone: string;
   shipping_address: string;
   notes?: string;
-  items: { product_id: number; quantity: number }[];
+  items: { product_id: number; variant_id?: number; quantity: number }[];
 }
 
 export function createOrder(payload: CreateOrderPayload) {
@@ -46,7 +48,7 @@ export interface TrackedOrder {
   status: Order["status"];
   created_at: string;
   total: string;
-  items: Pick<OrderItem, "id" | "product_name" | "quantity" | "subtotal">[];
+  items: Pick<OrderItem, "id" | "product_name" | "variant_label" | "quantity" | "subtotal">[];
 }
 
 export function trackOrder(payload: { order_number: string; email: string }) {

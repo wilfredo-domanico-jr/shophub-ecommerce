@@ -53,16 +53,19 @@
         <div v-else>
           <div
             v-for="item in cartStore.items"
-            :key="item.id"
+            :key="item.key"
             class="flex gap-4 mb-4 pb-4 border-b"
           >
             <img
-              :src="item.image"
+              :src="item.image ?? undefined"
               :alt="item.name"
               class="w-20 h-20 object-cover rounded-lg"
             />
             <div class="flex-1">
               <h4 class="font-medium text-sm mb-1">{{ item.name }}</h4>
+              <p v-if="item.variant_label" class="text-xs text-gray-500 mb-1">
+                {{ item.variant_label }}
+              </p>
               <p class="text-orange-500 font-bold">
                 ₱{{ (item.price * item.quantity).toLocaleString() }}
               </p>
@@ -83,7 +86,7 @@
               </div>
             </div>
             <button
-              @click="remove(item.id)"
+              @click="remove(item.key)"
               class="text-gray-400 hover:text-red-500"
             >
               <svg
@@ -126,7 +129,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { useCartStore } from "../../stores/cart";
+import { useCartStore, type CartLine } from "../../stores/cart";
 
 const cartStore = useCartStore();
 const emit = defineEmits<{ (e: "close-cart"): void; (e: "open-checkout"): void }>();
@@ -143,14 +146,14 @@ const totalPrice = computed(() => {
   return cartStore.total().toLocaleString();
 });
 
-function increase(item: any) {
-  cartStore.updateQuantity(item.id, item.quantity + 1);
+function increase(item: CartLine) {
+  cartStore.updateQuantity(item.key, item.quantity + 1);
 }
-function decrease(item: any) {
-  cartStore.updateQuantity(item.id, item.quantity - 1);
+function decrease(item: CartLine) {
+  cartStore.updateQuantity(item.key, item.quantity - 1);
 }
 
-function remove(id: number) {
-  cartStore.removeItem(id);
+function remove(key: string) {
+  cartStore.removeItem(key);
 }
 </script>

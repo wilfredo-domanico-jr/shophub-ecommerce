@@ -85,7 +85,19 @@
         </div>
 
         <div class="bg-gray-50 border rounded-lg p-3 text-sm">
-          <div class="flex justify-between font-semibold">
+          <div
+            v-for="item in cartStore.checkoutItems()"
+            :key="item.key"
+            class="flex justify-between text-gray-600 mb-1"
+          >
+            <span>
+              {{ item.name }}
+              <span v-if="item.variant_label" class="text-gray-400">({{ item.variant_label }})</span>
+              × {{ item.quantity || 1 }}
+            </span>
+            <span>₱{{ (item.price * (item.quantity || 1)).toLocaleString() }}</span>
+          </div>
+          <div class="flex justify-between font-semibold border-t pt-2 mt-2">
             <span>Total</span>
             <span class="text-orange-500">₱{{ cartStore.checkoutTotal().toLocaleString() }}</span>
           </div>
@@ -162,6 +174,7 @@ async function submit() {
       ...form.value,
       items: cartStore.checkoutItems().map((item) => ({
         product_id: item.id,
+        variant_id: item.variant_id ?? undefined,
         quantity: item.quantity || 1,
       })),
     });

@@ -31,7 +31,7 @@ export function useAddToCart() {
     return true;
   }
 
-  async function addToCart<T extends { id: number; name: string }>(
+  async function addToCart<T extends { id: number; name: string; price: number }>(
     product: T,
     quantity = 1,
     guestMessage = "Sign in to add items to your cart."

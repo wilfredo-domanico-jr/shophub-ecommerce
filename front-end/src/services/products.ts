@@ -1,6 +1,21 @@
 import api from "./api";
 import type { PaginatedResponse } from "./pagination";
 
+export interface ProductOption {
+  name: string;
+  values: string[];
+}
+
+export interface ProductVariant {
+  id: number;
+  option_values: Record<string, string>;
+  /** null = inherits the product price */
+  price: string | null;
+  stock_quantity: number;
+  /** null = inherits the product image */
+  image: string | null;
+}
+
 export interface Product {
   id: number;
   category_id: number;
@@ -12,6 +27,9 @@ export interface Product {
   original_price: string | null;
   stock_quantity: number;
   image: string | null;
+  options?: ProductOption[] | null;
+  variants?: ProductVariant[];
+  variants_count?: number;
   is_featured: boolean;
   is_flash_sale: boolean;
   sold_count: number;
