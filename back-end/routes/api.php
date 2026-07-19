@@ -37,8 +37,9 @@ Route::get('/flash-sale', [FlashSaleController::class, 'current']);
 Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->middleware('throttle:5,1');
 Route::post('/newsletter/unsubscribe', [NewsletterController::class, 'unsubscribe'])->middleware('throttle:10,1');
 
-// Order tracking (public — works for orders placed before accounts existed)
-Route::post('/orders/track', [OrderController::class, 'track']);
+// Order tracking (public — works for orders placed before accounts existed).
+// Throttled: order numbers are guessable enough to brute-force otherwise.
+Route::post('/orders/track', [OrderController::class, 'track'])->middleware('throttle:15,1');
 
 // Auth
 Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
@@ -55,7 +56,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
 
     // Customer account
-    Route::post('/orders', [OrderController::class, 'store']);
+    // Throttled: each order queues a confirmation email to a caller-chosen
+    // address — unlimited checkouts would be a mail cannon.
+    Route::post('/orders', [OrderController::class, 'store'])->middleware('throttle:10,1');
     Route::post('/vouchers/preview', [VoucherController::class, 'preview'])->middleware('throttle:20,1');
     Route::patch('/profile', [ProfileController::class, 'update']);
     Route::patch('/profile/password', [ProfileController::class, 'updatePassword']);

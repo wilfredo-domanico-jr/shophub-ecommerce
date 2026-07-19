@@ -33,6 +33,13 @@ class SocialAuthTest extends TestCase
         ]);
     }
 
+    /** Callback request carrying a matching state param + cookie (the CSRF check). */
+    private function stateCallback(string $provider)
+    {
+        return $this->withUnencryptedCookie('oauth_state', 'test-state')
+            ->get("/api/auth/{$provider}/callback?state=test-state");
+    }
+
     private function mockSocialiteUser(
         string $provider,
         ?string $email,
@@ -78,7 +85,7 @@ class SocialAuthTest extends TestCase
     {
         $this->mockSocialiteUser('google', 'new@example.com');
 
-        $response = $this->get('/api/auth/google/callback');
+        $response = $this->stateCallback('google');
 
         $response->assertRedirect();
         $this->assertStringStartsWith(
@@ -102,7 +109,7 @@ class SocialAuthTest extends TestCase
         $existing = User::factory()->create(['email' => 'existing@example.com']);
         $this->mockSocialiteUser('google', 'existing@example.com');
 
-        $response = $this->get('/api/auth/google/callback');
+        $response = $this->stateCallback('google');
 
         $response->assertRedirect();
         $this->assertStringStartsWith(
@@ -127,7 +134,7 @@ class SocialAuthTest extends TestCase
         // Same provider id, different email at the provider.
         $this->mockSocialiteUser('google', 'changed@example.com');
 
-        $response = $this->get('/api/auth/google/callback');
+        $response = $this->stateCallback('google');
 
         $response->assertRedirect();
         $this->assertStringStartsWith(
@@ -142,12 +149,40 @@ class SocialAuthTest extends TestCase
     {
         $this->mockSocialiteUser('facebook', null);
 
-        $response = $this->get('/api/auth/facebook/callback');
+        $response = $this->stateCallback('facebook');
 
         $response->assertRedirect();
         $this->assertStringContainsString('error=no_email', $response->headers->get('Location'));
         $this->assertSame(0, User::count());
         $this->assertSame(0, SocialAccount::count());
+    }
+
+    public function test_callback_rejects_missing_or_mismatched_state(): void
+    {
+        // No state at all.
+        $response = $this->get('/api/auth/google/callback');
+        $response->assertRedirect();
+        $this->assertStringContainsString('error=social_failed', $response->headers->get('Location'));
+
+        // State param without the cookie (attacker-crafted link).
+        $response = $this->get('/api/auth/google/callback?state=forged');
+        $this->assertStringContainsString('error=social_failed', $response->headers->get('Location'));
+
+        // Cookie and param disagree.
+        $response = $this->withUnencryptedCookie('oauth_state', 'real')
+            ->get('/api/auth/google/callback?state=forged');
+        $this->assertStringContainsString('error=social_failed', $response->headers->get('Location'));
+
+        $this->assertSame(0, User::count());
+    }
+
+    public function test_redirect_sets_the_state_cookie(): void
+    {
+        $response = $this->get('/api/auth/google/redirect');
+
+        $response->assertRedirect();
+        $response->assertCookie('oauth_state');
+        $this->assertStringContainsString('state=', $response->headers->get('Location'));
     }
 
     public function test_callback_redirects_with_error_when_socialite_throws(): void
@@ -156,7 +191,7 @@ class SocialAuthTest extends TestCase
         Socialite::shouldReceive('stateless')->andReturnSelf();
         Socialite::shouldReceive('user')->andThrow(new \Exception('provider down'));
 
-        $response = $this->get('/api/auth/google/callback');
+        $response = $this->stateCallback('google');
 
         $response->assertRedirect();
         $this->assertStringContainsString('error=social_failed', $response->headers->get('Location'));
@@ -182,10 +217,10 @@ class SocialAuthTest extends TestCase
     public function test_both_providers_can_link_to_one_user(): void
     {
         $this->mockSocialiteUser('google', 'shared@example.com', 'google-1');
-        $this->get('/api/auth/google/callback')->assertRedirect();
+        $this->stateCallback('google')->assertRedirect();
 
         $this->mockSocialiteUser('facebook', 'shared@example.com', 'facebook-1');
-        $this->get('/api/auth/facebook/callback')->assertRedirect();
+        $this->stateCallback('facebook')->assertRedirect();
 
         $this->assertSame(1, User::count());
         $this->assertSame(2, SocialAccount::count());

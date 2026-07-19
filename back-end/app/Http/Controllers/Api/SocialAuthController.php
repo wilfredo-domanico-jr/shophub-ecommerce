@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\SocialAccount;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 
 class SocialAuthController extends Controller
@@ -18,13 +20,29 @@ class SocialAuthController extends Controller
 
         // Stateless: OAuth callbacks are top-level navigations from the
         // provider's domain, so Sanctum never treats them as stateful and
-        // there is no session to hold Socialite's state parameter.
-        return Socialite::driver($provider)->stateless()->redirect();
+        // there is no session to hold Socialite's state parameter. We carry
+        // our own state in a short-lived cookie instead — without it, a
+        // victim could be logged into an attacker's account via a crafted
+        // callback link (OAuth login CSRF).
+        $state = Str::random(40);
+
+        return Socialite::driver($provider)
+            ->stateless()
+            ->with(['state' => $state])
+            ->redirect()
+            ->withCookie(cookie('oauth_state', $state, 10));
     }
 
-    public function callback(string $provider)
+    public function callback(Request $request, string $provider)
     {
         $this->ensureProviderIsAvailable($provider);
+
+        $state = (string) $request->query('state', '');
+        $cookieState = (string) $request->cookie('oauth_state', '');
+
+        if ($state === '' || $cookieState === '' || ! hash_equals($cookieState, $state)) {
+            return $this->redirectToSpa(['error' => 'social_failed']);
+        }
 
         try {
             $socialUser = Socialite::driver($provider)->stateless()->user();

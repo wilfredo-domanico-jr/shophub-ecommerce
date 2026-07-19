@@ -75,6 +75,10 @@ class VoucherController extends Controller
                         'items' => "Please choose options for \"{$product->name}\".",
                     ]);
                 }
+            } elseif (! empty($item['variant_id'])) {
+                throw ValidationException::withMessages([
+                    'items' => "\"{$product->name}\" does not have options to choose.",
+                ]);
             }
 
             $price = $variant ? ($variant->price ?? $product->price) : $product->price;

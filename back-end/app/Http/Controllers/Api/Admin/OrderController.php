@@ -40,6 +40,9 @@ class OrderController extends Controller
             'status' => ['required', 'in:pending,processing,shipped,delivered,cancelled'],
         ]);
 
+        // Deliberate simplification: cancelling does NOT restock items,
+        // roll back sold_count, or release the voucher redemption — admins
+        // adjust stock manually for the rare cancellation.
         $order->update(['status' => $validated['status']]);
         $order->load('items');
 

@@ -40,6 +40,19 @@ class OrderController extends Controller
             $validated['shipping_address'] = $user->default_shipping_address ?? $validated['shipping_address'];
         }
 
+        // Merge duplicate lines (same product + variant) so the stock check
+        // sees the true total — separate lines could each pass individually
+        // and then drive the unsigned stock column negative on decrement.
+        $validated['items'] = collect($validated['items'])
+            ->groupBy(fn ($item) => $item['product_id'].':'.($item['variant_id'] ?? ''))
+            ->map(fn ($group) => [
+                'product_id' => $group->first()['product_id'],
+                'variant_id' => $group->first()['variant_id'] ?? null,
+                'quantity' => $group->sum('quantity'),
+            ])
+            ->values()
+            ->all();
+
         $order = DB::transaction(function () use ($validated, $user) {
             $productIds = collect($validated['items'])->pluck('product_id');
 
@@ -164,7 +177,9 @@ class OrderController extends Controller
             return $order;
         });
 
-        $order->load('items');
+        // refresh() picks up DB defaults (status, payment fields) so the
+        // response matches what GET /my/orders returns for the same order.
+        $order->refresh()->load('items');
 
         Mail::to($order->customer_email)->queue(new OrderConfirmationMail($order));
 

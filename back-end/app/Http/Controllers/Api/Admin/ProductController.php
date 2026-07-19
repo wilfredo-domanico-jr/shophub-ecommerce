@@ -220,19 +220,27 @@ class ProductController extends Controller
         $keptIds = array_values(array_filter(array_map(fn ($variant) => $variant['id'] ?? null, $variants)));
         $product->variants()->whereNotIn('id', $keptIds)->delete();
 
-        foreach ($variants as $variant) {
-            $attributes = [
-                'option_values' => $variant['option_values'],
-                'price' => $variant['price'] ?? null,
-                'stock_quantity' => $variant['stock_quantity'],
-                'image' => $variant['image'] ?? null,
-            ];
+        try {
+            foreach ($variants as $variant) {
+                $attributes = [
+                    'option_values' => $variant['option_values'],
+                    'price' => $variant['price'] ?? null,
+                    'stock_quantity' => $variant['stock_quantity'],
+                    'image' => $variant['image'] ?? null,
+                ];
 
-            if (! empty($variant['id'])) {
-                $product->variants()->whereKey($variant['id'])->first()?->update($attributes);
-            } else {
-                $product->variants()->create($attributes);
+                if (! empty($variant['id'])) {
+                    $product->variants()->whereKey($variant['id'])->first()?->update($attributes);
+                } else {
+                    $product->variants()->create($attributes);
+                }
             }
+        } catch (\Illuminate\Database\UniqueConstraintViolationException) {
+            // Mid-loop collision with a kept row still holding its old key
+            // (e.g. two rows swapping combinations) — a clean 422 beats a 500.
+            throw ValidationException::withMessages([
+                'variants' => 'Variant combinations conflict — regenerate the combinations and save again.',
+            ]);
         }
 
         $product->options = $options;
