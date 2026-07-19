@@ -31,16 +31,16 @@ class ProductSeeder extends Seeder
         }
 
         $trendingProducts = [
-            ['name' => 'Premium Wireless Headphones (Trending)', 'price' => 1499, 'original_price' => 2999, 'sold_count' => 156, 'rating' => 4.5, 'image' => 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=300&fit=crop', 'category' => $electronics],
-            ['name' => 'Smart Watch Series 7', 'price' => 2499, 'original_price' => 4999, 'sold_count' => 203, 'rating' => 4.8, 'image' => 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&h=300&fit=crop', 'category' => $electronics],
-            ['name' => 'Wireless Gaming Mouse', 'price' => 799, 'original_price' => 1599, 'sold_count' => 189, 'rating' => 4.6, 'image' => 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=300&h=300&fit=crop', 'category' => $electronics],
-            ['name' => 'Mechanical Keyboard RGB', 'price' => 1899, 'original_price' => 3499, 'sold_count' => 142, 'rating' => 4.7, 'image' => 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=300&h=300&fit=crop', 'category' => $electronics],
-            ['name' => '4K Webcam Pro', 'price' => 1299, 'original_price' => 2599, 'sold_count' => 98, 'rating' => 4.4, 'image' => 'https://images.unsplash.com/photo-1600456899121-68eda5705257?w=300&h=300&fit=crop', 'category' => $electronics],
-            ['name' => 'Portable Bluetooth Speaker', 'price' => 599, 'original_price' => 1299, 'sold_count' => 267, 'rating' => 4.3, 'image' => 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=300&h=300&fit=crop', 'category' => $electronics],
-            ['name' => 'USB-C Hub Multiport', 'price' => 899, 'original_price' => 1799, 'sold_count' => 178, 'rating' => 4.5, 'image' => 'https://images.unsplash.com/photo-1625948515291-69613efd103f?w=300&h=300&fit=crop', 'category' => $electronics],
-            ['name' => 'Ergonomic Office Chair', 'price' => 3999, 'original_price' => 7999, 'sold_count' => 89, 'rating' => 4.9, 'image' => 'https://images.unsplash.com/photo-1580480055273-228ff5388ef8?w=300&h=300&fit=crop', 'category' => $home],
-            ['name' => 'LED Desk Lamp', 'price' => 449, 'original_price' => 899, 'sold_count' => 321, 'rating' => 4.2, 'image' => 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=300&h=300&fit=crop', 'category' => $home],
-            ['name' => 'Phone Stand Holder', 'price' => 199, 'original_price' => 499, 'sold_count' => 445, 'rating' => 4.1, 'image' => 'https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=300&h=300&fit=crop', 'category' => $electronics],
+            ['name' => 'Premium Wireless Headphones (Trending)', 'price' => 1499, 'original_price' => 2999, 'sold_count' => 156, 'image' => 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=300&fit=crop', 'category' => $electronics],
+            ['name' => 'Smart Watch Series 7', 'price' => 2499, 'original_price' => 4999, 'sold_count' => 203, 'image' => 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&h=300&fit=crop', 'category' => $electronics],
+            ['name' => 'Wireless Gaming Mouse', 'price' => 799, 'original_price' => 1599, 'sold_count' => 189, 'image' => 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=300&h=300&fit=crop', 'category' => $electronics],
+            ['name' => 'Mechanical Keyboard RGB', 'price' => 1899, 'original_price' => 3499, 'sold_count' => 142, 'image' => 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=300&h=300&fit=crop', 'category' => $electronics],
+            ['name' => '4K Webcam Pro', 'price' => 1299, 'original_price' => 2599, 'sold_count' => 98, 'image' => 'https://images.unsplash.com/photo-1600456899121-68eda5705257?w=300&h=300&fit=crop', 'category' => $electronics],
+            ['name' => 'Portable Bluetooth Speaker', 'price' => 599, 'original_price' => 1299, 'sold_count' => 267, 'image' => 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=300&h=300&fit=crop', 'category' => $electronics],
+            ['name' => 'USB-C Hub Multiport', 'price' => 899, 'original_price' => 1799, 'sold_count' => 178, 'image' => 'https://images.unsplash.com/photo-1625948515291-69613efd103f?w=300&h=300&fit=crop', 'category' => $electronics],
+            ['name' => 'Ergonomic Office Chair', 'price' => 3999, 'original_price' => 7999, 'sold_count' => 89, 'image' => 'https://images.unsplash.com/photo-1580480055273-228ff5388ef8?w=300&h=300&fit=crop', 'category' => $home],
+            ['name' => 'LED Desk Lamp', 'price' => 449, 'original_price' => 899, 'sold_count' => 321, 'image' => 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=300&h=300&fit=crop', 'category' => $home],
+            ['name' => 'Phone Stand Holder', 'price' => 199, 'original_price' => 499, 'sold_count' => 445, 'image' => 'https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=300&h=300&fit=crop', 'category' => $electronics],
         ];
 
         foreach ($trendingProducts as $product) {
@@ -71,7 +71,6 @@ class ProductSeeder extends Seeder
                     ['name' => 'Size', 'values' => ['S', 'M', 'L']],
                 ],
                 'is_featured' => true,
-                'rating' => 4.6,
                 'is_active' => true,
             ]
         );
@@ -103,7 +102,6 @@ class ProductSeeder extends Seeder
                 'options' => [
                     ['name' => 'Color', 'values' => ['Natural', 'Navy', 'Olive']],
                 ],
-                'rating' => 4.4,
                 'is_active' => true,
             ]
         );
@@ -136,7 +134,6 @@ class ProductSeeder extends Seeder
                 'is_flash_sale' => $isFlashSale,
                 'sold_count' => $data['sold_count'],
                 'flash_sale_goal' => $data['flash_sale_goal'] ?? null,
-                'rating' => $data['rating'] ?? 4.5,
                 'is_active' => true,
             ]
         );

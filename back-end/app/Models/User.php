@@ -60,6 +60,11 @@ class User extends Authenticatable
         return $this->hasMany(SocialAccount::class);
     }
 
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
+
     /**
      * In demo mode the seeded demo accounts are shared by every visitor —
      * nobody may modify or delete them.

@@ -28,6 +28,7 @@ class Product extends Model
         'sold_count',
         'flash_sale_goal',
         'rating',
+        'reviews_count',
         'is_active',
     ];
 
@@ -57,6 +58,29 @@ class Product extends Model
     public function variants(): HasMany
     {
         return $this->hasMany(ProductVariant::class)->orderBy('id');
+    }
+
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    /**
+     * rating/reviews_count are denormalized from the visible reviews.
+     * Recomputing from source (rather than incrementing) keeps them
+     * self-healing — no lock needed, a concurrent write is corrected
+     * by whichever review event fires next.
+     */
+    public function syncRatingFromReviews(): void
+    {
+        $stats = $this->reviews()->visible()
+            ->selectRaw('count(*) as total, coalesce(avg(rating), 0) as average')
+            ->first();
+
+        $this->forceFill([
+            'reviews_count' => (int) $stats->total,
+            'rating' => round((float) $stats->average, 1),
+        ])->save();
     }
 
     public function scopeActive(Builder $query): Builder
