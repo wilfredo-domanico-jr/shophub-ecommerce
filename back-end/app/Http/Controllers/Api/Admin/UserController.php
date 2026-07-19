@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Product;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
 {
@@ -81,7 +83,18 @@ class UserController extends Controller
             return response()->json(['message' => 'Demo accounts cannot be deleted.'], 422);
         }
 
+        // The DB cascade removes this user's reviews without firing model
+        // events, so clean up photo files and resync the affected products
+        // ourselves.
+        $reviews = $user->reviews()->get(['id', 'product_id', 'photos']);
+        Storage::disk('public')->delete($reviews->pluck('photos')->flatten()->filter()->all());
+
         $user->delete();
+
+        Product::whereIn('id', $reviews->pluck('product_id')->unique())
+            ->get()
+            ->each
+            ->syncRatingFromReviews();
 
         return response()->json(['message' => 'User removed']);
     }

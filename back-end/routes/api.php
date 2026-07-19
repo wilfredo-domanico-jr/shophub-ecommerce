@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\Admin\NewsletterController as AdminNewsletterContro
 use App\Http\Controllers\Api\Admin\NewsletterSubscriberController as AdminNewsletterSubscriberController;
 use App\Http\Controllers\Api\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Api\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Api\Admin\ReviewController as AdminReviewController;
 use App\Http\Controllers\Api\Admin\UploadController as AdminUploadController;
 use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\Admin\VoucherController as AdminVoucherController;
@@ -81,6 +82,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/orders', [AdminOrderController::class, 'index']);
         Route::get('/orders/{order}', [AdminOrderController::class, 'show']);
         Route::patch('/orders/{order}/status', [AdminOrderController::class, 'updateStatus']);
+
+        Route::get('/reviews', [AdminReviewController::class, 'index']);
+        Route::patch('/reviews/{review}/visibility', [AdminReviewController::class, 'updateVisibility']);
+        Route::delete('/reviews/{review}', [AdminReviewController::class, 'destroy']);
 
         Route::apiResource('users', AdminUserController::class)->except(['show']);
         Route::apiResource('careers', AdminJobOpeningController::class)->except(['show']);

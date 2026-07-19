@@ -7,6 +7,7 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -61,6 +62,12 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
+        // Review rows go with the product via DB cascade (no model events),
+        // so their photo files have to be removed here.
+        Storage::disk('public')->delete(
+            $product->reviews()->pluck('photos')->flatten()->filter()->all()
+        );
+
         $product->delete();
 
         return response()->json(['message' => 'Product deleted']);
