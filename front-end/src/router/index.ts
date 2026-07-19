@@ -29,6 +29,7 @@ import MyOrders from "../views/Account/MyOrders.vue";
 import AdminDashboard from "../views/Admin/Dashboard.vue";
 import AdminProducts from "../views/Admin/Products.vue";
 import AdminOrders from "../views/Admin/Orders.vue";
+import AdminReviews from "../views/Admin/Reviews.vue";
 import AdminCategories from "../views/Admin/Categories.vue";
 import AdminUsers from "../views/Admin/Users.vue";
 import AdminCareers from "../views/Admin/Careers.vue";
@@ -197,6 +198,11 @@ const routes = [
         path: "orders",
         name: "AdminOrders",
         component: AdminOrders,
+      },
+      {
+        path: "reviews",
+        name: "AdminReviews",
+        component: AdminReviews,
       },
       {
         path: "categories",
