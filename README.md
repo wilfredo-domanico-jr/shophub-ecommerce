@@ -1,6 +1,6 @@
-# 🛒 ShopHub — E‑Commerce Platform
+# ShopHub — E-Commerce Platform
 
-ShopHub is a full-stack **e‑commerce web application** built with a **Laravel REST API** and a **Vue 3 SPA**. It's a portfolio project demonstrating a real, working store: a browsable catalog, customer accounts with cart and checkout, order tracking, and a full admin panel — built from the ground up with an industry-standard, decoupled architecture.
+ShopHub is a full-stack **e-commerce web application** built with a **Laravel REST API** and a **Vue 3 SPA**. It's a portfolio project demonstrating a real, working store: a browsable catalog, customer accounts with cart and checkout, order tracking, and a full admin panel — built from the ground up with an industry-standard, decoupled architecture.
 
 ---
 
@@ -12,7 +12,7 @@ ShopHub is a full-stack **e‑commerce web application** built with a **Laravel 
 
 ---
 
-## 🚀 Tech Stack
+## Tech Stack
 
 ### Backend (API)
 
@@ -34,7 +34,7 @@ ShopHub is a full-stack **e‑commerce web application** built with a **Laravel 
 
 ---
 
-## 🧩 Architecture Overview
+## Architecture Overview
 
 ```
 Frontend (Vue SPA)
@@ -53,7 +53,7 @@ Database (MySQL)
 
 ---
 
-## 🔐 Authentication
+## Authentication
 
 Both **customers** and **admins** have accounts, authenticated with Sanctum bearer tokens:
 
@@ -67,9 +67,9 @@ Both **customers** and **admins** have accounts, authenticated with Sanctum bear
 
 ---
 
-## ✨ Core Features
+## Core Features
 
-### 👤 Storefront (Customer-facing)
+### Storefront (Customer-facing)
 
 - Home page with hero carousel, flash sale section, dynamic category bar, and trending products
 - **Scheduled flash sales** — the flash sale section runs on a real admin-set schedule: a "Starts In" countdown before the sale opens (products hidden), "Ends In" while live, and the section hides itself entirely when nothing is scheduled
@@ -86,7 +86,7 @@ Both **customers** and **admins** have accounts, authenticated with Sanctum bear
 - Real content pages: Help Center (FAQ), Returns & Refunds, Shipping Info, Our Story, Careers, Press & Media, Privacy Policy
 - Order confirmation, status-update & password-reset **emails**, sent via queued Laravel Mailables
 
-### 🛠 Admin Panel
+### Admin Panel
 
 - Dashboard with real sales/orders/products/customers stats and a 7-day sales chart
 - **Products** — full CRUD, drag-and-drop image upload, search, pagination, and full control of original price, featured, flash-sale (+ goal), and active flags
@@ -102,14 +102,14 @@ Both **customers** and **admins** have accounts, authenticated with Sanctum bear
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ### Backend (Laravel) — see [`back-end/README.md`](back-end/README.md)
 
 ```
 /app/Http/Controllers/Api      # public, auth/profile, and admin API controllers
-/app/Models                    # User, Category, Product, Order, OrderItem
-/app/Mail                      # order, status-update & password-reset Mailables
+/app/Models                    # Eloquent models (User, Product + variants, Order, Voucher, FlashSale, ...)
+/app/Mail                      # order, status-update, password-reset & newsletter Mailables
 /database/migrations           # schema
 /database/seeders              # demo categories, products, admin (+ demo customer)
 /routes/api.php                # all API routes
@@ -135,13 +135,13 @@ Both **customers** and **admins** have accounts, authenticated with Sanctum bear
 
 ---
 
-## ⚙️ Setup Instructions
+## Setup Instructions
 
 There are two ways to run ShopHub: natively on your machine, or via Docker Compose (no PHP/Node/MySQL install required). Pick one.
 
 ### Option A — Local (native)
 
-**1️⃣ Backend (Laravel API)**
+**1. Backend (Laravel API)**
 
 ```bash
 cd back-end
@@ -153,7 +153,7 @@ php artisan migrate --seed
 php artisan serve
 ```
 
-**2️⃣ Frontend (Vue SPA)**
+**2. Frontend (Vue SPA)**
 
 ```bash
 cd front-end
@@ -182,22 +182,22 @@ This starts MySQL, the backend API (migrated + seeded automatically), and the fr
 | Backend  | http://localhost:8000         |
 | MySQL    | localhost:3307                |
 
-Seeded admin login: `admin@shophub.test` / `password`. See [`back-end/README.md`](back-end/README.md#-docker) and [`front-end/README.md`](front-end/README.md#-docker) for details on what each container does.
+Seeded admin login: `admin@shophub.test` / `password`. See [`back-end/README.md`](back-end/README.md#docker) and [`front-end/README.md`](front-end/README.md#docker) for details on what each container does.
 
 To stop: `docker compose down` (add `-v` to also wipe the database volume).
 
-**Demo mode:** set `DEMO_MODE=true` in the root `.env` (it's **off by default**) to add one-click "Try Demo Admin Login" and "Try Demo Customer Login" buttons to `/admin/login` and `/login` — portfolio visitors can explore both sides of the app without credentials. The demo customer account is only seeded while demo mode is on, and the demo accounts are protected from tampering (no edits, deletion, or password resets) so they keep working for every visitor. See [`back-end/README.md`](back-end/README.md#-demo-mode) for details.
+**Demo mode:** set `DEMO_MODE=true` in the root `.env` (it's **off by default**) to add one-click "Try Demo Admin Login" and "Try Demo Customer Login" buttons to `/admin/login` and `/login` — portfolio visitors can explore both sides of the app without credentials. The demo customer account is only seeded while demo mode is on, and the demo accounts are protected from tampering (no edits, deletion, or password resets) so they keep working for every visitor. See [`back-end/README.md`](back-end/README.md#demo-mode) for details.
 
 ---
 
-## 🧪 Testing
+## Testing
 
 ```bash
 cd back-end && php artisan test     # 200+ feature & unit tests (auth incl. social login, accounts, password reset, catalog, product variants, vouchers, flash sales, admin CRUD, checkout, tracking, newsletter)
 cd front-end && npm run test        # Vitest: Pinia stores (auth, cart incl. buy-now & variant lines) + components
 ```
 
-## ⚙️ Continuous Integration
+## Continuous Integration
 
 Two GitHub Actions workflows ([`.github/workflows`](.github/workflows)) run on every push/PR that touches their respective folder:
 
@@ -206,44 +206,20 @@ Two GitHub Actions workflows ([`.github/workflows`](.github/workflows)) run on e
 
 ---
 
-## 🌐 API Communication
-
-- All data exchange is handled via REST endpoints under `/api`
-- JSON request/response format
-- Centralized Axios client with Bearer token auth for admin routes
-
----
-
-## 📈 Scalability & Best Practices
-
-- Clean separation of frontend and backend
-- Reusable API — ready for a future mobile app
-- Modular, typed frontend services per resource (products, orders, categories, admin/*)
-- Admin actions guarded by both middleware and route guards
-
----
-
-## 🧪 Future Enhancements
+## Roadmap
 
 - Real payment gateway integration (currently Cash on Delivery only)
 - Product reviews & ratings
 - Wishlist / saved items
-- Discount and voucher system
 
 ---
 
-## 👨‍💻 Author
+## Author
 
-**Wilfredo Domanico Jr.**
-
-Full‑stack Web Developer
+**Wilfredo Domanico Jr.** — Full-stack Web Developer
 
 ---
 
-## 📄 License
+## License
 
 This project is for educational and portfolio purposes.
-
----
-
-> 💡 _ShopHub demonstrates a production‑ready Laravel + Vue architecture commonly used in real‑world enterprise applications._

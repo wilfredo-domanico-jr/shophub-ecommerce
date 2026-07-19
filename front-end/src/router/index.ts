@@ -40,9 +40,7 @@ import AdminNewsletters from "../views/Admin/Newsletters.vue";
 import NotFound from "../views/NotFound.vue";
 
 const routes = [
-  // =========================
-  // PUBLIC WEBSITE
-  // =========================
+  // Public site
   {
     path: "/",
     component: DefaultLayout,
@@ -166,9 +164,7 @@ const routes = [
     ],
   },
 
-  // =========================
-  // AUTH (LOGIN / REGISTER)
-  // =========================
+  // Auth
   {
     path: "/admin/login",
     component: AuthenticationLayout,
@@ -181,9 +177,7 @@ const routes = [
     ],
   },
 
-  // =========================
-  // ADMIN DASHBOARD
-  // =========================
+  // Admin
   {
     path: "/admin",
     component: AdminLayout,
@@ -194,23 +188,22 @@ const routes = [
         name: "AdminDashboard",
         component: AdminDashboard,
       },
-      
       {
         path: "products",
         name: "AdminProducts",
         component: AdminProducts,
       },
-       {
+      {
         path: "orders",
         name: "AdminOrders",
         component: AdminOrders,
       },
-        {
+      {
         path: "categories",
         name: "AdminCategories",
         component: AdminCategories,
       },
-       {
+      {
         path: "users",
         name: "AdminUsers",
         component: AdminUsers,
@@ -238,9 +231,7 @@ const routes = [
     ],
   },
 
-  // =========================
-  // 404 PAGE (MUST BE LAST)
-  // =========================
+  // Catch-all 404 — keep last
   {
     path: "/:pathMatch(.*)*",
     name: "NotFound",

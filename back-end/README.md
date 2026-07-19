@@ -1,10 +1,10 @@
-# 🛠 ShopHub — Backend API
+# ShopHub — Backend API
 
 This is the Laravel REST API powering [ShopHub](../README.md) — it serves JSON to the Vue storefront and admin panel and isn't meant to be browsed directly (visiting `/` shows a small status page confirming the API is running).
 
 ---
 
-## 🚀 Tech Stack
+## Tech Stack
 
 - **Laravel 12** (PHP 8.2)
 - **MySQL**
@@ -15,7 +15,7 @@ This is the Laravel REST API powering [ShopHub](../README.md) — it serves JSON
 
 ---
 
-## 🔐 Authentication
+## Authentication
 
 Customers and admins share one `users` table (an `is_admin` flag separates them). Login and registration issue a Sanctum personal access token, sent as a `Bearer` header on every authenticated request. Admin-only routes are additionally gated by an `EnsureUserIsAdmin` middleware.
 
@@ -27,7 +27,7 @@ Customers and admins share one `users` table (an `is_admin` flag separates them)
 
 ---
 
-## 🌐 API Overview
+## API Overview
 
 ### Public
 
@@ -104,7 +104,7 @@ PATCH  /api/admin/orders/{order}/status   # also sends status-update email
 
 ---
 
-## 🗄 Data Model
+## Data Model
 
 ```
 User          — customers & admins (is_admin flag); phone + default shipping address;
@@ -130,7 +130,7 @@ NewsletterSubscriber — email, per-subscriber unsubscribe token, unsubscribed_a
 
 ---
 
-## 📧 Email
+## Email
 
 Order confirmation, status-update, password-reset, newsletter-welcome, and newsletter campaign emails are sent via queued Laravel Mailables (`app/Mail/`) rendered from Markdown Blade templates. Newsletter emails include a per-subscriber unsubscribe link; unsubscribed addresses are never mailed again.
 
@@ -151,7 +151,7 @@ MAIL_FROM_NAME="ShopHub"
 
 ---
 
-## ⚙️ Setup (local)
+## Setup (local)
 
 ```bash
 composer install
@@ -181,7 +181,7 @@ composer run dev
 
 ---
 
-## 🐳 Docker
+## Docker
 
 From the repo root:
 
@@ -207,7 +207,7 @@ Rebuild after changing PHP dependencies or the Dockerfile: `docker compose build
 
 ---
 
-## 🎭 Demo Mode
+## Demo Mode
 
 Set these in `.env` (**off by default** — everywhere, including `docker-compose.yml`) to add one-click "Try Demo Admin Login" / "Try Demo Customer Login" buttons to the frontend's `/admin/login` and `/login` pages — handy for letting portfolio visitors explore both sides of the app without needing credentials:
 
@@ -227,7 +227,7 @@ While demo mode is on, the demo accounts are **protected from tampering** so the
 
 ---
 
-## 🔗 Social Login (Google & Facebook)
+## Social Login (Google & Facebook)
 
 Optional — with no credentials configured, `/api/config` reports `social_providers: []` and the SPA hides the buttons entirely. To enable a provider, create OAuth credentials and set them in `.env`:
 
@@ -251,7 +251,7 @@ Full click-by-click walkthrough, linking behavior, and known limitations: [`docs
 
 ---
 
-## 🧪 Tests
+## Tests
 
 ```bash
 php artisan test
@@ -275,6 +275,6 @@ Tests run against an in-memory SQLite database (configured in `phpunit.xml`), so
 
 ---
 
-## 📄 License
+## License
 
 Part of the [ShopHub](../README.md) portfolio project.

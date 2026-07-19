@@ -1,10 +1,10 @@
-# 🛍 ShopHub — Frontend (SPA)
+# ShopHub — Frontend (SPA)
 
 This is the Vue 3 storefront and admin panel for [ShopHub](../README.md) — a fully decoupled SPA that talks to the [Laravel API](../back-end/README.md) over REST.
 
 ---
 
-## 🚀 Tech Stack
+## Tech Stack
 
 - **Vue 3** + **TypeScript** (`<script setup>`)
 - **Vite** — build tool
@@ -16,7 +16,7 @@ This is the Vue 3 storefront and admin panel for [ShopHub](../README.md) — a f
 
 ---
 
-## 🎨 Branding
+## Branding
 
 Centralized in `tailwind.config.js` and `src/assets/main.css`:
 
@@ -25,7 +25,7 @@ Centralized in `tailwind.config.js` and `src/assets/main.css`:
 
 ---
 
-## ✨ Pages & Features
+## Pages & Features
 
 ### Storefront (`/`)
 
@@ -60,7 +60,7 @@ Centralized in `tailwind.config.js` and `src/assets/main.css`:
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```
 src/
@@ -82,7 +82,7 @@ scripts/                  # dev utilities (regenerate the category icon library)
 
 ---
 
-## ⚙️ Setup (local)
+## Setup (local)
 
 ```bash
 npm install
@@ -100,7 +100,7 @@ Make sure this matches whatever port Vite actually starts on when you set the ba
 
 ---
 
-## 🐳 Docker
+## Docker
 
 From the repo root:
 
@@ -114,7 +114,7 @@ This image is dev-oriented (matches `npm run dev`), not a production build — f
 
 ---
 
-## 🧪 Testing
+## Testing
 
 ```bash
 npm run test            # run once (Vitest)
@@ -126,7 +126,7 @@ Tests live alongside the code they cover, in `__tests__/` folders (e.g. `src/sto
 
 ---
 
-## 🏗 Build
+## Build
 
 ```bash
 npm run build      # type-checks (vue-tsc) then builds
@@ -135,6 +135,6 @@ npm run preview    # preview the production build
 
 ---
 
-## 📄 License
+## License
 
 Part of the [ShopHub](../README.md) portfolio project.

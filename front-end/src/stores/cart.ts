@@ -23,7 +23,7 @@ export function lineKey(product: Pick<CartProduct, 'id' | 'variant_id'>): string
 }
 
 export const useCartStore = defineStore('cart', () => {
-  const items = ref<CartLine[]>([]); // Cart items
+  const items = ref<CartLine[]>([]);
 
   // "Buy now" checks out a single item without touching the cart.
   const buyNowItem = ref<CartLine | null>(null);

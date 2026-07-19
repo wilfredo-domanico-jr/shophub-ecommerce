@@ -37,7 +37,8 @@ npm install
 - Dev server: `npm run dev`
 - Production build (type-checks via `vue-tsc -b` then builds): `npm run build`
 - Preview a production build: `npm run preview`
-- No test runner or lint script is configured yet.
+- Run tests (Vitest, specs in `src/**/*.spec.ts`): `npm test` (also `npm run test:watch`, `npm run test:coverage`)
+- No lint script is configured yet.
 
 ## Architecture
 
