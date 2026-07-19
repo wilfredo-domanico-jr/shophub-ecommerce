@@ -337,8 +337,16 @@ const emptyForm = (): VoucherForm => ({
 
 const form = ref<VoucherForm>(emptyForm());
 
-// API dates ("2026-07-19T00:00:00.000000Z" or similar) -> datetime-local input value
-const toInputDate = (iso: string | null) => (iso ? iso.slice(0, 16) : "");
+// API dates are UTC ISO; datetime-local inputs are local wall time.
+// Convert properly in both directions or schedules shift by the UTC offset.
+const toInputDate = (iso: string | null) => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 16);
+};
+
+const toApiDate = (local: string) => (local ? new Date(local).toISOString() : null);
 
 function openAdd() {
   isEdit.value = false;
@@ -388,8 +396,8 @@ async function save() {
     value: Number(form.value.value),
     max_discount: form.value.type === "percent" ? numberOrNull(form.value.max_discount) : null,
     min_spend: numberOrNull(form.value.min_spend),
-    starts_at: form.value.starts_at || null,
-    expires_at: form.value.expires_at || null,
+    starts_at: toApiDate(form.value.starts_at),
+    expires_at: toApiDate(form.value.expires_at),
     usage_limit: numberOrNull(form.value.usage_limit),
     per_customer_limit: form.value.oncePerCustomer ? 1 : null,
     is_active: form.value.is_active,

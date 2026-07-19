@@ -228,7 +228,16 @@ const emptyForm = (): SaleForm => ({
 
 const form = ref<SaleForm>(emptyForm());
 
-const toInputDate = (iso: string) => (iso ? iso.slice(0, 16) : "");
+// API dates are UTC ISO; datetime-local inputs are local wall time.
+// Convert properly in both directions or schedules shift by the UTC offset.
+const toInputDate = (iso: string) => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0, 16);
+};
+
+const toApiDate = (local: string) => new Date(local).toISOString();
 
 function openAdd() {
   isEdit.value = false;
@@ -266,8 +275,8 @@ async function save() {
 
   const payload = {
     title: form.value.title.trim(),
-    starts_at: form.value.starts_at,
-    ends_at: form.value.ends_at,
+    starts_at: toApiDate(form.value.starts_at),
+    ends_at: toApiDate(form.value.ends_at),
     is_active: form.value.is_active,
   };
 
