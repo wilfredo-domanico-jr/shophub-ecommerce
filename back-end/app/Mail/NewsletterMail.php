@@ -29,8 +29,10 @@ class NewsletterMail extends Mailable implements ShouldQueue
 
     public function content(): Content
     {
+        // Plain HTML view (not markdown): markdown mails can't inline-embed
+        // images, and locally uploaded banners must travel inside the email.
         return new Content(
-            markdown: 'emails.newsletter',
+            view: 'emails.newsletter',
             with: [
                 'newsletter' => $this->newsletter,
                 'shopUrl' => config('app.frontend_url'),
