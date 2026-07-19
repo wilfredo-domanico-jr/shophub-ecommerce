@@ -2,13 +2,14 @@
 
 use App\Http\Controllers\Api\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Api\Admin\DashboardController;
+use App\Http\Controllers\Api\Admin\JobOpeningController as AdminJobOpeningController;
+use App\Http\Controllers\Api\Admin\NewsletterController as AdminNewsletterController;
+use App\Http\Controllers\Api\Admin\NewsletterSubscriberController as AdminNewsletterSubscriberController;
 use App\Http\Controllers\Api\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Api\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Api\Admin\UploadController as AdminUploadController;
 use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
-use App\Http\Controllers\Api\Admin\JobOpeningController as AdminJobOpeningController;
-use App\Http\Controllers\Api\Admin\NewsletterController as AdminNewsletterController;
-use App\Http\Controllers\Api\Admin\NewsletterSubscriberController as AdminNewsletterSubscriberController;
+use App\Http\Controllers\Api\Admin\VoucherController as AdminVoucherController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CareerController;
 use App\Http\Controllers\Api\CategoryController;
@@ -19,6 +20,7 @@ use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\SocialAuthController;
+use App\Http\Controllers\Api\VoucherController;
 use Illuminate\Support\Facades\Route;
 
 // Public storefront
@@ -50,6 +52,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Customer account
     Route::post('/orders', [OrderController::class, 'store']);
+    Route::post('/vouchers/preview', [VoucherController::class, 'preview'])->middleware('throttle:20,1');
     Route::patch('/profile', [ProfileController::class, 'update']);
     Route::patch('/profile/password', [ProfileController::class, 'updatePassword']);
     Route::get('/my/orders', [OrderController::class, 'myOrders']);
@@ -67,6 +70,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::apiResource('users', AdminUserController::class)->except(['show']);
         Route::apiResource('careers', AdminJobOpeningController::class)->except(['show']);
+        Route::apiResource('vouchers', AdminVoucherController::class)->except(['show']);
 
         Route::apiResource('newsletters', AdminNewsletterController::class)->except(['show']);
         Route::post('/newsletters/{newsletter}/send', [AdminNewsletterController::class, 'send']);

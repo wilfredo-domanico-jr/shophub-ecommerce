@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Mail\OrderConfirmationMail;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\Voucher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -21,6 +22,7 @@ class OrderController extends Controller
             'customer_phone' => ['required', 'string', 'max:30'],
             'shipping_address' => ['required', 'string'],
             'notes' => ['nullable', 'string'],
+            'voucher_code' => ['nullable', 'string', 'max:50'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'integer', 'exists:products,id'],
             'items.*.variant_id' => ['nullable', 'integer'],
@@ -38,9 +40,7 @@ class OrderController extends Controller
             $validated['shipping_address'] = $user->default_shipping_address ?? $validated['shipping_address'];
         }
 
-        $userId = $user->id;
-
-        $order = DB::transaction(function () use ($validated, $userId) {
+        $order = DB::transaction(function () use ($validated, $user) {
             $productIds = collect($validated['items'])->pluck('product_id');
 
             // The product-row lock serializes every stock mutation for these
@@ -104,11 +104,31 @@ class OrderController extends Controller
                 ];
             }
 
+            $voucher = null;
+            $discount = 0.0;
+
+            if (! empty($validated['voucher_code'])) {
+                // lockForUpdate serializes concurrent redemptions against usage_limit.
+                $voucher = Voucher::findByCode($validated['voucher_code'], lockForUpdate: true);
+
+                if (! $voucher) {
+                    throw ValidationException::withMessages([
+                        'voucher_code' => 'That voucher code is not valid.',
+                    ]);
+                }
+
+                $voucher->validateFor($user, $subtotal);
+                $discount = $voucher->discountFor($subtotal);
+            }
+
             $shippingFee = 0;
-            $total = $subtotal + $shippingFee;
+            $total = $subtotal - $discount + $shippingFee;
 
             $order = Order::create([
-                'user_id' => $userId,
+                'user_id' => $user->id,
+                'voucher_id' => $voucher?->id,
+                'voucher_code' => $voucher?->code,
+                'discount' => $discount,
                 'customer_name' => $validated['customer_name'],
                 'customer_email' => $validated['customer_email'],
                 'customer_phone' => $validated['customer_phone'],
@@ -138,6 +158,8 @@ class OrderController extends Controller
                 $product->decrement('stock_quantity', $data['quantity']);
                 $product->increment('sold_count', $data['quantity']);
             }
+
+            $voucher?->increment('used_count');
 
             return $order;
         });
@@ -181,6 +203,8 @@ class OrderController extends Controller
             'order_number' => $order->order_number,
             'status' => $order->status,
             'created_at' => $order->created_at,
+            'voucher_code' => $order->voucher_code,
+            'discount' => $order->discount,
             'total' => $order->total,
             'items' => $order->items->map(fn ($item) => [
                 'id' => $item->id,
