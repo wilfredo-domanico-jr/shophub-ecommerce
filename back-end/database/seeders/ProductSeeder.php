@@ -46,6 +46,76 @@ class ProductSeeder extends Seeder
         foreach ($trendingProducts as $product) {
             $this->createProduct($product, isFlashSale: false, isFeatured: true);
         }
+
+        $this->seedVariantProducts($fashion);
+    }
+
+    /**
+     * Sample variant products so the demo shows off option pickers,
+     * per-variant pricing/images, and a sold-out combination.
+     */
+    private function seedVariantProducts(Category $fashion): void
+    {
+        $shirt = Product::firstOrCreate(
+            ['slug' => 'classic-cotton-t-shirt'],
+            [
+                'category_id' => $fashion->id,
+                'name' => 'Classic Cotton T-Shirt',
+                'description' => 'Soft 100% cotton tee available in multiple colors and sizes.',
+                'price' => 499,
+                'original_price' => 799,
+                'stock_quantity' => 0,
+                'image' => 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=300&h=300&fit=crop',
+                'options' => [
+                    ['name' => 'Color', 'values' => ['White', 'Black', 'Red']],
+                    ['name' => 'Size', 'values' => ['S', 'M', 'L']],
+                ],
+                'is_featured' => true,
+                'rating' => 4.6,
+                'is_active' => true,
+            ]
+        );
+
+        if ($shirt->variants()->doesntExist()) {
+            $shirt->variants()->createMany([
+                ['option_values' => ['Color' => 'White', 'Size' => 'S'], 'stock_quantity' => 12],
+                ['option_values' => ['Color' => 'White', 'Size' => 'M'], 'stock_quantity' => 15],
+                ['option_values' => ['Color' => 'White', 'Size' => 'L'], 'stock_quantity' => 8],
+                ['option_values' => ['Color' => 'Black', 'Size' => 'S'], 'stock_quantity' => 10, 'image' => 'https://images.unsplash.com/photo-1503341504253-dff4815485f1?w=300&h=300&fit=crop'],
+                ['option_values' => ['Color' => 'Black', 'Size' => 'M'], 'stock_quantity' => 0, 'image' => 'https://images.unsplash.com/photo-1503341504253-dff4815485f1?w=300&h=300&fit=crop'],
+                ['option_values' => ['Color' => 'Black', 'Size' => 'L'], 'price' => 549, 'stock_quantity' => 6, 'image' => 'https://images.unsplash.com/photo-1503341504253-dff4815485f1?w=300&h=300&fit=crop'],
+                ['option_values' => ['Color' => 'Red', 'Size' => 'S'], 'stock_quantity' => 9],
+                ['option_values' => ['Color' => 'Red', 'Size' => 'M'], 'stock_quantity' => 11],
+                ['option_values' => ['Color' => 'Red', 'Size' => 'L'], 'price' => 549, 'stock_quantity' => 4],
+            ]);
+            $shirt->update(['stock_quantity' => $shirt->variants()->sum('stock_quantity')]);
+        }
+
+        $tote = Product::firstOrCreate(
+            ['slug' => 'canvas-tote-bag'],
+            [
+                'category_id' => $fashion->id,
+                'name' => 'Canvas Tote Bag',
+                'description' => 'Durable everyday canvas tote in your choice of color.',
+                'price' => 349,
+                'stock_quantity' => 0,
+                'image' => 'https://images.unsplash.com/photo-1544816155-12df9643f363?w=300&h=300&fit=crop',
+                'options' => [
+                    ['name' => 'Color', 'values' => ['Natural', 'Navy', 'Olive']],
+                ],
+                'rating' => 4.4,
+                'is_active' => true,
+            ]
+        );
+
+        if ($tote->variants()->doesntExist()) {
+            $tote->variants()->createMany([
+                ['option_values' => ['Color' => 'Natural'], 'stock_quantity' => 20],
+                ['option_values' => ['Color' => 'Navy'], 'stock_quantity' => 14],
+                ['option_values' => ['Color' => 'Olive'], 'stock_quantity' => 7],
+            ]);
+            $tote->update(['stock_quantity' => $tote->variants()->sum('stock_quantity')]);
+        }
     }
 
     private function createProduct(array $data, bool $isFlashSale, bool $isFeatured): void
@@ -57,7 +127,7 @@ class ProductSeeder extends Seeder
             [
                 'category_id' => $data['category']->id,
                 'name' => $data['name'],
-                'description' => $data['name'] . ' — great quality, fast shipping.',
+                'description' => $data['name'].' — great quality, fast shipping.',
                 'price' => $data['price'],
                 'original_price' => $data['original_price'],
                 'stock_quantity' => 100,
