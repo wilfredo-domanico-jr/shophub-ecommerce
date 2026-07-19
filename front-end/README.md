@@ -46,7 +46,7 @@ Centralized in `tailwind.config.js` and `src/assets/main.css`:
 - Route-guarded (`router.beforeEach` checks `auth.isAdmin`)
 - Dashboard — real stats + 7-day sales chart
 - Products — CRUD, drag-and-drop image upload, search, pagination
-- Categories — CRUD with icon/color pickers
+- Categories — CRUD with a searchable icon picker (200+ Heroicons, regenerable via `scripts/generate-category-icons.mjs`) and color choice: brand gradient presets or any custom color via a native color picker
 - Orders — searchable/paginated list, inline status updates, full order-detail modal
 - Users — searchable admin/customer list with role filter; create, edit, remove
 
@@ -67,7 +67,9 @@ src/
   composables/            # useAddToCart (auth-gated add-to-cart / buy-now guard)
   services/               # typed Axios clients: products, categories, orders, account, config, admin/*
   router/                 # routes + auth guards (requiresAuth, requiresAdmin, guestOnly)
-  data/                   # static content (info pages)
+  utils/                  # small shared helpers (e.g. category color class/hex rendering)
+  data/                   # static content (info pages, generated category icon library)
+scripts/                  # dev utilities (regenerate the category icon library)
 ```
 
 ---

@@ -86,7 +86,7 @@ Both **customers** and **admins** have accounts, authenticated with Sanctum bear
 
 - Dashboard with real sales/orders/products/customers stats and a 7-day sales chart
 - **Products** — full CRUD, drag-and-drop image upload, search, pagination
-- **Categories** — full CRUD with icon & brand-color pickers
+- **Categories** — full CRUD with a searchable 200+ icon library and free color choice (brand gradients or a custom color picker)
 - **Orders** — searchable/paginated list, inline status updates, full order-detail view
 - **Users** — searchable admin/customer list with role filter; create, edit, and remove accounts
 - Consistent ShopHub branding throughout (icons, gradients, empty/loading states)
