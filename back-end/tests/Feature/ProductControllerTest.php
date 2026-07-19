@@ -96,4 +96,19 @@ class ProductControllerTest extends TestCase
         $response->assertJsonPath('id', $product->id);
         $response->assertJsonPath('category.id', $category->id);
     }
+
+    public function test_products_expose_reviews_count(): void
+    {
+        $product = Product::factory()->create(['slug' => 'reviewed-product']);
+        \App\Models\Review::factory()->count(2)->create(['product_id' => $product->id, 'rating' => 4]);
+
+        $this->getJson('/api/products')
+            ->assertOk()
+            ->assertJsonPath('data.0.reviews_count', 2);
+
+        $this->getJson('/api/products/reviewed-product')
+            ->assertOk()
+            ->assertJsonPath('reviews_count', 2)
+            ->assertJsonPath('rating', '4.0');
+    }
 }

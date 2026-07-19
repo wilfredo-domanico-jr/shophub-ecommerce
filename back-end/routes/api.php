@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\SocialAuthController;
 use App\Http\Controllers\Api\VoucherController;
 use Illuminate\Support\Facades\Route;
@@ -31,6 +32,7 @@ Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/categories/{category:slug}', [CategoryController::class, 'show']);
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{product:slug}', [ProductController::class, 'show']);
+Route::get('/products/{product:slug}/reviews', [ReviewController::class, 'index']);
 Route::get('/careers', [CareerController::class, 'index']);
 Route::get('/vouchers', [VoucherController::class, 'index']);
 Route::get('/flash-sale', [FlashSaleController::class, 'current']);
@@ -63,6 +65,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update']);
     Route::patch('/profile/password', [ProfileController::class, 'updatePassword']);
     Route::get('/my/orders', [OrderController::class, 'myOrders']);
+
+    // Reviews (verified purchasers; posting throttled like checkout)
+    Route::post('/products/{product:slug}/reviews', [ReviewController::class, 'store'])->middleware('throttle:10,1');
+    Route::patch('/reviews/{review}', [ReviewController::class, 'update']);
+    Route::delete('/reviews/{review}', [ReviewController::class, 'destroy']);
 
     Route::middleware('admin')->prefix('admin')->group(function () {
         Route::get('/dashboard/stats', [DashboardController::class, 'stats']);

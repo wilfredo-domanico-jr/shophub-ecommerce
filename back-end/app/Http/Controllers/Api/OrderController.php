@@ -190,7 +190,9 @@ class OrderController extends Controller
     {
         return $request->user()
             ->orders()
-            ->with('items')
+            // The product slug lets delivered items link to a review form;
+            // items whose product was deleted come back with product null.
+            ->with('items.product:id,slug')
             ->latest()
             ->paginate($request->integer('per_page', 10));
     }
