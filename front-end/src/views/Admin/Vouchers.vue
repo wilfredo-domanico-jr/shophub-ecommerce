@@ -241,10 +241,11 @@
           </button>
 
           <button
-            class="bg-orange-500 text-white px-4 py-2 rounded"
+            class="bg-orange-500 text-white px-4 py-2 rounded disabled:opacity-50"
+            :disabled="saving"
             @click="save"
           >
-            {{ isEdit ? "Update" : "Add" }}
+            {{ saving ? "Saving..." : isEdit ? "Update" : "Add" }}
           </button>
         </div>
       </div>
@@ -383,7 +384,10 @@ function closeModal() {
 const numberOrNull = (value: number | "" | null) =>
   value === "" || value === null ? null : Number(value);
 
+const saving = ref(false);
+
 async function save() {
+  if (saving.value) return;
   if (!form.value.code.trim() || form.value.value === "" || Number(form.value.value) <= 0) {
     formError.value = "A code and a discount value are required.";
     return;
@@ -404,6 +408,7 @@ async function save() {
     is_public: form.value.is_public,
   };
 
+  saving.value = true;
   try {
     if (isEdit.value) {
       await updateVoucher(form.value.id, payload);
@@ -416,6 +421,8 @@ async function save() {
     await loadVouchers();
   } catch (e) {
     formError.value = firstValidationError(e, "Failed to save the voucher.");
+  } finally {
+    saving.value = false;
   }
 }
 

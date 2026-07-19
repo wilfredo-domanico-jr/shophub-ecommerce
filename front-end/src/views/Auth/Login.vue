@@ -117,6 +117,14 @@ async function handleLogin() {
       password: password.value,
     });
 
+    // Non-admins would just bounce off the /admin guard back to this page —
+    // tell them what's happening instead of looping.
+    if (!auth.isAdmin) {
+      useToastStore().info("This account has no admin access — taking you to the shop.");
+      router.push("/");
+      return;
+    }
+
     useToastStore().success(`Welcome back, ${auth.user?.name ?? "admin"}!`);
     router.push("/admin");
   } catch (error) {

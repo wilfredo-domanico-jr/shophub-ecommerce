@@ -21,6 +21,7 @@ export interface VariantPayload {
 export interface ProductPayload {
   name: string;
   category_id: number;
+  description: string | null;
   price: number;
   original_price: number | null;
   stock_quantity: number;

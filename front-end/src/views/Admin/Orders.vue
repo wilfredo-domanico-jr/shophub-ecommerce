@@ -254,6 +254,10 @@ async function openView(order: AdminOrder) {
   viewingOrder.value = null;
   try {
     viewingOrder.value = await getAdminOrder(order.id);
+  } catch {
+    // Without this the overlay stays up with no content and no close button.
+    closeView();
+    toast.error("Failed to load the order.");
   } finally {
     viewLoading.value = false;
   }

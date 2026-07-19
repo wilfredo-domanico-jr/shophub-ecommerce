@@ -169,10 +169,11 @@
           </button>
 
           <button
-            class="bg-orange-500 text-white px-4 py-2 rounded"
+            class="bg-orange-500 text-white px-4 py-2 rounded disabled:opacity-50"
+            :disabled="saving"
             @click="save"
           >
-            {{ isEdit ? "Update" : "Add" }}
+            {{ saving ? "Saving..." : isEdit ? "Update" : "Add" }}
           </button>
         </div>
       </div>
@@ -260,7 +261,10 @@ function closeModal() {
   showModal.value = false;
 }
 
+const saving = ref(false);
+
 async function save() {
+  if (saving.value) return;
   if (!form.value.title || !form.value.department || !form.value.location || !form.value.description) {
     formError.value = "All fields are required.";
     return;
@@ -275,6 +279,7 @@ async function save() {
     is_active: form.value.is_active,
   };
 
+  saving.value = true;
   try {
     if (isEdit.value) {
       await updateJobOpening(form.value.id, payload);
@@ -287,6 +292,8 @@ async function save() {
     await loadOpenings();
   } catch (e) {
     formError.value = firstValidationError(e, "Failed to save the opening.");
+  } finally {
+    saving.value = false;
   }
 }
 

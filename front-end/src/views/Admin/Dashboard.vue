@@ -8,6 +8,10 @@
       </p>
     </div>
 
+    <p v-if="loadError" class="text-red-500 text-sm bg-red-50 border border-red-200 rounded-lg p-3">
+      Failed to load dashboard stats — refresh to try again.
+    </p>
+
     <!-- Stats -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <div
@@ -114,8 +118,14 @@ const stats = ref<DashboardStats>({
   recent_orders: [],
 });
 
+const loadError = ref(false);
+
 onMounted(async () => {
-  stats.value = await getDashboardStats();
+  try {
+    stats.value = await getDashboardStats();
+  } catch {
+    loadError.value = true; // otherwise the dashboard shows all zeros silently
+  }
 });
 
 const statCards = computed(() => [

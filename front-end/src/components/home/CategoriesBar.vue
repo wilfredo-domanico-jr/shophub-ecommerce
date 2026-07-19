@@ -74,6 +74,6 @@ async function fetchCategories() {
 }
 
 onMounted(() => {
-  fetchCategories();
+  fetchCategories().catch(() => {});
 });
 </script>

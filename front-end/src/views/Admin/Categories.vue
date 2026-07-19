@@ -215,10 +215,11 @@
           </button>
 
           <button
-            class="bg-orange-500 text-white px-4 py-2 rounded"
+            class="bg-orange-500 text-white px-4 py-2 rounded disabled:opacity-50"
+            :disabled="saving"
             @click="save"
           >
-            {{ isEdit ? "Update" : "Add" }}
+            {{ saving ? "Saving..." : isEdit ? "Update" : "Add" }}
           </button>
         </div>
       </div>
@@ -361,11 +362,15 @@ function closeModal() {
   showModal.value = false;
 }
 
+const saving = ref(false);
+
 async function save() {
+  if (saving.value) return;
   if (!form.value.name) {
     formError.value = "Name is required.";
     return;
   }
+  saving.value = true;
 
   const payload = {
     name: form.value.name,
@@ -386,6 +391,8 @@ async function save() {
     await loadCategories();
   } catch {
     formError.value = "Failed to save category.";
+  } finally {
+    saving.value = false;
   }
 }
 

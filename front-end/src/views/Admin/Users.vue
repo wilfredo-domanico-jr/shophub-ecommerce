@@ -173,10 +173,11 @@
           </button>
 
           <button
-            class="bg-orange-500 text-white px-4 py-2 rounded"
+            class="bg-orange-500 text-white px-4 py-2 rounded disabled:opacity-50"
+            :disabled="saving"
             @click="save"
           >
-            {{ isEdit ? "Update" : "Add" }}
+            {{ saving ? "Saving..." : isEdit ? "Update" : "Add" }}
           </button>
         </div>
       </div>
@@ -295,7 +296,10 @@ function closeModal() {
   showModal.value = false;
 }
 
+const saving = ref(false);
+
 async function save() {
+  if (saving.value) return;
   if (!form.value.name || !form.value.email) {
     formError.value = "Name and email are required.";
     return;
@@ -306,6 +310,7 @@ async function save() {
     return;
   }
 
+  saving.value = true;
   try {
     if (isEdit.value) {
       await updateAdminUser(form.value.id, {
@@ -326,6 +331,8 @@ async function save() {
     await loadUsers();
   } catch (e: any) {
     formError.value = e?.response?.data?.message ?? "Failed to save admin.";
+  } finally {
+    saving.value = false;
   }
 }
 

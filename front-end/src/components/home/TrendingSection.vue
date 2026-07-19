@@ -76,6 +76,7 @@ async function fetchTrendings() {
 }
 
 onMounted(() => {
-  fetchTrendings();
+  // Homepage sections fail quietly — an empty section beats a broken page.
+  fetchTrendings().catch(() => {});
 });
 </script>

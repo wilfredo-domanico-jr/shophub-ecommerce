@@ -87,7 +87,8 @@
                 <button
                   v-if="newsletter.status === 'draft'"
                   title="Send to all subscribers"
-                  class="w-8 h-8 flex items-center justify-center rounded-lg text-green-600 bg-green-50 hover:bg-green-600 hover:text-white transition"
+                  class="w-8 h-8 flex items-center justify-center rounded-lg text-green-600 bg-green-50 hover:bg-green-600 hover:text-white transition disabled:opacity-50"
+                  :disabled="sendingId !== null"
                   @click="send(newsletter)"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -254,10 +255,11 @@
           </button>
 
           <button
-            class="bg-orange-500 text-white px-4 py-2 rounded"
+            class="bg-orange-500 text-white px-4 py-2 rounded disabled:opacity-50"
+            :disabled="saving"
             @click="save"
           >
-            {{ isEdit ? "Save Draft" : "Save as Draft" }}
+            {{ saving ? "Saving..." : isEdit ? "Save Draft" : "Save as Draft" }}
           </button>
         </div>
       </div>
@@ -406,11 +408,15 @@ function closeModal() {
   showModal.value = false;
 }
 
+const saving = ref(false);
+
 async function save() {
+  if (saving.value) return;
   if (!form.value.subject || !form.value.body) {
     formError.value = "Subject and message are required.";
     return;
   }
+  saving.value = true;
 
   const payload = {
     subject: form.value.subject,
@@ -430,17 +436,26 @@ async function save() {
     await loadNewsletters();
   } catch (e) {
     formError.value = firstValidationError(e, "Failed to save the newsletter.");
+  } finally {
+    saving.value = false;
   }
 }
 
+// Guarded: a double-click here would email the entire subscriber list twice.
+const sendingId = ref<number | null>(null);
+
 async function send(newsletter: Newsletter) {
+  if (sendingId.value !== null) return;
   if (!confirm(`Send "${newsletter.subject}" to all ${subscribersCount.value} subscribers?`)) return;
+  sendingId.value = newsletter.id;
   try {
     const { message } = await sendNewsletter(newsletter.id);
     toast.success(message);
     await loadNewsletters();
   } catch (e: any) {
     toast.error(e?.response?.data?.message ?? "Failed to send the newsletter.");
+  } finally {
+    sendingId.value = null;
   }
 }
 

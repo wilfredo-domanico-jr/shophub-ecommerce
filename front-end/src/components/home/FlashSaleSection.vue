@@ -142,11 +142,15 @@ function tick() {
 
   if (newPhase === "live" && !productsFetched) {
     productsFetched = true;
-    fetchProducts(); // grid appears the moment the sale opens
+    // Grid appears the moment the sale opens; on failure, retry next tick.
+    fetchProducts().catch(() => (productsFetched = false));
   }
 
   if (newPhase === "ended") {
     clearInterval(timerInterval);
+    phase.value = "ended";
+    rollOverToNextSale(); // a back-to-back sale may already be scheduled
+    return;
   }
 
   phase.value = newPhase;
@@ -161,19 +165,37 @@ function tick() {
   seconds.value = s.toString().padStart(2, "0");
 }
 
-onMounted(async () => {
-  try {
-    sale.value = await getCurrentFlashSale();
-  } catch {
-    sale.value = null; // API down -> section just stays hidden
-  }
-  if (!sale.value) return;
-
-  startsAt = Date.parse(sale.value.starts_at);
-  endsAt = Date.parse(sale.value.ends_at);
-
+function arm(info: FlashSaleInfo) {
+  sale.value = info;
+  startsAt = Date.parse(info.starts_at);
+  endsAt = Date.parse(info.ends_at);
+  productsFetched = false;
+  products.value = [];
   tick();
   timerInterval = setInterval(tick, 1000);
+}
+
+async function rollOverToNextSale() {
+  const next = await getCurrentFlashSale().catch(() => null);
+
+  // Guard against re-arming the sale that just ended (client clock ahead
+  // of the server's) — that would loop forever.
+  if (!next || Date.parse(next.ends_at) <= Date.now()) {
+    sale.value = null;
+    return;
+  }
+
+  arm(next);
+}
+
+onMounted(async () => {
+  let info: FlashSaleInfo | null = null;
+  try {
+    info = await getCurrentFlashSale();
+  } catch {
+    // API down -> section just stays hidden
+  }
+  if (info) arm(info);
 });
 
 onUnmounted(() => {

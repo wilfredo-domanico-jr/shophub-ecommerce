@@ -61,6 +61,13 @@
           <div v-for="i in 8" :key="i" class="skeleton rounded-xl h-64"></div>
         </div>
 
+        <div v-else-if="loadError" class="bg-white rounded-xl shadow p-12 text-center">
+          <p class="text-red-500 mb-3">Something went wrong loading products.</p>
+          <button class="text-orange-500 font-medium hover:underline" @click="loadProducts">
+            Try again
+          </button>
+        </div>
+
         <div v-else-if="products.length === 0" class="bg-white rounded-xl shadow p-12 text-center text-gray-400">
           No products found. Try a different search or category.
         </div>
@@ -106,8 +113,11 @@ const categories = ref<Category[]>([]);
 const loading = ref(false);
 const meta = ref({ current_page: 1, last_page: 1, total: 0, from: 0 as number | null, to: 0 as number | null });
 
+const loadError = ref(false);
+
 async function loadProducts() {
   loading.value = true;
+  loadError.value = false;
   try {
     const res = await getProducts({
       search: search.value || undefined,
@@ -125,6 +135,8 @@ async function loadProducts() {
       from: res.from,
       to: res.to,
     };
+  } catch {
+    loadError.value = true; // distinct from the empty state
   } finally {
     loading.value = false;
   }
@@ -164,7 +176,10 @@ watch(
 );
 
 onMounted(async () => {
-  categories.value = await getCategories();
+  // Products must load even if the category sidebar fails.
+  try {
+    categories.value = await getCategories();
+  } catch {}
   await loadProducts();
 });
 </script>

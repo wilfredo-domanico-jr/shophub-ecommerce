@@ -174,7 +174,9 @@ async function handleLogin() {
     if (auth.isAdmin) {
       router.push("/admin");
     } else {
-      router.push((route.query.redirect as string) || "/");
+      // Same-origin paths only — never trust ?redirect= blindly.
+      const target = (route.query.redirect as string) || "/";
+      router.push(target.startsWith("/") && !target.startsWith("//") ? target : "/");
     }
   } catch (error) {
     const err = error as AxiosError<{ message?: string }>;

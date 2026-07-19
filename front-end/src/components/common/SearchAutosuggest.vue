@@ -90,6 +90,10 @@ function onQueryChange() {
     try {
       const res = await getProducts({ search: query.value.trim(), per_page: 6 });
       suggestions.value = res.data;
+    } catch {
+      // A failed lookup shouldn't claim "no products found".
+      suggestions.value = [];
+      open.value = false;
     } finally {
       loading.value = false;
     }

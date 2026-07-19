@@ -139,10 +139,11 @@
           </button>
 
           <button
-            class="bg-orange-500 text-white px-4 py-2 rounded"
+            class="bg-orange-500 text-white px-4 py-2 rounded disabled:opacity-50"
+            :disabled="saving"
             @click="save"
           >
-            {{ isEdit ? "Update" : "Schedule" }}
+            {{ saving ? "Saving..." : isEdit ? "Update" : "Schedule" }}
           </button>
         </div>
       </div>
@@ -263,7 +264,10 @@ function closeModal() {
   showModal.value = false;
 }
 
+const saving = ref(false);
+
 async function save() {
+  if (saving.value) return;
   if (!form.value.title.trim() || !form.value.starts_at || !form.value.ends_at) {
     formError.value = "Title, start, and end are all required.";
     return;
@@ -280,6 +284,7 @@ async function save() {
     is_active: form.value.is_active,
   };
 
+  saving.value = true;
   try {
     if (isEdit.value) {
       await updateFlashSale(form.value.id, payload);
@@ -292,6 +297,8 @@ async function save() {
     await loadSales();
   } catch (e) {
     formError.value = firstValidationError(e, "Failed to save the flash sale.");
+  } finally {
+    saving.value = false;
   }
 }
 

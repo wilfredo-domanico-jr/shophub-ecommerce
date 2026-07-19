@@ -43,8 +43,11 @@ onMounted(async () => {
     await auth.loginWithToken(token);
     toast.success(`Welcome, ${auth.user?.name ?? "shopper"}!`);
 
-    const target = localStorage.getItem("postLoginRedirect") || "/";
+    // Only allow in-app paths ("/x", never "//host" or "scheme:") — the
+    // stored value originates from an untrusted query param.
+    const stored = localStorage.getItem("postLoginRedirect") || "/";
     localStorage.removeItem("postLoginRedirect");
+    const target = stored.startsWith("/") && !stored.startsWith("//") ? stored : "/";
     router.replace(auth.isAdmin ? "/admin" : target);
   } catch {
     toast.error("Sign-in failed. Please try again.");

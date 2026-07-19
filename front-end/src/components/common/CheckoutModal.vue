@@ -225,8 +225,10 @@ const appliedVoucher = ref<VoucherPreview | null>(null);
 const voucherError = ref("");
 const applyingVoucher = ref(false);
 
+// With a voucher applied, the server-priced total is the source of truth —
+// the client cart may hold stale prices.
 const displayTotal = computed(() =>
-  Math.max(0, cartStore.checkoutTotal() - Number(appliedVoucher.value?.discount ?? 0))
+  appliedVoucher.value ? Number(appliedVoucher.value.total) : cartStore.checkoutTotal()
 );
 
 function checkoutItemsPayload() {
@@ -306,7 +308,7 @@ async function submit() {
     if (wasBuyNow) {
       cartStore.clearBuyNow();
     } else {
-      cartStore.items = [];
+      cartStore.clearItems();
     }
 
     emit("order-placed");

@@ -76,12 +76,14 @@
               <span
                 class="px-2 py-1 text-xs rounded-full"
                 :class="
-                  p.stock_quantity > 0
-                    ? 'bg-green-100 text-green-600'
-                    : 'bg-red-100 text-red-500'
+                  !p.is_active
+                    ? 'bg-gray-100 text-gray-500'
+                    : p.stock_quantity > 0
+                      ? 'bg-green-100 text-green-600'
+                      : 'bg-red-100 text-red-500'
                 "
               >
-                {{ p.stock_quantity > 0 ? "Active" : "Out of stock" }}
+                {{ !p.is_active ? "Inactive" : p.stock_quantity > 0 ? "Active" : "Out of stock" }}
               </span>
             </td>
 
@@ -148,6 +150,16 @@
             placeholder="e.g. Wireless Bluetooth Earbuds"
             class="w-full border p-2 rounded focus:outline-none focus:border-orange-500"
           />
+        </div>
+
+        <div>
+          <label class="block mb-1 text-sm font-medium text-gray-700">Description</label>
+          <textarea
+            v-model="form.description"
+            rows="3"
+            placeholder="What makes this product great?"
+            class="w-full border p-2 rounded focus:outline-none focus:border-orange-500"
+          ></textarea>
         </div>
 
         <div>
@@ -355,10 +367,11 @@
           </button>
 
           <button
-            class="bg-orange-500 text-white px-4 py-2 rounded"
+            class="bg-orange-500 text-white px-4 py-2 rounded disabled:opacity-50"
+            :disabled="saving"
             @click="saveProduct"
           >
-            {{ isEdit ? "Update" : "Add" }}
+            {{ saving ? "Saving..." : isEdit ? "Update" : "Add" }}
           </button>
         </div>
       </div>
@@ -441,6 +454,7 @@ type ProductForm = {
   id: number;
   category_id: number;
   name: string;
+  description: string;
   price: number;
   original_price: number | "" | null;
   stock_quantity: number;
@@ -455,6 +469,7 @@ const emptyForm = (): ProductForm => ({
   id: 0,
   category_id: 0,
   name: "",
+  description: "",
   price: 0,
   original_price: null,
   stock_quantity: 0,
@@ -566,6 +581,7 @@ function openEdit(product: Product) {
     id: product.id,
     category_id: product.category_id,
     name: product.name,
+    description: product.description ?? "",
     price: Number(product.price),
     original_price: product.original_price !== null ? Number(product.original_price) : null,
     stock_quantity: product.stock_quantity,
@@ -583,7 +599,10 @@ function closeModal() {
   showModal.value = false;
 }
 
+const saving = ref(false);
+
 async function saveProduct() {
+  if (saving.value) return;
   if (!form.value.name || !form.value.category_id) {
     formError.value = "Name and category are required.";
     return;
@@ -592,6 +611,7 @@ async function saveProduct() {
   const payload: ProductPayload = {
     name: form.value.name,
     category_id: form.value.category_id,
+    description: form.value.description.trim() || null,
     price: form.value.price,
     original_price: numberOrNull(form.value.original_price),
     stock_quantity: form.value.stock_quantity,
@@ -627,6 +647,7 @@ async function saveProduct() {
     payload.variants = [];
   }
 
+  saving.value = true;
   try {
     if (isEdit.value) {
       await updateProduct(form.value.id, payload);
@@ -641,6 +662,8 @@ async function saveProduct() {
     const errors = e?.response?.data?.errors;
     const first = errors && (Object.values(errors)[0] as string[] | undefined)?.[0];
     formError.value = first ?? "Failed to save product.";
+  } finally {
+    saving.value = false;
   }
 }
 

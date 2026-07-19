@@ -59,6 +59,10 @@ export const useCartStore = defineStore('cart', () => {
     buyNowItem.value = null;
   }
 
+  function clearItems() {
+    items.value = [];
+  }
+
   function removeItem(key: string) {
     items.value = items.value.filter(i => i.key !== key);
   }
@@ -85,6 +89,7 @@ export const useCartStore = defineStore('cart', () => {
     checkoutTotal,
     addItem,
     clear,
+    clearItems,
     removeItem,
     updateQuantity,
     count,
