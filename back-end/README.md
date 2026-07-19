@@ -37,6 +37,7 @@ GET  /api/categories/{slug}
 GET  /api/products                 # ?search=&category=&sort=&featured=&flash_sale=&page= (rows include variants_count)
 GET  /api/products/{slug}          # includes options + variants (per-variant stock, price/image overrides)
 GET  /api/careers                  # published job openings for the Careers page
+GET  /api/vouchers                 # publicly listed, currently claimable vouchers (safe fields only)
 POST /api/newsletter/subscribe     # store email + queue a welcome mail (throttled)
 POST /api/newsletter/unsubscribe   # token from the email's unsubscribe link (throttled)
 ```
@@ -116,7 +117,7 @@ Order         — belongs to User (nullable — legacy guest orders); order_numb
                 voucher_id + voucher_code snapshot + discount when a voucher was applied
 OrderItem     — snapshot of product name/price (+ variant label, e.g. "Red / M") at time of order
 Voucher       — discount code; percent (optional max cap) or fixed amount, min spend, validity
-                window, usage/per-customer limits, used_count, is_active
+                window, usage/per-customer limits, used_count, is_active, is_public (storefront listing)
 JobOpening    — careers-page posting; title, department, location, type, is_active
 Newsletter    — campaign; subject, body, optional image, draft/sent + sent_at
 NewsletterSubscriber — email, per-subscriber unsubscribe token, unsubscribed_at

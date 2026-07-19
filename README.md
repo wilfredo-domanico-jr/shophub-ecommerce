@@ -78,7 +78,7 @@ Both **customers** and **admins** have accounts, authenticated with Sanctum bear
 - Live **search autosuggest** in the header
 - **Customer accounts** — registration, login (email/password or **Google / Facebook social login**), password reset via email, profile with saved contact & shipping details, and a My Orders history
 - Cart → **checkout** (Cash on Delivery, sign-in required, form pre-filled from the profile) → order confirmation with order number
-- **Vouchers** — apply a discount code at checkout with a live preview of the savings (percentage or fixed-amount, validated server-side); the discount shows on the confirmation, order history, tracking, and email
+- **Vouchers** — apply a discount code at checkout with a live preview of the savings (percentage or fixed-amount, validated server-side); the discount shows on the confirmation, order history, tracking, and email. Public codes are discoverable on a `/vouchers` page (with copy buttons) and as tap-to-apply suggestions right in checkout; private codes stay unlisted for newsletter/social campaigns
 - **Newsletter** — footer signup with a queued welcome email; every email carries a one-click **unsubscribe** link (token-based, no login needed)
 - **Toast notifications** for cart, auth, and admin actions
 - **Order tracking** by order number + email for guests and legacy orders (header button shown to guests only — signed-in customers use My Orders)
@@ -94,7 +94,7 @@ Both **customers** and **admins** have accounts, authenticated with Sanctum bear
 - **Orders** — searchable/paginated list, inline status updates, full order-detail view
 - **Users** — searchable admin/customer list with role filter; create, edit, and remove accounts
 - **Careers** — manage the job openings shown on the public Careers page (publish/hide, edit, delete)
-- **Vouchers** — create discount codes (percentage with an optional cap, or fixed amount) with minimum spend, validity dates, usage limits, once-per-customer, and an on/off toggle; the table tracks redemptions live
+- **Vouchers** — create discount codes (percentage with an optional cap, or fixed amount) with minimum spend, validity dates, usage limits, once-per-customer, an on/off toggle, and a **public/private** flag controlling storefront visibility; the table tracks redemptions live
 - **Newsletter** — write campaigns with an optional banner image, save drafts, send to all subscribers, and manage the subscriber list (status, search, remove)
 - Consistent ShopHub branding throughout (icons, gradients, empty/loading states)
 
