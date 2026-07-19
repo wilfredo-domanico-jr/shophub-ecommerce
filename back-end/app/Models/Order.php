@@ -16,6 +16,7 @@ class Order extends Model
     protected $fillable = [
         'order_number',
         'user_id',
+        'voucher_id',
         'customer_name',
         'customer_email',
         'customer_phone',
@@ -25,6 +26,8 @@ class Order extends Model
         'payment_status',
         'subtotal',
         'shipping_fee',
+        'voucher_code',
+        'discount',
         'total',
         'notes',
     ];
@@ -34,6 +37,7 @@ class Order extends Model
         return [
             'subtotal' => 'decimal:2',
             'shipping_fee' => 'decimal:2',
+            'discount' => 'decimal:2',
             'total' => 'decimal:2',
         ];
     }
@@ -50,7 +54,7 @@ class Order extends Model
     public static function generateOrderNumber(): string
     {
         do {
-            $candidate = 'SHP-' . now()->format('YmdHis') . '-' . Str::upper(Str::random(4));
+            $candidate = 'SHP-'.now()->format('YmdHis').'-'.Str::upper(Str::random(4));
         } while (static::where('order_number', $candidate)->exists());
 
         return $candidate;
@@ -64,5 +68,10 @@ class Order extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function voucher(): BelongsTo
+    {
+        return $this->belongsTo(Voucher::class);
     }
 }
