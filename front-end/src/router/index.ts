@@ -33,6 +33,7 @@ import AdminCategories from "../views/Admin/Categories.vue";
 import AdminUsers from "../views/Admin/Users.vue";
 import AdminCareers from "../views/Admin/Careers.vue";
 import AdminVouchers from "../views/Admin/Vouchers.vue";
+import AdminFlashSales from "../views/Admin/FlashSales.vue";
 import AdminNewsletters from "../views/Admin/Newsletters.vue";
 
 // Misc
@@ -223,6 +224,11 @@ const routes = [
         path: "vouchers",
         name: "AdminVouchers",
         component: AdminVouchers,
+      },
+      {
+        path: "flash-sales",
+        name: "AdminFlashSales",
+        component: AdminFlashSales,
       },
       {
         path: "newsletters",
