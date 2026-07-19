@@ -46,7 +46,6 @@
           v-for="product in products"
           :key="product.id"
           :product="product"
-          @select="onProductSelect"
         />
       </div>
     </div>
@@ -57,12 +56,10 @@
 import { ref, onMounted, onUnmounted } from "vue";
 import FlashSaleProductCard from "../common/FlashSaleProductCard.vue";
 import { getFlashSaleProducts } from "../../services/products";
-import { useAddToCart } from "../../composables/useAddToCart";
-
-const { addToCart } = useAddToCart();
 
 interface Product {
   id: number;
+  slug: string;
   name: string;
   price: number;
   originalPrice: number;
@@ -84,6 +81,7 @@ async function fetchProducts() {
 
     return {
       id: p.id,
+      slug: p.slug,
       name: p.name,
       price,
       originalPrice,
@@ -117,10 +115,6 @@ function updateTimer() {
   hours.value = h.toString().padStart(2, "0");
   minutes.value = m.toString().padStart(2, "0");
   seconds.value = s.toString().padStart(2, "0");
-}
-
-async function onProductSelect(product: Product) {
-  await addToCart(product, 1, "Sign in to grab flash sale deals.");
 }
 
 onMounted(() => {

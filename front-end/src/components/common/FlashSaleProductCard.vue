@@ -1,7 +1,7 @@
 <template>
-  <div
-    class="bg-white rounded-xl p-4 hover:shadow-lg transition cursor-pointer"
-    @click="handleClick"
+  <router-link
+    :to="`/products/${product.slug}`"
+    class="bg-white rounded-xl p-4 hover:shadow-lg transition cursor-pointer block"
   >
     <div class="relative mb-3">
       <img
@@ -35,12 +35,13 @@
     </div>
 
     <p class="text-xs text-gray-500">{{ product.sold }} sold</p>
-  </div>
+  </router-link>
 </template>
 
 <script lang="ts" setup>
 interface Product {
   id: number;
+  slug: string;
   name: string;
   price: number;
   originalPrice: number;
@@ -50,15 +51,7 @@ interface Product {
   progress: number;
 }
 
-const props = defineProps<{
+defineProps<{
   product: Product;
 }>();
-
-const emit = defineEmits<{
-  (e: "select", product: Product): void;
-}>();
-
-function handleClick() {
-  emit("select", props.product);
-}
 </script>
