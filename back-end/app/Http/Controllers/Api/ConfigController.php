@@ -16,6 +16,10 @@ class ConfigController extends Controller
             'demo_admin_password' => $enabled ? config('demo.admin_password') : null,
             'demo_customer_email' => $enabled ? config('demo.customer_email') : null,
             'demo_customer_password' => $enabled ? config('demo.customer_password') : null,
+            'social_providers' => array_values(array_filter(
+                ['google', 'facebook'],
+                fn ($provider) => (bool) config("services.$provider.client_id")
+            )),
         ]);
     }
 }

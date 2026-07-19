@@ -43,4 +43,30 @@ class ConfigControllerTest extends TestCase
             'demo_customer_password' => 'demo-customer-pass',
         ]);
     }
+
+    public function test_social_providers_lists_only_configured_providers(): void
+    {
+        config([
+            'services.google.client_id' => 'google-client-id',
+            'services.facebook.client_id' => null,
+        ]);
+
+        $response = $this->getJson('/api/config');
+
+        $response->assertOk();
+        $response->assertJsonPath('social_providers', ['google']);
+    }
+
+    public function test_social_providers_is_empty_when_none_are_configured(): void
+    {
+        config([
+            'services.google.client_id' => null,
+            'services.facebook.client_id' => null,
+        ]);
+
+        $response = $this->getJson('/api/config');
+
+        $response->assertOk();
+        $response->assertJsonPath('social_providers', []);
+    }
 }
