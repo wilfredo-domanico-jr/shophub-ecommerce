@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import api from "../services/api";
+import { useCartStore } from "./cart";
 
 export interface User {
   id: number;
@@ -65,6 +66,8 @@ export const useAuthStore = defineStore("auth", () => {
     } finally {
       localStorage.removeItem("token");
       user.value = null;
+      // The cart belongs to the account that just signed out.
+      useCartStore().clear();
     }
   }
 

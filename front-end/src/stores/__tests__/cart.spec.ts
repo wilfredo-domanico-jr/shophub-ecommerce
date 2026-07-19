@@ -76,6 +76,18 @@ describe("cart store", () => {
     expect(cart.total()).toBe(350);
   });
 
+  it("clear() empties both the cart and any pending buy-now item", () => {
+    const cart = useCartStore();
+    cart.addItem({ id: 1, name: "Widget", price: 100 }, 2);
+    cart.setBuyNow({ id: 2, name: "Gadget", price: 50 });
+
+    cart.clear();
+
+    expect(cart.items).toHaveLength(0);
+    expect(cart.buyNowItem).toBeNull();
+    expect(cart.count()).toBe(0);
+  });
+
   it("checkoutItems() returns the cart when no buy-now item is set", () => {
     const cart = useCartStore();
     cart.addItem({ id: 1, name: "Widget", price: 100 });
