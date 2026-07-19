@@ -10,7 +10,7 @@ class ProductController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Product::query()->active()->with('category');
+        $query = Product::query()->active()->with('category')->withCount('variants');
 
         if ($request->boolean('featured')) {
             $query->featured();
@@ -25,7 +25,7 @@ class ProductController extends Controller
         }
 
         if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->string('search') . '%');
+            $query->where('name', 'like', '%'.$request->string('search').'%');
         }
 
         match ($request->string('sort')->toString()) {
@@ -42,6 +42,6 @@ class ProductController extends Controller
     {
         abort_unless($product->is_active, 404);
 
-        return $product->load('category');
+        return $product->load('category', 'variants');
     }
 }

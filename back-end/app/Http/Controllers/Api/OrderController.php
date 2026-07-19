@@ -23,6 +23,7 @@ class OrderController extends Controller
             'notes' => ['nullable', 'string'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'integer', 'exists:products,id'],
+            'items.*.variant_id' => ['nullable', 'integer'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
         ]);
 
@@ -42,11 +43,15 @@ class OrderController extends Controller
         $order = DB::transaction(function () use ($validated, $userId) {
             $productIds = collect($validated['items'])->pluck('product_id');
 
+            // The product-row lock serializes every stock mutation for these
+            // products, so variant rows don't need their own lock.
             $products = Product::query()
                 ->whereIn('id', $productIds)
                 ->lockForUpdate()
                 ->get()
                 ->keyBy('id');
+
+            $products->load('variants');
 
             $subtotal = 0;
             $orderItemsData = [];
@@ -60,17 +65,40 @@ class OrderController extends Controller
                     ]);
                 }
 
-                if ($product->stock_quantity < $item['quantity']) {
+                $variant = null;
+
+                if ($product->variants->isNotEmpty()) {
+                    $variant = $product->variants->firstWhere('id', $item['variant_id'] ?? null);
+
+                    if (! $variant) {
+                        throw ValidationException::withMessages([
+                            'items' => "Please choose options for \"{$product->name}\".",
+                        ]);
+                    }
+                } elseif (! empty($item['variant_id'])) {
                     throw ValidationException::withMessages([
-                        'items' => "Not enough stock for \"{$product->name}\" (only {$product->stock_quantity} left).",
+                        'items' => "\"{$product->name}\" does not have options to choose.",
                     ]);
                 }
 
-                $lineSubtotal = $product->price * $item['quantity'];
+                $availableStock = $variant ? $variant->stock_quantity : $product->stock_quantity;
+
+                if ($availableStock < $item['quantity']) {
+                    $label = $variant ? "{$product->name} ({$variant->labelFor($product)})" : $product->name;
+
+                    throw ValidationException::withMessages([
+                        'items' => "Not enough stock for \"{$label}\" (only {$availableStock} left).",
+                    ]);
+                }
+
+                $price = $variant ? ($variant->price ?? $product->price) : $product->price;
+                $lineSubtotal = $price * $item['quantity'];
                 $subtotal += $lineSubtotal;
 
                 $orderItemsData[] = [
                     'product' => $product,
+                    'variant' => $variant,
+                    'price' => $price,
                     'quantity' => $item['quantity'],
                     'subtotal' => $lineSubtotal,
                 ];
@@ -93,15 +121,20 @@ class OrderController extends Controller
 
             foreach ($orderItemsData as $data) {
                 $product = $data['product'];
+                $variant = $data['variant'];
 
                 $order->items()->create([
                     'product_id' => $product->id,
+                    'product_variant_id' => $variant?->id,
                     'product_name' => $product->name,
-                    'product_price' => $product->price,
+                    'variant_label' => $variant?->labelFor($product),
+                    'product_price' => $data['price'],
                     'quantity' => $data['quantity'],
                     'subtotal' => $data['subtotal'],
                 ]);
 
+                // Product stock stays the variant sum, so decrement both.
+                $variant?->decrement('stock_quantity', $data['quantity']);
                 $product->decrement('stock_quantity', $data['quantity']);
                 $product->increment('sold_count', $data['quantity']);
             }
@@ -152,6 +185,7 @@ class OrderController extends Controller
             'items' => $order->items->map(fn ($item) => [
                 'id' => $item->id,
                 'product_name' => $item->product_name,
+                'variant_label' => $item->variant_label,
                 'quantity' => $item->quantity,
                 'subtotal' => $item->subtotal,
             ])->values(),

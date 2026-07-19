@@ -13,7 +13,7 @@ Your order has been received and is being prepared. Here's a summary for your re
 | Item | Qty | Price | Subtotal |
 | :--- | :-: | ----: | -------: |
 @foreach ($order->items as $item)
-| {{ $item->product_name }} | {{ $item->quantity }} | ₱{{ number_format($item->product_price, 2) }} | ₱{{ number_format($item->subtotal, 2) }} |
+| {{ $item->product_name }}@if ($item->variant_label) ({{ $item->variant_label }})@endif | {{ $item->quantity }} | ₱{{ number_format($item->product_price, 2) }} | ₱{{ number_format($item->subtotal, 2) }} |
 @endforeach
 | | | **Subtotal** | ₱{{ number_format($order->subtotal, 2) }} |
 | | | **Shipping** | ₱{{ number_format($order->shipping_fee, 2) }} |
