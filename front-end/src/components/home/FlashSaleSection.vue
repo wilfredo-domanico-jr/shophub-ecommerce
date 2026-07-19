@@ -90,9 +90,10 @@ interface Product {
 const products = ref<Product[]>([]);
 
 async function fetchProducts() {
-  // The homepage shows at most 10 — "View All" links to the full list.
+  // The homepage shows 10 (two full 5-column rows) or 5 (one row) — never a
+  // partial second row with orphan cards. "View All" links to the full list.
   const res = await getFlashSaleProducts({ per_page: 10 });
-  products.value = res.data.map((p) => {
+  const mapped = res.data.map((p) => {
     const price = Number(p.price);
     const originalPrice = Number(p.original_price ?? p.price);
     const discount = originalPrice > 0 ? Math.round(((originalPrice - price) / originalPrice) * 100) : 0;
@@ -110,6 +111,8 @@ async function fetchProducts() {
       progress: Math.min(100, Math.round((p.sold_count / goal) * 100)),
     };
   });
+
+  products.value = mapped.length >= 10 ? mapped.slice(0, 10) : mapped.slice(0, 5);
 }
 
 // ** Scheduled event + countdown **
