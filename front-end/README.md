@@ -38,6 +38,7 @@ Centralized in `tailwind.config.js` and `src/assets/main.css`:
 - **Social login** — "Continue with Google / Facebook" buttons on login & register (shown only for providers the backend reports as configured via `/api/config`), with an `/auth/callback` landing page that scrubs the token from history, signs the user in, and resumes any pending redirect. Backend setup: [`docs/SOCIAL_LOGIN_SETUP.md`](../docs/SOCIAL_LOGIN_SETUP.md)
 - Add-to-cart and checkout require sign-in — guests are redirected to `/login?redirect=...` and resume where they left off (a pending checkout reopens automatically via `?checkout=1`)
 - Cart → checkout (`CheckoutModal.vue`, pre-filled from the saved profile) → order confirmation
+- **Voucher codes** at checkout — live discount preview via `/api/vouchers/preview`, inline validation errors, and a "You saved ₱X" confirmation; discounts also show in My Orders and order tracking
 - Global **toast notifications** (`stores/toast.ts` + `ToastContainer.vue`) for cart, auth, and admin feedback
 - Order tracking modal (order number + email) — header entry point shown to guests only
 - Footer **newsletter signup** (welcome email) and a public `/unsubscribe` page for the one-click links in every newsletter email
@@ -52,6 +53,7 @@ Centralized in `tailwind.config.js` and `src/assets/main.css`:
 - Orders — searchable/paginated list, inline status updates, full order-detail modal
 - Users — searchable admin/customer list with role filter; create, edit, remove
 - Careers — manage the job openings shown on the public Careers page (publish/hide, edit, delete)
+- Vouchers — create/edit discount codes (percent with optional cap, or fixed amount) with min spend, validity dates, usage limits, once-per-customer, and an active toggle; usage counts shown live
 - Newsletter — two tabs: Campaigns (write with optional banner image, save as draft, send to all subscribers) and Subscribers (search, status, remove)
 
 ---

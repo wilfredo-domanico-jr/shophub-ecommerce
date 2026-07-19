@@ -65,7 +65,10 @@ GET  /api/auth/{provider}/callback # OAuth return: find-or-create user, redirect
 POST  /api/logout
 GET   /api/me
 POST  /api/orders                  # checkout (stock-locked, server-side totals, sends confirmation email);
-                                   # items take an optional variant_id — required for products with options
+                                   # items take an optional variant_id — required for products with options;
+                                   # optional voucher_code applies a discount (re-validated under lock)
+POST  /api/vouchers/preview        # price a voucher against the cart before checkout (throttled, cosmetic —
+                                   # never redeems; the order endpoint is the authority)
 GET   /api/my/orders               # paginated order history
 PATCH /api/profile                 # name, email, phone, default shipping address
 PATCH /api/profile/password        # requires current password
@@ -83,6 +86,8 @@ POST   /api/admin/uploads          # product/category image upload
                                    #  product stock becomes the sum of variant stocks)
 /api/admin/users                   # manage admin accounts
 /api/admin/careers                 # manage job openings (incl. unpublished)
+/api/admin/vouchers                # full CRUD for discount codes (percent/fixed, min spend,
+                                   # validity window, usage + per-customer limits, active toggle)
 
 /api/admin/newsletters             # newsletter campaigns: drafts, edit, delete
 POST   /api/admin/newsletters/{id}/send   # queue the campaign to all active subscribers
@@ -107,8 +112,11 @@ Product       — belongs to Category; price, original_price, stock, flash-sale/
                 optional JSON options (e.g. Color/Size) when the product has variations
 ProductVariant — one sellable combination (e.g. Red / M); per-variant stock, optional
                 price/image overrides, unique per product via a deterministic variant_key
-Order         — belongs to User (nullable — legacy guest orders); order_number, status, payment, totals
+Order         — belongs to User (nullable — legacy guest orders); order_number, status, payment, totals;
+                voucher_id + voucher_code snapshot + discount when a voucher was applied
 OrderItem     — snapshot of product name/price (+ variant label, e.g. "Red / M") at time of order
+Voucher       — discount code; percent (optional max cap) or fixed amount, min spend, validity
+                window, usage/per-customer limits, used_count, is_active
 JobOpening    — careers-page posting; title, department, location, type, is_active
 Newsletter    — campaign; subject, body, optional image, draft/sent + sent_at
 NewsletterSubscriber — email, per-subscriber unsubscribe token, unsubscribed_at
@@ -244,12 +252,13 @@ Full click-by-click walkthrough, linking behavior, and known limitations: [`docs
 php artisan test
 ```
 
-150+ feature and unit tests covering:
+180+ feature and unit tests covering:
 - Auth (register/login/logout/me, admin-vs-customer access to admin routes)
 - Social login (Socialite mocked — new-user creation, email linking, repeat logins, no-email and provider-failure errors, null-password login rejection)
 - Customer accounts (profile updates, password change, password reset flow, order history isolation)
 - Public catalog (category/product filtering, search, sort, active-only visibility)
 - Product variants (options/variants in the public payload, admin sync with combination-integrity validation, variant checkout: per-variant stock/price, label snapshots, rollback on overselling)
+- Vouchers (discount math incl. caps and clamping, checkout redemption + used_count, every rejection rule — min spend, validity window, limits, once-per-customer — preview endpoint, admin CRUD validation)
 - Admin CRUD (categories, products, users, job openings, newsletters) including validation and authorization
 - Newsletter (subscribe/welcome mail, unsubscribe tokens, resubscribe, drafts-only editing, sends skipping unsubscribed addresses)
 - Dashboard stats aggregation

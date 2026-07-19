@@ -78,6 +78,7 @@ Both **customers** and **admins** have accounts, authenticated with Sanctum bear
 - Live **search autosuggest** in the header
 - **Customer accounts** — registration, login (email/password or **Google / Facebook social login**), password reset via email, profile with saved contact & shipping details, and a My Orders history
 - Cart → **checkout** (Cash on Delivery, sign-in required, form pre-filled from the profile) → order confirmation with order number
+- **Vouchers** — apply a discount code at checkout with a live preview of the savings (percentage or fixed-amount, validated server-side); the discount shows on the confirmation, order history, tracking, and email
 - **Newsletter** — footer signup with a queued welcome email; every email carries a one-click **unsubscribe** link (token-based, no login needed)
 - **Toast notifications** for cart, auth, and admin actions
 - **Order tracking** by order number + email for guests and legacy orders (header button shown to guests only — signed-in customers use My Orders)
@@ -93,6 +94,7 @@ Both **customers** and **admins** have accounts, authenticated with Sanctum bear
 - **Orders** — searchable/paginated list, inline status updates, full order-detail view
 - **Users** — searchable admin/customer list with role filter; create, edit, and remove accounts
 - **Careers** — manage the job openings shown on the public Careers page (publish/hide, edit, delete)
+- **Vouchers** — create discount codes (percentage with an optional cap, or fixed amount) with minimum spend, validity dates, usage limits, once-per-customer, and an on/off toggle; the table tracks redemptions live
 - **Newsletter** — write campaigns with an optional banner image, save drafts, send to all subscribers, and manage the subscriber list (status, search, remove)
 - Consistent ShopHub branding throughout (icons, gradients, empty/loading states)
 
@@ -189,7 +191,7 @@ To stop: `docker compose down` (add `-v` to also wipe the database volume).
 ## 🧪 Testing
 
 ```bash
-cd back-end && php artisan test     # 150+ feature & unit tests (auth incl. social login, accounts, password reset, catalog, product variants, admin CRUD, checkout, tracking, newsletter)
+cd back-end && php artisan test     # 180+ feature & unit tests (auth incl. social login, accounts, password reset, catalog, product variants, vouchers, admin CRUD, checkout, tracking, newsletter)
 cd front-end && npm run test        # Vitest: Pinia stores (auth, cart incl. buy-now & variant lines) + components
 ```
 
