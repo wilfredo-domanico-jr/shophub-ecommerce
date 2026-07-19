@@ -47,7 +47,8 @@
     <div class="bg-white rounded-xl shadow p-5">
       <h2 class="font-display text-lg font-semibold mb-4 text-gray-800">Recent Orders</h2>
 
-      <table class="w-full text-sm">
+      <div class="overflow-x-auto">
+      <table class="w-full text-sm min-w-[500px]">
         <thead class="text-left text-gray-500 border-b">
           <tr>
             <th class="py-2">Order #</th>
@@ -79,6 +80,7 @@
           </tr>
         </tbody>
       </table>
+      </div>
     </div>
   </div>
 </template>

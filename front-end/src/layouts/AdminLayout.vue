@@ -29,7 +29,7 @@
       </div>
 
       <!-- Navigation -->
-      <nav class="flex-1 p-4 space-y-1">
+      <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
         <router-link
           v-for="item in navItems"
           :key="item.to"

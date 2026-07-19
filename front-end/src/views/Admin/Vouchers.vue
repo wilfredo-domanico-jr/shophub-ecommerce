@@ -189,7 +189,7 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="block mb-1 text-sm font-medium text-gray-700">Starts (optional)</label>
             <input

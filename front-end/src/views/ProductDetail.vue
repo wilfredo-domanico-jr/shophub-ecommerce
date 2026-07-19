@@ -18,7 +18,7 @@
 
     <div v-else>
       <!-- Breadcrumb -->
-      <nav class="text-sm text-gray-500 mb-6 flex items-center gap-2">
+      <nav class="text-sm text-gray-500 mb-6 flex flex-wrap items-center gap-2">
         <router-link to="/" class="hover:text-orange-500">Home</router-link>
         <span>/</span>
         <router-link to="/products" class="hover:text-orange-500">Products</router-link>
@@ -99,7 +99,7 @@
           </p>
 
           <div v-if="product.stock_quantity > 0" class="mb-6">
-            <div class="flex items-center gap-4">
+            <div class="flex flex-wrap items-center gap-3">
               <div class="flex items-center border rounded-lg">
                 <button class="w-10 h-10 flex items-center justify-center hover:bg-gray-100" @click="quantity = Math.max(1, quantity - 1)">
                   -
@@ -111,7 +111,7 @@
               </div>
 
               <button
-                class="flex-1 border-2 border-orange-500 text-orange-500 py-3 rounded-lg font-semibold hover:bg-orange-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                class="flex-1 min-w-[130px] border-2 border-orange-500 text-orange-500 py-3 rounded-lg font-semibold hover:bg-orange-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 :disabled="!canPurchase"
                 @click="addToCart"
               >
@@ -119,7 +119,7 @@
               </button>
 
               <button
-                class="flex-1 gradient-primary text-white py-3 rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                class="flex-1 min-w-[130px] gradient-primary text-white py-3 rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 :disabled="!canPurchase"
                 @click="buyNow"
               >

@@ -72,14 +72,16 @@
               <div class="flex items-center gap-2 mt-2">
                 <button
                   @click="decrease(item)"
-                  class="w-6 h-6 rounded border border-gray-300 flex items-center justify-center hover:bg-gray-100"
+                  class="w-8 h-8 rounded border border-gray-300 flex items-center justify-center hover:bg-gray-100"
+                  aria-label="Decrease quantity"
                 >
                   -
                 </button>
                 <span class="w-8 text-center">{{ item.quantity }}</span>
                 <button
                   @click="increase(item)"
-                  class="w-6 h-6 rounded border border-gray-300 flex items-center justify-center hover:bg-gray-100"
+                  class="w-8 h-8 rounded border border-gray-300 flex items-center justify-center hover:bg-gray-100"
+                  aria-label="Increase quantity"
                 >
                   +
                 </button>
@@ -87,7 +89,8 @@
             </div>
             <button
               @click="remove(item.key)"
-              class="text-gray-400 hover:text-red-500"
+              class="text-gray-400 hover:text-red-500 w-8 h-8 flex items-center justify-center shrink-0"
+              aria-label="Remove item"
             >
               <svg
                 class="w-5 h-5"

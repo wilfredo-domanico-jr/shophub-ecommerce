@@ -16,7 +16,7 @@
       </div>
       <button
         @click.prevent.stop="addToCart()"
-        class="absolute top-2 right-2 bg-white p-2 rounded-full shadow-lg hover:bg-orange-500 hover:text-white transition opacity-0 group-hover:opacity-100"
+        class="absolute top-2 right-2 bg-white p-2 rounded-full shadow-lg hover:bg-orange-500 hover:text-white transition opacity-100 md:opacity-0 md:group-hover:opacity-100"
       >
         <svg
           class="w-5 h-5"

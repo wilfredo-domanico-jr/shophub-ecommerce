@@ -38,7 +38,7 @@
             />
           </svg>
 
-          <span class="text-sm font-medium whitespace-nowrap">
+          <span class="hidden sm:inline text-sm font-medium whitespace-nowrap">
             Track Order
           </span>
         </button>
@@ -92,7 +92,7 @@
                 d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
               />
             </svg>
-            <span class="text-sm font-medium whitespace-nowrap">Sign In</span>
+            <span class="hidden sm:inline text-sm font-medium whitespace-nowrap">Sign In</span>
           </router-link>
 
           <div v-else ref="accountMenuRef" class="relative">
@@ -114,7 +114,7 @@
                   d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                 />
               </svg>
-              <span class="text-sm font-medium whitespace-nowrap max-w-[10rem] truncate">
+              <span class="text-sm font-medium whitespace-nowrap max-w-[6rem] sm:max-w-[10rem] truncate">
                 {{ auth.user?.name }}
               </span>
             </button>

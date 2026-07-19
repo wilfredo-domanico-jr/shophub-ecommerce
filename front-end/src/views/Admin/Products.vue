@@ -1,7 +1,7 @@
 <template>
   <div class="space-y-6">
     <!-- Header -->
-    <div class="flex justify-between items-center">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
       <div>
         <h1 class="text-2xl font-bold">Products</h1>
         <p class="text-gray-500 text-sm">Manage your store products</p>
@@ -274,12 +274,12 @@
               </button>
             </div>
 
-            <div v-for="(row, i) in optionRows" :key="i" class="flex gap-2 items-center">
+            <div v-for="(row, i) in optionRows" :key="i" class="flex flex-col sm:flex-row gap-2 sm:items-center">
               <input
                 v-model="row.name"
                 type="text"
                 placeholder="Name (e.g. Color)"
-                class="w-32 border p-2 rounded text-sm focus:outline-none focus:border-orange-500"
+                class="w-full sm:w-32 border p-2 rounded text-sm focus:outline-none focus:border-orange-500"
               />
               <input
                 v-model="row.valuesText"

@@ -2,7 +2,7 @@
   <div v-if="sale && phase !== 'ended'" class="container mx-auto px-4 py-8">
     <div class="gradient-primary rounded-2xl p-6 shadow-xl">
       <!-- Header -->
-      <div class="flex items-center justify-between mb-6">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div class="flex items-center gap-3">
           <div class="bg-white rounded-lg p-2">
             <svg
@@ -17,7 +17,7 @@
             <h3 class="font-display text-2xl md:text-3xl font-bold text-white">
               Flash Sale
             </h3>
-            <p class="text-white/80 text-sm">{{ sale.title }}</p>
+            <p class="text-white/80 text-sm truncate max-w-[200px] sm:max-w-none">{{ sale.title }}</p>
           </div>
         </div>
 

@@ -151,8 +151,9 @@
               Discount ({{ appliedVoucher.code }})
               <button
                 type="button"
-                class="text-gray-400 hover:text-red-500 ml-1"
+                class="text-gray-400 hover:text-red-500 ml-1 p-1.5 -m-1"
                 title="Remove voucher"
+                aria-label="Remove voucher"
                 @click="removeVoucher"
               >
                 ✕

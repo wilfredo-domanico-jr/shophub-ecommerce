@@ -150,8 +150,8 @@
           <!-- Items -->
           <div>
             <h3 class="text-xs font-semibold text-gray-500 uppercase mb-2">Items</h3>
-            <div class="border rounded-lg overflow-hidden">
-              <table class="w-full text-sm">
+            <div class="border rounded-lg overflow-x-auto">
+              <table class="w-full text-sm min-w-[420px]">
                 <thead class="bg-gray-50 text-left text-gray-500">
                   <tr>
                     <th class="p-3">Product</th>

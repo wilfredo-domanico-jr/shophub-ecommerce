@@ -128,7 +128,7 @@
       v-if="showModal"
       class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
     >
-      <div class="bg-white w-full max-w-md rounded-xl p-6 space-y-4">
+      <div class="bg-white w-full max-w-md rounded-xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
         <h2 class="text-xl font-bold">
           {{ isEdit ? "Edit Category" : "Add Category" }}
         </h2>
