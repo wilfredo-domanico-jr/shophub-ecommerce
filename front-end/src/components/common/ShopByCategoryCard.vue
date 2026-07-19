@@ -2,6 +2,7 @@
   <router-link
     :to="`/products?category=${category.slug}`"
     :class="category.gradientClass"
+    :style="category.gradientStyle"
     class="rounded-xl p-6 text-white hover:shadow-xl transition cursor-pointer transform hover:scale-105 block"
   >
     <svg
@@ -30,6 +31,7 @@ interface CategoryCard {
   title: string;
   itemCount: number;
   gradientClass: string;
+  gradientStyle?: Record<string, string>;
 }
 
 const props = defineProps<{

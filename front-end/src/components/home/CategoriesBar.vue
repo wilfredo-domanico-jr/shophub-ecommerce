@@ -11,6 +11,7 @@
           <div
             class="category-icon w-12 h-12 rounded-full flex items-center justify-center text-white"
             :class="category.gradientClass"
+            :style="category.gradientStyle"
           >
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="category.icon" />
@@ -28,6 +29,7 @@
 <script lang="ts" setup>
 import { ref, onMounted } from "vue";
 import { getCategories } from "../../services/categories";
+import { categoryColorClass, categoryColorStyle } from "../../utils/categoryColor";
 
 interface CategoryBarItem {
   id: number;
@@ -35,6 +37,7 @@ interface CategoryBarItem {
   name: string;
   icon: string;
   gradientClass: string;
+  gradientStyle?: Record<string, string>;
 }
 
 const MAX_CATEGORIES = 10;
@@ -62,7 +65,11 @@ async function fetchCategories() {
       slug: c.slug,
       name: c.name,
       icon: c.icon || FALLBACK_ICON,
-      gradientClass: c.color_class || FALLBACK_GRADIENTS[index % FALLBACK_GRADIENTS.length]!,
+      gradientClass: categoryColorClass(
+        c.color_class,
+        FALLBACK_GRADIENTS[index % FALLBACK_GRADIENTS.length]!
+      ),
+      gradientStyle: categoryColorStyle(c.color_class),
     }));
 }
 

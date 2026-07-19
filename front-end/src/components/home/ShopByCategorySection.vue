@@ -18,6 +18,7 @@
 import { ref, onMounted } from "vue";
 import ShopByCategoryCard from "../common/ShopByCategoryCard.vue";
 import { getCategories } from "../../services/categories";
+import { categoryColorClass, categoryColorStyle } from "../../utils/categoryColor";
 
 interface CategoryCard {
   id: number;
@@ -26,6 +27,7 @@ interface CategoryCard {
   title: string;
   itemCount: number;
   gradientClass: string;
+  gradientStyle?: Record<string, string>;
 }
 
 const FALLBACK_GRADIENTS = [
@@ -52,7 +54,11 @@ async function fetchCategories() {
       icon: c.icon || FALLBACK_ICON,
       title: c.name,
       itemCount: c.products_count,
-      gradientClass: c.color_class || FALLBACK_GRADIENTS[index % FALLBACK_GRADIENTS.length]!,
+      gradientClass: categoryColorClass(
+        c.color_class,
+        FALLBACK_GRADIENTS[index % FALLBACK_GRADIENTS.length]!
+      ),
+      gradientStyle: categoryColorStyle(c.color_class),
     }));
 }
 

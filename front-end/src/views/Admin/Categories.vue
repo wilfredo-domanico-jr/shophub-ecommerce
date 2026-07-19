@@ -55,7 +55,8 @@
             <td class="p-4 font-medium flex items-center gap-3">
               <div
                 class="w-9 h-9 rounded-lg flex items-center justify-center text-white shrink-0"
-                :class="c.color_class || 'bg-gray-300'"
+                :class="categoryColorClass(c.color_class)"
+                :style="categoryColorStyle(c.color_class)"
               >
                 <svg v-if="c.icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="c.icon" />
@@ -145,11 +146,20 @@
         </div>
 
         <div>
-          <label class="block mb-1 text-sm font-medium text-gray-700">Icon</label>
-          <div class="grid grid-cols-6 gap-2">
+          <label class="block mb-1 text-sm font-medium text-gray-700">
+            Icon
+            <span class="text-gray-400 font-normal">({{ CATEGORY_ICONS.length }} available)</span>
+          </label>
+          <input
+            v-model="iconSearch"
+            type="text"
+            placeholder="Search icons... e.g. shopping, music, phone"
+            class="w-full border p-2 rounded mb-2 text-sm focus:outline-none focus:border-orange-500"
+          />
+          <div class="grid grid-cols-6 gap-2 max-h-44 overflow-y-auto pr-1">
             <button
-              v-for="opt in ICON_OPTIONS"
-              :key="opt.icon"
+              v-for="opt in filteredIcons"
+              :key="opt.label"
               type="button"
               :title="opt.label"
               class="aspect-square rounded-lg border-2 flex items-center justify-center transition"
@@ -157,15 +167,18 @@
               @click="form.icon = opt.icon"
             >
               <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="opt.icon" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" :d="opt.icon" />
               </svg>
             </button>
           </div>
+          <p v-if="filteredIcons.length === 0" class="text-xs text-gray-400 text-center py-2">
+            No icons match "{{ iconSearch }}"
+          </p>
         </div>
 
         <div>
           <label class="block mb-1 text-sm font-medium text-gray-700">Color</label>
-          <div class="grid grid-cols-4 gap-2">
+          <div class="grid grid-cols-4 gap-2 mb-2">
             <button
               v-for="opt in COLOR_OPTIONS"
               :key="opt.value"
@@ -175,6 +188,19 @@
               :class="[opt.value, form.color_class === opt.value ? 'border-gray-800' : 'border-transparent']"
               @click="form.color_class = opt.value"
             ></button>
+          </div>
+          <div class="flex items-center gap-3">
+            <input
+              type="color"
+              :value="customColor"
+              @input="pickCustomColor(($event.target as HTMLInputElement).value)"
+              class="h-9 w-14 rounded-lg border-2 cursor-pointer p-0.5"
+              :class="isCustomColorActive ? 'border-gray-800' : 'border-gray-200'"
+              title="Pick any custom color"
+            />
+            <span class="text-xs text-gray-500">
+              {{ isCustomColorActive ? `Custom color: ${form.color_class}` : "...or pick any custom color" }}
+            </span>
           </div>
         </div>
 
@@ -201,7 +227,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from "vue";
+import { computed, ref, onMounted, watch } from "vue";
 import type { Category } from "../../services/categories";
 import {
   getAdminCategories,
@@ -211,17 +237,20 @@ import {
 } from "../../services/admin/categories";
 import Pagination from "../../components/common/Pagination.vue";
 import { useToastStore } from "../../stores/toast";
+import { CATEGORY_ICONS } from "../../data/categoryIcons";
+import { categoryColorClass, categoryColorStyle } from "../../utils/categoryColor";
 
 const toast = useToastStore();
 
-const ICON_OPTIONS = [
-  { label: "Electronics", icon: "M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" },
-  { label: "Fashion", icon: "M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" },
-  { label: "Home", icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" },
-  { label: "Beauty", icon: "M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" },
-  { label: "Sports", icon: "M13 10V3L4 14h7v7l9-11h-7z" },
-  { label: "Generic", icon: "M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-5 5a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 10V5a2 2 0 012-2z" },
-];
+const DEFAULT_ICON =
+  CATEGORY_ICONS.find((i) => i.label === "Tag") ?? CATEGORY_ICONS[0]!;
+
+const iconSearch = ref("");
+const filteredIcons = computed(() => {
+  const term = iconSearch.value.trim().toLowerCase();
+  if (!term) return CATEGORY_ICONS;
+  return CATEGORY_ICONS.filter((i) => i.label.toLowerCase().includes(term));
+});
 
 const COLOR_OPTIONS = [
   { label: "Orange", value: "gradient-primary" },
@@ -229,6 +258,16 @@ const COLOR_OPTIONS = [
   { label: "Teal/Blue", value: "gradient-accent" },
   { label: "Green", value: "gradient-success" },
 ];
+
+// The native color input needs a hex value; anything the admin picks there is
+// stored in color_class as-is (renderers treat "#..." as a background style).
+const customColor = ref("#f97316");
+const isCustomColorActive = computed(() => form.value.color_class.startsWith("#"));
+
+function pickCustomColor(hex: string) {
+  customColor.value = hex;
+  form.value.color_class = hex;
+}
 
 const search = ref("");
 const page = ref(1);
@@ -287,7 +326,7 @@ const emptyForm = (): CategoryForm => ({
   id: 0,
   name: "",
   is_active: true,
-  icon: ICON_OPTIONS[0]!.icon,
+  icon: DEFAULT_ICON.icon,
   color_class: COLOR_OPTIONS[0]!.value,
 });
 
@@ -296,6 +335,7 @@ const form = ref<CategoryForm>(emptyForm());
 function openAdd() {
   isEdit.value = false;
   formError.value = "";
+  iconSearch.value = "";
   form.value = emptyForm();
   showModal.value = true;
 }
@@ -303,13 +343,17 @@ function openAdd() {
 function openEdit(cat: Category) {
   isEdit.value = true;
   formError.value = "";
+  iconSearch.value = "";
   form.value = {
     id: cat.id,
     name: cat.name,
     is_active: cat.is_active,
-    icon: cat.icon || ICON_OPTIONS[0]!.icon,
+    icon: cat.icon || DEFAULT_ICON.icon,
     color_class: cat.color_class || COLOR_OPTIONS[0]!.value,
   };
+  if (form.value.color_class.startsWith("#")) {
+    customColor.value = form.value.color_class;
+  }
   showModal.value = true;
 }
 
