@@ -36,6 +36,7 @@ GET  /api/categories               # active categories, with product counts
 GET  /api/categories/{slug}
 GET  /api/products                 # ?search=&category=&sort=&featured=&flash_sale=&page= (rows include variants_count)
 GET  /api/products/{slug}          # includes options + variants (per-variant stock, price/image overrides)
+GET  /api/products/{slug}/reviews  # paginated visible reviews + rating breakdown for the distribution bars
 GET  /api/careers                  # published job openings for the Careers page
 GET  /api/vouchers                 # publicly listed, currently claimable vouchers (safe fields only)
 GET  /api/flash-sale               # {sale: null | {title, starts_at, ends_at, is_live}} — current-or-next event
@@ -71,9 +72,14 @@ POST  /api/orders                  # checkout (stock-locked, server-side totals,
                                    # optional voucher_code applies a discount (re-validated under lock)
 POST  /api/vouchers/preview        # price a voucher against the cart before checkout (throttled, cosmetic —
                                    # never redeems; the order endpoint is the authority)
-GET   /api/my/orders               # paginated order history
+GET   /api/my/orders               # paginated order history (items link back to the product for reviews)
 PATCH /api/profile                 # name, email, phone, default shipping address
 PATCH /api/profile/password        # requires current password
+
+POST   /api/products/{slug}/reviews # post a review (1–5 stars + optional comment + up to 4 photos, multipart;
+                                    # gated to customers with a delivered order for the product; throttled)
+PATCH  /api/reviews/{id}            # edit your own review (rating/comment only — photos are immutable)
+DELETE /api/reviews/{id}            # delete your own review (photo files removed too)
 ```
 
 ### Admin (`auth:sanctum` + `admin` middleware)
@@ -91,6 +97,10 @@ POST   /api/admin/uploads          # product/category image upload
 /api/admin/vouchers                # full CRUD for discount codes (percent/fixed, min spend,
                                    # validity window, usage + per-customer limits, active toggle)
 /api/admin/flash-sales             # schedule flash sale events (title, start/end, active toggle)
+
+GET    /api/admin/reviews          # all reviews incl. hidden; ?search= (comment/product/customer) &rating=
+PATCH  /api/admin/reviews/{id}/visibility  # hide/unhide (hidden reviews drop out of the product rating)
+DELETE /api/admin/reviews/{id}     # delete a review and its photo files
 
 /api/admin/newsletters             # newsletter campaigns: drafts, edit, delete
 POST   /api/admin/newsletters/{id}/send   # queue the campaign to all active subscribers
@@ -112,12 +122,15 @@ User          — customers & admins (is_admin flag); phone + default shipping a
 SocialAccount — links a User to a Google/Facebook identity (provider + provider_id)
 Category      — name, slug, icon, color_class (brand gradient), product count
 Product       — belongs to Category; price, original_price, stock, flash-sale/featured flags;
-                optional JSON options (e.g. Color/Size) when the product has variations
+                optional JSON options (e.g. Color/Size) when the product has variations;
+                rating + reviews_count are derived from visible reviews (never set directly)
 ProductVariant — one sellable combination (e.g. Red / M); per-variant stock, optional
                 price/image overrides, unique per product via a deterministic variant_key
 Order         — belongs to User (nullable — legacy guest orders); order_number, status, payment, totals;
                 voucher_id + voucher_code snapshot + discount when a voucher was applied
 OrderItem     — snapshot of product name/price (+ variant label, e.g. "Red / M") at time of order
+Review        — 1–5 star rating + optional comment/photos per (user, product) — one each,
+                verified-purchase gated at the API; is_hidden for admin moderation
 Voucher       — discount code; percent (optional max cap) or fixed amount, min spend, validity
                 window, usage/per-customer limits, used_count, is_active, is_public (storefront listing)
 FlashSale     — scheduled homepage sale event: title, starts_at, ends_at, is_active;
@@ -169,6 +182,8 @@ php artisan serve
 - A demo customer (`customer@shophub.test` / `password`) — **only when `DEMO_MODE=true`**
 - 20 demo categories
 - ~15 demo products (some featured, some flash-sale)
+- Demo reviews from a handful of seeded reviewer accounts (product ratings derive from them;
+  in demo mode the demo customer also gets a delivered order so visitors can post a review)
 - 3 sample job openings for the Careers page
 
 Run the server, queue worker, and log tailer together via:
@@ -265,6 +280,7 @@ php artisan test
 - Product variants (options/variants in the public payload, admin sync with combination-integrity validation, variant checkout: per-variant stock/price, label snapshots, rollback on overselling)
 - Vouchers (discount math incl. caps and clamping, checkout redemption + used_count, every rejection rule — min spend, validity window, limits, once-per-customer — preview endpoint, admin CRUD validation)
 - Flash sales (public current-event resolution: live wins over upcoming, ended/inactive ignored; admin scheduling CRUD + validation)
+- Reviews (verified-purchase and duplicate gates, photo upload validation/storage, derived rating/reviews_count resync on every write, owner-only edit/delete, admin moderation incl. hide/unhide and photo-file cleanup on user/product deletion)
 - Admin CRUD (categories, products, users, job openings, newsletters) including validation and authorization
 - Newsletter (subscribe/welcome mail, unsubscribe tokens, resubscribe, drafts-only editing, sends skipping unsubscribed addresses)
 - Dashboard stats aggregation

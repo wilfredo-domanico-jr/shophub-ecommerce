@@ -39,6 +39,7 @@ Centralized in `tailwind.config.js` and `src/assets/main.css`:
 - **Social login** — "Continue with Google / Facebook" buttons on login & register (shown only for providers the backend reports as configured via `/api/config`), with an `/auth/callback` landing page that scrubs the token from history, signs the user in, and resumes any pending redirect. Backend setup: [`docs/SOCIAL_LOGIN_SETUP.md`](../docs/SOCIAL_LOGIN_SETUP.md)
 - Add-to-cart and checkout require sign-in — guests are redirected to `/login?redirect=...` and resume where they left off (a pending checkout reopens automatically via `?checkout=1`)
 - Cart → checkout (`CheckoutModal.vue`, pre-filled from the saved profile) → order confirmation
+- **Product reviews** — a reviews section on every product page (average, distribution bars, photo thumbnails with a lightbox, Verified Purchase badges) with an inline write/edit form (interactive `RatingInput`, up to 4 photos); My Orders links delivered items straight to the form via `?review=1`, and cards show real derived ratings with a "No reviews yet" fallback
 - **Voucher codes** at checkout — live discount preview via `/api/vouchers/preview`, inline validation errors, and a "You saved ₱X" confirmation; discounts also show in My Orders and order tracking. Public vouchers are discoverable on a `/vouchers` page (copy-to-clipboard, linked from the footer) and as tap-to-apply suggestions inside the checkout modal
 - Global **toast notifications** (`stores/toast.ts` + `ToastContainer.vue`) for cart, auth, and admin feedback
 - Order tracking modal (order number + email) — header entry point shown to guests only
@@ -53,6 +54,7 @@ Centralized in `tailwind.config.js` and `src/assets/main.css`:
 - Flash Sales — schedule sale windows with live/upcoming/ended/disabled status badges; the homepage section follows this schedule
 - Categories — CRUD with a searchable icon picker (200+ Heroicons, regenerable via `scripts/generate-category-icons.mjs`) and color choice: brand gradient presets or any custom color via a native color picker
 - Orders — searchable/paginated list, inline status updates, full order-detail modal
+- Reviews — searchable/filterable moderation table with hide/unhide and delete actions
 - Users — searchable admin/customer list with role filter; create, edit, remove
 - Careers — manage the job openings shown on the public Careers page (publish/hide, edit, delete)
 - Vouchers — create/edit discount codes (percent with optional cap, or fixed amount) with min spend, validity dates, usage limits, once-per-customer, and an active toggle; usage counts shown live
@@ -68,6 +70,7 @@ src/
   components/
     common/               # Header, Footer, Cart/Checkout/OrderTracking modals, ToastContainer, ProductCard, etc.
     home/                 # homepage-specific sections
+    product/              # product-page sections (reviews list + form)
     account/              # AccountNav
     auth/                 # SocialLoginButtons
     admin/                # ImageDropzone
@@ -122,7 +125,7 @@ npm run test:watch      # watch mode
 npm run test:coverage   # with coverage (v8)
 ```
 
-Tests live alongside the code they cover, in `__tests__/` folders (e.g. `src/stores/__tests__/cart.spec.ts`). Currently covers the `cart` (including buy-now semantics) and `auth` (including social token login and cart-clearing logout) Pinia stores and the `StarRating`/`Pagination` components.
+Tests live alongside the code they cover, in `__tests__/` folders (e.g. `src/stores/__tests__/cart.spec.ts`). Currently covers the `cart` (including buy-now semantics) and `auth` (including social token login and cart-clearing logout) Pinia stores and the `StarRating`/`RatingInput`/`Pagination` components.
 
 ---
 

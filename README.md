@@ -79,6 +79,7 @@ Both **customers** and **admins** have accounts, authenticated with Sanctum bear
 - Live **search autosuggest** in the header
 - **Customer accounts** — registration, login (email/password or **Google / Facebook social login**), password reset via email, profile with saved contact & shipping details, and a My Orders history
 - Cart → **checkout** (Cash on Delivery, sign-in required, form pre-filled from the profile) → order confirmation with order number
+- **Product reviews & ratings** — customers with a delivered order can rate products 1–5 stars with an optional comment and up to 4 photos; product ratings are computed live from the reviews (no fake numbers), the product page shows a summary with distribution bars, and every review carries a Verified Purchase badge. Reviews are editable/deletable by their author, and My Orders links straight to the review form for delivered items
 - **Vouchers** — apply a discount code at checkout with a live preview of the savings (percentage or fixed-amount, validated server-side); the discount shows on the confirmation, order history, tracking, and email. Public codes are discoverable on a `/vouchers` page (with copy buttons) and as tap-to-apply suggestions right in checkout; private codes stay unlisted for newsletter/social campaigns
 - **Newsletter** — footer signup with a queued welcome email; every email carries a one-click **unsubscribe** link (token-based, no login needed)
 - **Toast notifications** for cart, auth, and admin actions
@@ -93,6 +94,7 @@ Both **customers** and **admins** have accounts, authenticated with Sanctum bear
 - **Product variations** — define up to 3 options per product (e.g. Color × Size), one-click **"Generate combinations"**, then set per-variant stock, optional price override, and optional per-variant photo; product stock is derived automatically from the variant total
 - **Categories** — full CRUD with a searchable 200+ icon library and free color choice (brand gradients or a custom color picker)
 - **Orders** — searchable/paginated list, inline status updates, full order-detail view
+- **Reviews** — searchable moderation table (filter by rating) with hide/unhide and delete; hidden reviews drop out of the product's public rating instantly
 - **Users** — searchable admin/customer list with role filter; create, edit, and remove accounts
 - **Careers** — manage the job openings shown on the public Careers page (publish/hide, edit, delete)
 - **Vouchers** — create discount codes (percentage with an optional cap, or fixed amount) with minimum spend, validity dates, usage limits, once-per-customer, an on/off toggle, and a **public/private** flag controlling storefront visibility; the table tracks redemptions live
@@ -108,7 +110,7 @@ Both **customers** and **admins** have accounts, authenticated with Sanctum bear
 
 ```
 /app/Http/Controllers/Api      # public, auth/profile, and admin API controllers
-/app/Models                    # Eloquent models (User, Product + variants, Order, Voucher, FlashSale, ...)
+/app/Models                    # Eloquent models (User, Product + variants, Order, Review, Voucher, FlashSale, ...)
 /app/Mail                      # order, status-update, password-reset & newsletter Mailables
 /database/migrations           # schema
 /database/seeders              # demo categories, products, admin (+ demo customer)
@@ -193,7 +195,7 @@ To stop: `docker compose down` (add `-v` to also wipe the database volume).
 ## Testing
 
 ```bash
-cd back-end && php artisan test     # 200+ feature & unit tests (auth incl. social login, accounts, password reset, catalog, product variants, vouchers, flash sales, admin CRUD, checkout, tracking, newsletter)
+cd back-end && php artisan test     # 230+ feature & unit tests (auth incl. social login, accounts, password reset, catalog, product variants, reviews, vouchers, flash sales, admin CRUD, checkout, tracking, newsletter)
 cd front-end && npm run test        # Vitest: Pinia stores (auth, cart incl. buy-now & variant lines) + components
 ```
 
@@ -209,8 +211,6 @@ Two GitHub Actions workflows ([`.github/workflows`](.github/workflows)) run on e
 ## Roadmap
 
 - Real payment gateway integration (currently Cash on Delivery only)
-- Product reviews & ratings
-- Wishlist / saved items
 
 ---
 
