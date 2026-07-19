@@ -89,6 +89,9 @@
               <span>₱{{ item.subtotal }}</span>
             </li>
           </ul>
+          <p v-if="Number(result.discount) > 0" class="text-sm text-green-600 text-right">
+            Discount ({{ result.voucher_code }}): −₱{{ result.discount }}
+          </p>
           <p class="text-sm font-semibold text-right">Total: ₱{{ result.total }}</p>
         </div>
 

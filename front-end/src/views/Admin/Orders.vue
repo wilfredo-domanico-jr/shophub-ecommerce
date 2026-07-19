@@ -185,6 +185,10 @@
               <span>Shipping Fee</span>
               <span>₱{{ Number(viewingOrder.shipping_fee).toLocaleString() }}</span>
             </div>
+            <div v-if="Number(viewingOrder.discount) > 0" class="flex justify-between text-green-600">
+              <span>Discount ({{ viewingOrder.voucher_code }})</span>
+              <span>−₱{{ Number(viewingOrder.discount).toLocaleString() }}</span>
+            </div>
             <div class="flex justify-between font-semibold text-base pt-1 border-t">
               <span>Total</span>
               <span>₱{{ Number(viewingOrder.total).toLocaleString() }}</span>

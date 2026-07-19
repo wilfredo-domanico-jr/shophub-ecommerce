@@ -31,6 +31,9 @@
           <p class="text-xs text-gray-500">Order Number</p>
           <p class="font-bold text-lg text-orange-500">{{ placedOrder.order_number }}</p>
         </div>
+        <p v-if="Number(placedOrder.discount) > 0" class="text-sm text-green-600 font-medium">
+          You saved ₱{{ Number(placedOrder.discount).toLocaleString() }} with {{ placedOrder.voucher_code }}!
+        </p>
         <p class="text-xs text-gray-400">
           Save this order number and your email — you'll need both to track your order.
         </p>
@@ -84,6 +87,30 @@
           <textarea v-model="form.shipping_address" required rows="2" :readonly="isDemoAccount" :class="lockedFieldClass" class="w-full mt-1 px-4 py-2 border rounded-lg focus:outline-none focus:border-orange-500"></textarea>
         </div>
 
+        <!-- Voucher -->
+        <div>
+          <label class="text-sm font-medium text-gray-700">Voucher Code</label>
+          <div v-if="!appliedVoucher" class="flex gap-2 mt-1">
+            <input
+              v-model="voucherCode"
+              type="text"
+              placeholder="e.g. SAVE10"
+              class="flex-1 px-4 py-2 border rounded-lg uppercase focus:outline-none focus:border-orange-500"
+              @input="voucherCode = voucherCode.toUpperCase()"
+              @keydown.enter.prevent="applyVoucher"
+            />
+            <button
+              type="button"
+              class="px-4 py-2 border-2 border-orange-500 text-orange-500 rounded-lg font-semibold hover:bg-orange-50 transition disabled:opacity-50"
+              :disabled="applyingVoucher || !voucherCode.trim()"
+              @click="applyVoucher"
+            >
+              {{ applyingVoucher ? "..." : "Apply" }}
+            </button>
+          </div>
+          <p v-if="voucherError" class="text-red-500 text-xs mt-1">{{ voucherError }}</p>
+        </div>
+
         <div class="bg-gray-50 border rounded-lg p-3 text-sm">
           <div
             v-for="item in cartStore.checkoutItems()"
@@ -97,9 +124,23 @@
             </span>
             <span>₱{{ (item.price * (item.quantity || 1)).toLocaleString() }}</span>
           </div>
+          <div v-if="appliedVoucher" class="flex justify-between text-green-600 mb-1">
+            <span>
+              Discount ({{ appliedVoucher.code }})
+              <button
+                type="button"
+                class="text-gray-400 hover:text-red-500 ml-1"
+                title="Remove voucher"
+                @click="removeVoucher"
+              >
+                ✕
+              </button>
+            </span>
+            <span>−₱{{ Number(appliedVoucher.discount).toLocaleString() }}</span>
+          </div>
           <div class="flex justify-between font-semibold border-t pt-2 mt-2">
             <span>Total</span>
-            <span class="text-orange-500">₱{{ cartStore.checkoutTotal().toLocaleString() }}</span>
+            <span class="text-orange-500">₱{{ displayTotal.toLocaleString() }}</span>
           </div>
           <p class="text-xs text-gray-500 mt-1">Payment: Cash on Delivery</p>
         </div>
@@ -122,6 +163,7 @@ import { useCartStore } from "../../stores/cart";
 import { useAuthStore } from "../../stores/auth";
 import { useDemoAccount } from "../../composables/useDemoAccount";
 import { createOrder, type Order } from "../../services/orders";
+import { previewVoucher, type VoucherPreview } from "../../services/vouchers";
 
 const cartStore = useCartStore();
 const auth = useAuthStore();
@@ -149,6 +191,49 @@ const submitting = ref(false);
 const error = ref("");
 const placedOrder = ref<Order | null>(null);
 
+// Voucher state is checkout-scoped: it lives and dies with this modal.
+const voucherCode = ref("");
+const appliedVoucher = ref<VoucherPreview | null>(null);
+const voucherError = ref("");
+const applyingVoucher = ref(false);
+
+const displayTotal = computed(() =>
+  Math.max(0, cartStore.checkoutTotal() - Number(appliedVoucher.value?.discount ?? 0))
+);
+
+function checkoutItemsPayload() {
+  return cartStore.checkoutItems().map((item) => ({
+    product_id: item.id,
+    variant_id: item.variant_id ?? undefined,
+    quantity: item.quantity || 1,
+  }));
+}
+
+async function applyVoucher() {
+  const code = voucherCode.value.trim();
+  if (!code || applyingVoucher.value) return;
+
+  voucherError.value = "";
+  applyingVoucher.value = true;
+
+  try {
+    appliedVoucher.value = await previewVoucher({ code, items: checkoutItemsPayload() });
+  } catch (e: any) {
+    voucherError.value =
+      e?.response?.data?.errors?.voucher_code?.[0] ??
+      e?.response?.data?.errors?.items?.[0] ??
+      "Could not apply that voucher. Please try again.";
+  } finally {
+    applyingVoucher.value = false;
+  }
+}
+
+function removeVoucher() {
+  appliedVoucher.value = null;
+  voucherCode.value = "";
+  voucherError.value = "";
+}
+
 function close() {
   emit("close-checkout");
 }
@@ -172,11 +257,8 @@ async function submit() {
 
     const order = await createOrder({
       ...form.value,
-      items: cartStore.checkoutItems().map((item) => ({
-        product_id: item.id,
-        variant_id: item.variant_id ?? undefined,
-        quantity: item.quantity || 1,
-      })),
+      ...(appliedVoucher.value ? { voucher_code: appliedVoucher.value.code } : {}),
+      items: checkoutItemsPayload(),
     });
 
     placedOrder.value = order;
@@ -192,6 +274,7 @@ async function submit() {
   } catch (e: any) {
     error.value =
       e?.response?.data?.errors?.items?.[0] ??
+      e?.response?.data?.errors?.voucher_code?.[0] ??
       e?.response?.data?.message ??
       "Something went wrong placing your order. Please try again.";
   } finally {

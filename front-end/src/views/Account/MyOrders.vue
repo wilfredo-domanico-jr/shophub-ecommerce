@@ -55,7 +55,10 @@
             </li>
           </ul>
 
-          <p class="text-sm font-semibold text-right mt-2">Total: ₱{{ order.total }}</p>
+          <p v-if="Number(order.discount) > 0" class="text-sm text-green-600 text-right mt-2">
+            Discount ({{ order.voucher_code }}): −₱{{ order.discount }}
+          </p>
+          <p class="text-sm font-semibold text-right mt-1">Total: ₱{{ order.total }}</p>
         </div>
       </div>
 

@@ -24,6 +24,8 @@ export interface Order {
   payment_status: "unpaid" | "paid";
   subtotal: string;
   shipping_fee: string;
+  voucher_code: string | null;
+  discount: string;
   total: string;
   notes: string | null;
   created_at: string;
@@ -36,6 +38,7 @@ export interface CreateOrderPayload {
   customer_phone: string;
   shipping_address: string;
   notes?: string;
+  voucher_code?: string;
   items: { product_id: number; variant_id?: number; quantity: number }[];
 }
 
@@ -47,6 +50,8 @@ export interface TrackedOrder {
   order_number: string;
   status: Order["status"];
   created_at: string;
+  voucher_code: string | null;
+  discount: string;
   total: string;
   items: Pick<OrderItem, "id" | "product_name" | "variant_label" | "quantity" | "subtotal">[];
 }
