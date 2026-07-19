@@ -49,16 +49,20 @@ class UserController extends Controller
 
     public function update(Request $request, User $user)
     {
+        if ($user->isProtectedDemoAccount()) {
+            return response()->json(['message' => 'Demo accounts cannot be modified.'], 422);
+        }
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'unique:users,email,' . $user->id],
+            'email' => ['required', 'email', 'unique:users,email,'.$user->id],
             'password' => ['nullable', 'string', 'min:6'],
         ]);
 
         $user->name = $validated['name'];
         $user->email = $validated['email'];
 
-        if (!empty($validated['password'])) {
+        if (! empty($validated['password'])) {
             $user->password = Hash::make($validated['password']);
         }
 
@@ -71,6 +75,10 @@ class UserController extends Controller
     {
         if ($user->id === $request->user()->id) {
             return response()->json(['message' => 'You cannot delete your own account.'], 422);
+        }
+
+        if ($user->isProtectedDemoAccount()) {
+            return response()->json(['message' => 'Demo accounts cannot be deleted.'], 422);
         }
 
         $user->delete();

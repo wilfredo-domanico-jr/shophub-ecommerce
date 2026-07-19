@@ -59,4 +59,16 @@ class User extends Authenticatable
     {
         return $this->hasMany(SocialAccount::class);
     }
+
+    /**
+     * In demo mode the seeded demo accounts are shared by every visitor —
+     * nobody may modify or delete them.
+     */
+    public function isProtectedDemoAccount(): bool
+    {
+        return (bool) config('demo.enabled') && in_array($this->email, array_filter([
+            config('demo.admin_email'),
+            config('demo.customer_email'),
+        ]), true);
+    }
 }

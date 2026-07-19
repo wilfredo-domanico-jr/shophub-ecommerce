@@ -32,6 +32,38 @@ class PasswordResetTest extends TestCase
         });
     }
 
+    public function test_forgot_password_sends_nothing_for_demo_account_in_demo_mode(): void
+    {
+        Mail::fake();
+        config(['demo.enabled' => true, 'demo.customer_email' => 'demo-customer@example.com']);
+        User::factory()->create(['email' => 'demo-customer@example.com']);
+
+        $response = $this->postJson('/api/forgot-password', [
+            'email' => 'demo-customer@example.com',
+        ]);
+
+        // Same generic response as everyone else, but no reset token is minted.
+        $response->assertOk();
+        Mail::assertNothingQueued();
+    }
+
+    public function test_reset_is_rejected_for_demo_account_in_demo_mode(): void
+    {
+        config(['demo.enabled' => true, 'demo.customer_email' => 'demo-customer@example.com']);
+        $user = User::factory()->create(['email' => 'demo-customer@example.com']);
+        $token = Password::broker()->createToken($user);
+
+        $response = $this->postJson('/api/reset-password', [
+            'token' => $token,
+            'email' => 'demo-customer@example.com',
+            'password' => 'new-password-123',
+            'password_confirmation' => 'new-password-123',
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonPath('message', 'Password changes are disabled for the shared demo account.');
+    }
+
     public function test_forgot_password_returns_generic_response_for_unknown_email(): void
     {
         Mail::fake();

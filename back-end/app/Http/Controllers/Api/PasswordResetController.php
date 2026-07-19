@@ -20,12 +20,14 @@ class PasswordResetController extends Controller
 
         $user = User::where('email', $request->email)->first();
 
-        if ($user) {
+        // Never mint reset tokens for shared demo accounts — their emails are
+        // public, and a reset would break the demo for everyone.
+        if ($user && ! $user->isProtectedDemoAccount()) {
             $token = Password::broker()->createToken($user);
 
             $url = rtrim(config('app.frontend_url'), '/')
-                . '/reset-password?token=' . $token
-                . '&email=' . urlencode($user->email);
+                .'/reset-password?token='.$token
+                .'&email='.urlencode($user->email);
 
             Mail::to($user->email)->queue(new PasswordResetMail($user, $url));
         }
@@ -42,6 +44,11 @@ class PasswordResetController extends Controller
             'email' => 'required|email',
             'password' => 'required|string|min:8|confirmed',
         ]);
+
+        $user = User::where('email', $validated['email'])->first();
+        if ($user && $user->isProtectedDemoAccount()) {
+            return response()->json(['message' => 'Password changes are disabled for the shared demo account.'], 422);
+        }
 
         $status = Password::reset(
             $validated,

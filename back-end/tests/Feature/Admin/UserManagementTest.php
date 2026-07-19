@@ -76,4 +76,60 @@ class UserManagementTest extends TestCase
         $response->assertStatus(422);
         $this->assertDatabaseHas('users', ['id' => $this->admin->id]);
     }
+
+    public function test_demo_accounts_cannot_be_deleted_in_demo_mode(): void
+    {
+        config([
+            'demo.enabled' => true,
+            'demo.admin_email' => 'demo-admin@example.com',
+            'demo.customer_email' => 'demo-customer@example.com',
+        ]);
+        $demoAdmin = User::factory()->create(['email' => 'demo-admin@example.com', 'is_admin' => true]);
+        $demoCustomer = User::factory()->create(['email' => 'demo-customer@example.com']);
+
+        foreach ([$demoAdmin, $demoCustomer] as $protected) {
+            $response = $this->actingAs($this->admin, 'sanctum')->deleteJson("/api/admin/users/{$protected->id}");
+
+            $response->assertStatus(422);
+            $response->assertJsonPath('message', 'Demo accounts cannot be deleted.');
+            $this->assertDatabaseHas('users', ['id' => $protected->id]);
+        }
+    }
+
+    public function test_demo_accounts_cannot_be_updated_in_demo_mode(): void
+    {
+        config([
+            'demo.enabled' => true,
+            'demo.admin_email' => 'demo-admin@example.com',
+        ]);
+        $demoAdmin = User::factory()->create([
+            'name' => 'Demo Admin',
+            'email' => 'demo-admin@example.com',
+            'is_admin' => true,
+        ]);
+
+        $response = $this->actingAs($this->admin, 'sanctum')->putJson("/api/admin/users/{$demoAdmin->id}", [
+            'name' => 'Hijacked',
+            'email' => 'hijacked@example.com',
+            'password' => 'new-password',
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonPath('message', 'Demo accounts cannot be modified.');
+        $this->assertDatabaseHas('users', ['id' => $demoAdmin->id, 'email' => 'demo-admin@example.com', 'name' => 'Demo Admin']);
+    }
+
+    public function test_demo_account_emails_are_deletable_when_demo_mode_is_off(): void
+    {
+        config([
+            'demo.enabled' => false,
+            'demo.admin_email' => 'demo-admin@example.com',
+        ]);
+        $user = User::factory()->create(['email' => 'demo-admin@example.com']);
+
+        $response = $this->actingAs($this->admin, 'sanctum')->deleteJson("/api/admin/users/{$user->id}");
+
+        $response->assertOk();
+        $this->assertDatabaseMissing('users', ['id' => $user->id]);
+    }
 }

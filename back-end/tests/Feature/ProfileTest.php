@@ -32,6 +32,39 @@ class ProfileTest extends TestCase
         ]);
     }
 
+    public function test_demo_account_cannot_update_profile_in_demo_mode(): void
+    {
+        config(['demo.enabled' => true, 'demo.customer_email' => 'demo-customer@example.com']);
+        $user = User::factory()->create(['email' => 'demo-customer@example.com']);
+
+        $response = $this->actingAs($user, 'sanctum')->patchJson('/api/profile', [
+            'name' => 'Hijacked',
+            'email' => 'hijacked@example.com',
+        ]);
+
+        $response->assertStatus(422);
+        $response->assertJsonPath('message', 'Profile changes are disabled for the shared demo account.');
+        $this->assertDatabaseHas('users', ['id' => $user->id, 'email' => 'demo-customer@example.com']);
+    }
+
+    public function test_demo_account_cannot_change_password_in_demo_mode(): void
+    {
+        config(['demo.enabled' => true, 'demo.customer_email' => 'demo-customer@example.com']);
+        $user = User::factory()->create([
+            'email' => 'demo-customer@example.com',
+            'password' => Hash::make('original-pass'),
+        ]);
+
+        $response = $this->actingAs($user, 'sanctum')->patchJson('/api/profile/password', [
+            'current_password' => 'original-pass',
+            'password' => 'new-password-123',
+            'password_confirmation' => 'new-password-123',
+        ]);
+
+        $response->assertStatus(422);
+        $this->assertTrue(Hash::check('original-pass', $user->fresh()->password));
+    }
+
     public function test_email_uniqueness_ignores_own_email(): void
     {
         $user = User::factory()->create(['email' => 'juan@example.com']);

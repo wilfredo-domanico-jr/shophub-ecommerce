@@ -77,8 +77,12 @@
             <td class="text-right p-4">
               <div class="flex justify-end gap-2">
                 <button
-                  title="Edit"
-                  class="w-8 h-8 flex items-center justify-center rounded-lg text-blue-500 bg-blue-50 hover:bg-blue-500 hover:text-white transition"
+                  :title="isDemoAccount(user) ? 'Demo account — protected' : 'Edit'"
+                  :disabled="isDemoAccount(user)"
+                  class="w-8 h-8 flex items-center justify-center rounded-lg transition"
+                  :class="isDemoAccount(user)
+                    ? 'text-gray-300 bg-gray-50 cursor-not-allowed'
+                    : 'text-blue-500 bg-blue-50 hover:bg-blue-500 hover:text-white'"
                   @click="openEdit(user)"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -87,8 +91,12 @@
                 </button>
 
                 <button
-                  title="Remove"
-                  class="w-8 h-8 flex items-center justify-center rounded-lg text-red-500 bg-red-50 hover:bg-red-500 hover:text-white transition"
+                  :title="isDemoAccount(user) ? 'Demo account — protected' : 'Remove'"
+                  :disabled="isDemoAccount(user)"
+                  class="w-8 h-8 flex items-center justify-center rounded-lg transition"
+                  :class="isDemoAccount(user)
+                    ? 'text-gray-300 bg-gray-50 cursor-not-allowed'
+                    : 'text-red-500 bg-red-50 hover:bg-red-500 hover:text-white'"
                   @click="remove(user.id)"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -187,8 +195,17 @@ import {
 } from "../../services/admin/users";
 import Pagination from "../../components/common/Pagination.vue";
 import { useToastStore } from "../../stores/toast";
+import { getAppConfig } from "../../services/config";
 
 const toast = useToastStore();
+
+// In demo mode the seeded demo accounts can't be edited or deleted (backend
+// enforces this too) — show the buttons as disabled instead of letting them fail.
+const demoEmails = ref<string[]>([]);
+
+function isDemoAccount(user: AdminUser) {
+  return demoEmails.value.includes(user.email);
+}
 
 const search = ref("");
 const roleFilter = ref<"" | "admin" | "customer">("");
@@ -239,7 +256,19 @@ watch(roleFilter, () => {
   loadUsers();
 });
 
-onMounted(loadUsers);
+onMounted(async () => {
+  loadUsers();
+  try {
+    const config = await getAppConfig();
+    demoEmails.value = config.demo_mode
+      ? [config.demo_admin_email, config.demo_customer_email].filter(
+          (email): email is string => !!email
+        )
+      : [];
+  } catch {
+    demoEmails.value = [];
+  }
+});
 
 const showModal = ref(false);
 const isEdit = ref(false);

@@ -9,9 +9,13 @@ class ProfileController extends Controller
 {
     public function update(Request $request)
     {
+        if ($request->user()->isProtectedDemoAccount()) {
+            return response()->json(['message' => 'Profile changes are disabled for the shared demo account.'], 422);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email,' . $request->user()->id,
+            'email' => 'required|email|max:255|unique:users,email,'.$request->user()->id,
             'phone' => 'nullable|string|max:30',
             'default_shipping_address' => 'nullable|string|max:1000',
         ]);
@@ -23,6 +27,10 @@ class ProfileController extends Controller
 
     public function updatePassword(Request $request)
     {
+        if ($request->user()->isProtectedDemoAccount()) {
+            return response()->json(['message' => 'Password changes are disabled for the shared demo account.'], 422);
+        }
+
         $validated = $request->validate([
             'current_password' => 'required|current_password:sanctum',
             'password' => 'required|string|min:8|confirmed',
