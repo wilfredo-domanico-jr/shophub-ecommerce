@@ -1,5 +1,5 @@
 <template>
-  <div class="container mx-auto px-4 py-8">
+  <div v-if="sale && phase !== 'ended'" class="container mx-auto px-4 py-8">
     <div class="gradient-primary rounded-2xl p-6 shadow-xl">
       <!-- Header -->
       <div class="flex items-center justify-between mb-6">
@@ -13,14 +13,17 @@
               <path d="M13 10V3L4 14h7v7l9-11h-7z"></path>
             </svg>
           </div>
-          <h3 class="font-display text-2xl md:text-3xl font-bold text-white">
-            Flash Sale
-          </h3>
+          <div>
+            <h3 class="font-display text-2xl md:text-3xl font-bold text-white">
+              Flash Sale
+            </h3>
+            <p class="text-white/80 text-sm">{{ sale.title }}</p>
+          </div>
         </div>
 
         <!-- Countdown Timer -->
         <div class="flex items-center gap-2 text-white">
-          <span class="text-sm hidden md:block">Ends In:</span>
+          <span class="text-sm hidden md:block">{{ phase === "live" ? "Ends In:" : "Starts In:" }}</span>
           <div class="flex gap-1">
             <div class="timer-box px-2 py-1 rounded text-center min-w-[40px]">
               <div class="font-bold text-lg">{{ hours }}</div>
@@ -40,14 +43,17 @@
         </div>
       </div>
 
-      <!-- Products Grid -->
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      <!-- Products Grid (only while the sale is live) -->
+      <div v-if="phase === 'live'" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <FlashSaleProductCard
           v-for="product in products"
           :key="product.id"
           :product="product"
         />
       </div>
+      <p v-else class="text-white/90 text-center py-6 font-medium">
+        Get ready — deals go live when the countdown hits zero!
+      </p>
     </div>
   </div>
 </template>
@@ -56,6 +62,7 @@
 import { ref, onMounted, onUnmounted } from "vue";
 import FlashSaleProductCard from "../common/FlashSaleProductCard.vue";
 import { getFlashSaleProducts } from "../../services/products";
+import { getCurrentFlashSale, type FlashSaleInfo } from "../../services/flashSale";
 
 interface Product {
   id: number;
@@ -93,22 +100,44 @@ async function fetchProducts() {
   });
 }
 
-// ** Countdown Timer **
+// ** Scheduled event + countdown **
+// The countdown targets the real event window from the API. Phases:
+// upcoming (Starts In, grid hidden) -> live (Ends In, grid shown) -> ended (section hidden).
+const sale = ref<FlashSaleInfo | null>(null);
+const phase = ref<"upcoming" | "live" | "ended">("upcoming");
+
 const hours = ref("00");
 const minutes = ref("00");
 const seconds = ref("00");
 
-const saleEndTime = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 hours from now
-let timerInterval: number;
+let startsAt = 0;
+let endsAt = 0;
+let productsFetched = false;
+let timerInterval: number | undefined;
 
-function updateTimer() {
-  const now = new Date();
-  const diff = saleEndTime.getTime() - now.getTime();
-  if (diff <= 0) {
-    clearInterval(timerInterval);
-    hours.value = minutes.value = seconds.value = "00";
-    return;
+function computePhase(now: number): "upcoming" | "live" | "ended" {
+  if (now < startsAt) return "upcoming";
+  if (now < endsAt) return "live";
+  return "ended";
+}
+
+function tick() {
+  const now = Date.now();
+  const newPhase = computePhase(now);
+
+  if (newPhase === "live" && !productsFetched) {
+    productsFetched = true;
+    fetchProducts(); // grid appears the moment the sale opens
   }
+
+  if (newPhase === "ended") {
+    clearInterval(timerInterval);
+  }
+
+  phase.value = newPhase;
+
+  const target = newPhase === "upcoming" ? startsAt : endsAt;
+  const diff = Math.max(0, target - now);
   const h = Math.floor(diff / 1000 / 60 / 60);
   const m = Math.floor((diff / 1000 / 60) % 60);
   const s = Math.floor((diff / 1000) % 60);
@@ -117,10 +146,19 @@ function updateTimer() {
   seconds.value = s.toString().padStart(2, "0");
 }
 
-onMounted(() => {
-  fetchProducts();
-  updateTimer();
-  timerInterval = setInterval(updateTimer, 1000);
+onMounted(async () => {
+  try {
+    sale.value = await getCurrentFlashSale();
+  } catch {
+    sale.value = null; // API down -> section just stays hidden
+  }
+  if (!sale.value) return;
+
+  startsAt = Date.parse(sale.value.starts_at);
+  endsAt = Date.parse(sale.value.ends_at);
+
+  tick();
+  timerInterval = setInterval(tick, 1000);
 });
 
 onUnmounted(() => {
