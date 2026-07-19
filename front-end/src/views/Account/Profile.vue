@@ -4,6 +4,14 @@
 
     <AccountNav />
 
+    <div
+      v-if="isDemoAccount"
+      class="mb-6 p-4 rounded-lg bg-orange-50 border border-orange-200 text-sm text-gray-700"
+    >
+      You're signed in with the <span class="font-semibold">shared demo account</span> —
+      profile details and password can't be changed, so it stays working for every visitor.
+    </div>
+
     <!-- Profile details -->
     <div class="bg-white p-6 rounded-lg shadow-md mb-8">
       <h2 class="text-lg font-semibold mb-4">Profile Details</h2>
@@ -15,7 +23,8 @@
         {{ profileError }}
       </div>
 
-      <form @submit.prevent="saveProfile" class="space-y-4">
+      <form @submit.prevent="saveProfile">
+        <fieldset :disabled="isDemoAccount" class="space-y-4 disabled:opacity-60">
         <div>
           <label class="block mb-1 font-medium" for="name">Full Name</label>
           <input
@@ -67,6 +76,7 @@
         >
           {{ savingProfile ? "Saving..." : "Save Changes" }}
         </button>
+        </fieldset>
       </form>
     </div>
 
@@ -81,7 +91,8 @@
         {{ passwordError }}
       </div>
 
-      <form @submit.prevent="savePassword" class="space-y-4">
+      <form @submit.prevent="savePassword">
+        <fieldset :disabled="isDemoAccount" class="space-y-4 disabled:opacity-60">
         <div>
           <label class="block mb-1 font-medium" for="current_password">Current Password</label>
           <input
@@ -128,6 +139,7 @@
         >
           {{ savingPassword ? "Updating..." : "Update Password" }}
         </button>
+        </fieldset>
       </form>
     </div>
   </div>
@@ -137,9 +149,11 @@
 import { ref } from "vue";
 import { useAuthStore } from "../../stores/auth";
 import { updateProfile, changePassword, firstValidationError } from "../../services/account";
+import { useDemoAccount } from "../../composables/useDemoAccount";
 import AccountNav from "../../components/account/AccountNav.vue";
 
 const auth = useAuthStore();
+const { isDemoAccount } = useDemoAccount();
 
 const profileForm = ref({
   name: auth.user?.name ?? "",
@@ -161,6 +175,7 @@ const passwordSuccess = ref(false);
 const passwordError = ref("");
 
 async function saveProfile() {
+  if (isDemoAccount.value) return;
   profileSuccess.value = false;
   profileError.value = "";
   savingProfile.value = true;
@@ -177,6 +192,7 @@ async function saveProfile() {
 }
 
 async function savePassword() {
+  if (isDemoAccount.value) return;
   passwordSuccess.value = false;
   passwordError.value = "";
   savingPassword.value = true;

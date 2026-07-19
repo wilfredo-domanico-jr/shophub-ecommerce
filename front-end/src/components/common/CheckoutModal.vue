@@ -47,7 +47,14 @@
         <p v-if="error" class="text-red-500 text-sm">{{ error }}</p>
 
         <p
-          v-if="profileIncomplete"
+          v-if="isDemoAccount"
+          class="text-xs text-gray-500 bg-orange-50 border border-orange-200 rounded-lg p-3"
+        >
+          Demo account — contact and shipping details are locked to the demo profile.
+        </p>
+
+        <p
+          v-else-if="profileIncomplete"
           class="text-xs text-gray-500 bg-orange-50 border border-orange-200 rounded-lg p-3"
         >
           Tip: save your contact number and shipping address in
@@ -59,22 +66,22 @@
 
         <div>
           <label class="text-sm font-medium text-gray-700">Full Name</label>
-          <input v-model="form.customer_name" type="text" required class="w-full mt-1 px-4 py-2 border rounded-lg focus:outline-none focus:border-orange-500" />
+          <input v-model="form.customer_name" type="text" required :readonly="isDemoAccount" :class="lockedFieldClass" class="w-full mt-1 px-4 py-2 border rounded-lg focus:outline-none focus:border-orange-500" />
         </div>
 
         <div>
           <label class="text-sm font-medium text-gray-700">Email</label>
-          <input v-model="form.customer_email" type="email" required class="w-full mt-1 px-4 py-2 border rounded-lg focus:outline-none focus:border-orange-500" />
+          <input v-model="form.customer_email" type="email" required :readonly="isDemoAccount" :class="lockedFieldClass" class="w-full mt-1 px-4 py-2 border rounded-lg focus:outline-none focus:border-orange-500" />
         </div>
 
         <div>
           <label class="text-sm font-medium text-gray-700">Phone Number</label>
-          <input v-model="form.customer_phone" type="tel" required class="w-full mt-1 px-4 py-2 border rounded-lg focus:outline-none focus:border-orange-500" />
+          <input v-model="form.customer_phone" type="tel" required :readonly="isDemoAccount" :class="lockedFieldClass" class="w-full mt-1 px-4 py-2 border rounded-lg focus:outline-none focus:border-orange-500" />
         </div>
 
         <div>
           <label class="text-sm font-medium text-gray-700">Shipping Address</label>
-          <textarea v-model="form.shipping_address" required rows="2" class="w-full mt-1 px-4 py-2 border rounded-lg focus:outline-none focus:border-orange-500"></textarea>
+          <textarea v-model="form.shipping_address" required rows="2" :readonly="isDemoAccount" :class="lockedFieldClass" class="w-full mt-1 px-4 py-2 border rounded-lg focus:outline-none focus:border-orange-500"></textarea>
         </div>
 
         <div class="bg-gray-50 border rounded-lg p-3 text-sm">
@@ -101,10 +108,17 @@
 import { computed, ref } from "vue";
 import { useCartStore } from "../../stores/cart";
 import { useAuthStore } from "../../stores/auth";
+import { useDemoAccount } from "../../composables/useDemoAccount";
 import { createOrder, type Order } from "../../services/orders";
 
 const cartStore = useCartStore();
 const auth = useAuthStore();
+const { isDemoAccount } = useDemoAccount();
+
+// Demo orders always use the seeded demo identity (backend enforces this too).
+const lockedFieldClass = computed(() =>
+  isDemoAccount.value ? "bg-gray-50 text-gray-500 cursor-not-allowed" : ""
+);
 const emit = defineEmits<{ (e: "close-checkout"): void; (e: "order-placed"): void }>();
 
 const profileIncomplete = computed(

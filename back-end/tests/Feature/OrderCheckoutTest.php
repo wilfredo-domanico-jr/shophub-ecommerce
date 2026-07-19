@@ -77,6 +77,43 @@ class OrderCheckoutTest extends TestCase
         ]);
     }
 
+    public function test_demo_account_checkout_uses_the_seeded_demo_details(): void
+    {
+        Mail::fake();
+        config(['demo.enabled' => true, 'demo.customer_email' => 'demo-customer@example.com']);
+
+        $user = User::factory()->create([
+            'name' => 'Demo Customer',
+            'email' => 'demo-customer@example.com',
+            'phone' => '09170000000',
+            'default_shipping_address' => '1 Demo St, Manila',
+        ]);
+        $product = Product::factory()->create([
+            'category_id' => Category::factory(),
+            'price' => 500,
+            'stock_quantity' => 10,
+        ]);
+
+        $response = $this->actingAs($user, 'sanctum')->postJson('/api/orders', [
+            'customer_name' => 'Someone Else',
+            'customer_email' => 'someone-else@example.com',
+            'customer_phone' => '09998887777',
+            'shipping_address' => 'Anywhere but the demo address',
+            'items' => [
+                ['product_id' => $product->id, 'quantity' => 1],
+            ],
+        ]);
+
+        $response->assertCreated();
+        $this->assertDatabaseHas('orders', [
+            'id' => $response->json('id'),
+            'customer_name' => 'Demo Customer',
+            'customer_email' => 'demo-customer@example.com',
+            'customer_phone' => '09170000000',
+            'shipping_address' => '1 Demo St, Manila',
+        ]);
+    }
+
     public function test_guest_cannot_checkout(): void
     {
         Mail::fake();

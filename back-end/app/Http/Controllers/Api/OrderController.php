@@ -26,7 +26,18 @@ class OrderController extends Controller
             'items.*.quantity' => ['required', 'integer', 'min:1'],
         ]);
 
-        $userId = $request->user()->id;
+        $user = $request->user();
+
+        // Demo visitors order as the seeded demo identity — the checkout
+        // form is locked in the UI, and enforced here for direct API calls.
+        if ($user->isProtectedDemoAccount()) {
+            $validated['customer_name'] = $user->name;
+            $validated['customer_email'] = $user->email;
+            $validated['customer_phone'] = $user->phone ?? $validated['customer_phone'];
+            $validated['shipping_address'] = $user->default_shipping_address ?? $validated['shipping_address'];
+        }
+
+        $userId = $user->id;
 
         $order = DB::transaction(function () use ($validated, $userId) {
             $productIds = collect($validated['items'])->pluck('product_id');
@@ -43,9 +54,9 @@ class OrderController extends Controller
             foreach ($validated['items'] as $item) {
                 $product = $products->get($item['product_id']);
 
-                if (!$product || !$product->is_active) {
+                if (! $product || ! $product->is_active) {
                     throw ValidationException::withMessages([
-                        'items' => "One of the products in your cart is no longer available.",
+                        'items' => 'One of the products in your cart is no longer available.',
                     ]);
                 }
 
@@ -127,7 +138,7 @@ class OrderController extends Controller
             ->with('items')
             ->first();
 
-        if (!$order) {
+        if (! $order) {
             return response()->json(['message' => 'No matching order found.'], 404);
         }
 
