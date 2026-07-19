@@ -8,20 +8,13 @@ export interface FaqItem {
   a: string;
 }
 
-export interface JobOpening {
-  title: string;
-  department: string;
-  location: string;
-  type: string;
-  description: string;
-}
-
 export interface InfoPageContent {
   title: string;
   tagline: string;
   sections?: InfoSection[];
   faqs?: FaqItem[];
-  jobs?: JobOpening[];
+  /** Careers only: openings are fetched live from /api/careers. */
+  showJobOpenings?: boolean;
 }
 
 export const infoPages: Record<string, InfoPageContent> = {
@@ -116,32 +109,7 @@ export const infoPages: Record<string, InfoPageContent> = {
   careers: {
     title: "Careers",
     tagline: "Help us build the next version of ShopHub.",
-    jobs: [
-      {
-        title: "Frontend Developer (Vue)",
-        department: "Engineering",
-        location: "Manila / Remote",
-        type: "Full-time",
-        description:
-          "Build and polish the storefront and admin experiences with Vue 3, TypeScript, and Tailwind. You'll own features end to end — from UI details to API integration — and help shape how millions of future orders get placed.",
-      },
-      {
-        title: "Customer Support Specialist",
-        department: "Operations",
-        location: "Manila",
-        type: "Full-time",
-        description:
-          "Be the friendly voice behind help@shophub.test — resolving order issues, coordinating returns, and turning frustrated shoppers into repeat customers.",
-      },
-      {
-        title: "Warehouse Associate",
-        department: "Fulfillment",
-        location: "Pasig",
-        type: "Part-time",
-        description:
-          "Pick, pack, and stage orders for same-day courier handoff. Your attention to detail is what keeps our delivery promise honest.",
-      },
-    ],
+    showJobOpenings: true,
     sections: [
       {
         heading: "What We Look For",

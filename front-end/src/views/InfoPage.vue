@@ -14,13 +14,13 @@
       <h1 class="font-display text-3xl font-bold text-gray-800 mb-2">{{ content.title }}</h1>
       <p class="text-gray-500 mb-8">{{ content.tagline }}</p>
 
-      <!-- Job openings (careers) -->
-      <div v-if="content.jobs" class="mb-8">
+      <!-- Job openings (careers) — fetched from the API, managed in the admin panel -->
+      <div v-if="content.showJobOpenings" class="mb-8">
         <h2 class="font-semibold text-lg text-gray-800 mb-3">Current Openings</h2>
-        <div class="space-y-3">
+        <div v-if="jobs.length" class="space-y-3">
           <div
-            v-for="job in content.jobs"
-            :key="job.title"
+            v-for="job in jobs"
+            :key="job.id"
             class="bg-white rounded-xl shadow p-6"
           >
             <div class="flex flex-wrap items-start justify-between gap-3 mb-2">
@@ -30,7 +30,7 @@
               </div>
               <div class="flex gap-2">
                 <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-700">
-                  {{ job.type }}
+                  {{ job.employment_type }}
                 </span>
                 <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
                   {{ job.location }}
@@ -46,6 +46,9 @@
             </a>
           </div>
         </div>
+        <p v-else class="bg-white rounded-xl shadow p-6 text-sm text-gray-500">
+          We don't have any open positions right now — check back soon, or send us your resume anyway.
+        </p>
       </div>
 
       <!-- FAQ style content -->
@@ -88,11 +91,29 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import { infoPages } from "../data/infoPages";
+import { getJobOpenings, type JobOpening } from "../services/careers";
 
 const props = defineProps<{ slug: string }>();
 
 const openFaq = ref(0);
 const content = computed(() => infoPages[props.slug]);
+
+const jobs = ref<JobOpening[]>([]);
+
+// watch (not onMounted): the same component instance is reused when
+// navigating between info pages.
+watch(
+  () => props.slug,
+  async () => {
+    if (!content.value?.showJobOpenings) return;
+    try {
+      jobs.value = await getJobOpenings();
+    } catch {
+      jobs.value = [];
+    }
+  },
+  { immediate: true }
+);
 </script>

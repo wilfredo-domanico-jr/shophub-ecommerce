@@ -39,7 +39,7 @@ Centralized in `tailwind.config.js` and `src/assets/main.css`:
 - Cart → checkout (`CheckoutModal.vue`, pre-filled from the saved profile) → order confirmation
 - Global **toast notifications** (`stores/toast.ts` + `ToastContainer.vue`) for cart, auth, and admin feedback
 - Order tracking modal (order number + email) — header entry point shown to guests only
-- Content pages: `/help-center`, `/returns-refunds`, `/shipping-info`, `/our-story`, `/careers`, `/press-media`, `/privacy-policy` (driven by `src/data/infoPages.ts`)
+- Content pages: `/help-center`, `/returns-refunds`, `/shipping-info`, `/our-story`, `/careers`, `/press-media`, `/privacy-policy` (driven by `src/data/infoPages.ts`); the Careers page renders live job openings from the API
 
 ### Admin panel (`/admin`)
 
@@ -49,6 +49,7 @@ Centralized in `tailwind.config.js` and `src/assets/main.css`:
 - Categories — CRUD with a searchable icon picker (200+ Heroicons, regenerable via `scripts/generate-category-icons.mjs`) and color choice: brand gradient presets or any custom color via a native color picker
 - Orders — searchable/paginated list, inline status updates, full order-detail modal
 - Users — searchable admin/customer list with role filter; create, edit, remove
+- Careers — manage the job openings shown on the public Careers page (publish/hide, edit, delete)
 
 ---
 

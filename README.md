@@ -89,6 +89,7 @@ Both **customers** and **admins** have accounts, authenticated with Sanctum bear
 - **Categories** — full CRUD with a searchable 200+ icon library and free color choice (brand gradients or a custom color picker)
 - **Orders** — searchable/paginated list, inline status updates, full order-detail view
 - **Users** — searchable admin/customer list with role filter; create, edit, and remove accounts
+- **Careers** — manage the job openings shown on the public Careers page (publish/hide, edit, delete)
 - Consistent ShopHub branding throughout (icons, gradients, empty/loading states)
 
 ---
@@ -184,7 +185,7 @@ To stop: `docker compose down` (add `-v` to also wipe the database volume).
 ## 🧪 Testing
 
 ```bash
-cd back-end && php artisan test     # 85+ feature & unit tests (auth incl. social login, accounts, password reset, catalog, admin CRUD, checkout, tracking)
+cd back-end && php artisan test     # 100+ feature & unit tests (auth incl. social login, accounts, password reset, catalog, admin CRUD, checkout, tracking)
 cd front-end && npm run test        # Vitest: Pinia stores (auth, cart incl. buy-now) + components
 ```
 

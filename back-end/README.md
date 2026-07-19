@@ -36,6 +36,7 @@ GET  /api/categories               # active categories, with product counts
 GET  /api/categories/{slug}
 GET  /api/products                 # ?search=&category=&sort=&featured=&flash_sale=&page=
 GET  /api/products/{slug}
+GET  /api/careers                  # published job openings for the Careers page
 ```
 
 ### Order tracking (public, for guests & legacy orders)
@@ -76,6 +77,7 @@ POST   /api/admin/uploads          # product/category image upload
 /api/admin/categories              # full CRUD
 /api/admin/products                # full CRUD
 /api/admin/users                   # manage admin accounts
+/api/admin/careers                 # manage job openings (incl. unpublished)
 
 GET    /api/admin/orders
 GET    /api/admin/orders/{order}
@@ -94,6 +96,8 @@ Category      — name, slug, icon, color_class (brand gradient), product count
 Product       — belongs to Category; price, original_price, stock, flash-sale/featured flags
 Order         — belongs to User (nullable — legacy guest orders); order_number, status, payment, totals
 OrderItem     — snapshot of product name/price at time of order
+JobOpening    — careers-page posting; title, department, location, type, is_active
+
 ```
 
 ---
@@ -137,6 +141,7 @@ php artisan serve
 - A demo customer (`customer@shophub.test` / `password`) — **only when `DEMO_MODE=true`**
 - 20 demo categories
 - ~15 demo products (some featured, some flash-sale)
+- 3 sample job openings for the Careers page
 
 Run the server, queue worker, and log tailer together via:
 
@@ -224,12 +229,12 @@ Full click-by-click walkthrough, linking behavior, and known limitations: [`docs
 php artisan test
 ```
 
-85+ feature and unit tests covering:
+100+ feature and unit tests covering:
 - Auth (register/login/logout/me, admin-vs-customer access to admin routes)
 - Social login (Socialite mocked — new-user creation, email linking, repeat logins, no-email and provider-failure errors, null-password login rejection)
 - Customer accounts (profile updates, password change, password reset flow, order history isolation)
 - Public catalog (category/product filtering, search, sort, active-only visibility)
-- Admin CRUD (categories, products, users) including validation and authorization
+- Admin CRUD (categories, products, users, job openings) including validation and authorization
 - Dashboard stats aggregation
 - Checkout (including stock-locking against overselling) and order tracking (including its trimmed, PII-free response)
 - Model behavior (`Order` number generation/uniqueness, `Product` scopes)
