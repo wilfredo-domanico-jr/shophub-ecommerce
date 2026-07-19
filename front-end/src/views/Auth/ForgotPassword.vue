@@ -50,16 +50,40 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import { forgotPassword } from "../../services/account";
+import { getAppConfig } from "../../services/config";
 
 const email = ref("");
 const successMessage = ref("");
 const errorMessage = ref("");
 const loading = ref(false);
 
+// The backend silently ignores reset requests for demo accounts — tell the
+// visitor up front instead of pretending an email was sent.
+const demoEmails = ref<string[]>([]);
+
+onMounted(async () => {
+  try {
+    const config = await getAppConfig();
+    demoEmails.value = config.demo_mode
+      ? [config.demo_admin_email, config.demo_customer_email]
+          .filter((e): e is string => !!e)
+          .map((e) => e.toLowerCase())
+      : [];
+  } catch {
+    demoEmails.value = [];
+  }
+});
+
 async function handleSubmit() {
   errorMessage.value = "";
+
+  if (demoEmails.value.includes(email.value.trim().toLowerCase())) {
+    errorMessage.value = "Password resets are disabled for the shared demo account.";
+    return;
+  }
+
   loading.value = true;
 
   try {

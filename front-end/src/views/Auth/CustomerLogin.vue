@@ -82,7 +82,14 @@
         </div>
 
         <div class="text-right">
-          <router-link to="/forgot-password" class="text-sm text-orange-500 hover:underline">
+          <span
+            v-if="isDemoEmail"
+            class="text-sm text-gray-400 cursor-not-allowed"
+            title="Password resets are disabled for the shared demo account"
+          >
+            Forgot password?
+          </span>
+          <router-link v-else to="/forgot-password" class="text-sm text-orange-500 hover:underline">
             Forgot password?
           </router-link>
         </div>
@@ -107,7 +114,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useAuthStore } from "../../stores/auth";
 import { useToastStore } from "../../stores/toast";
@@ -125,6 +132,16 @@ const password = ref("");
 const errorMessage = ref("");
 const loading = ref(false);
 const demoConfig = ref<AppConfig | null>(null);
+
+// The backend refuses password resets for demo accounts — gray the link out
+// instead of sending visitors down a dead end.
+const isDemoEmail = computed(() => {
+  const typed = email.value.trim().toLowerCase();
+  if (!typed || !demoConfig.value?.demo_mode) return false;
+  return [demoConfig.value.demo_admin_email, demoConfig.value.demo_customer_email]
+    .filter((e): e is string => !!e)
+    .some((e) => e.toLowerCase() === typed);
+});
 
 onMounted(async () => {
   try {
