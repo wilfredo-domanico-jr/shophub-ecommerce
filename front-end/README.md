@@ -32,6 +32,7 @@ Centralized in `tailwind.config.js` and `src/assets/main.css`:
 - Home — hero carousel, flash sale, dynamic category bar, shop-by-category, trending products
 - `/products` — searchable, filterable, sortable, paginated product listing
 - `/products/:slug` — product detail with quantity picker, add-to-cart & **Buy Now** (single-item checkout, cart untouched)
+- **Product variations** — option pickers (Color, Size, …) on the detail page; sold-out combinations are disabled, and price, photo, and stock switch to the selected variant. Each variant is its own cart line, and quick-add on product cards routes variant products to the detail page first
 - Live search autosuggest in the header (`SearchAutosuggest.vue`)
 - **Customer accounts** — `/login`, `/register`, `/forgot-password`, `/reset-password`, plus `/account` (profile) and `/account/orders` (order history), all backed by router guards (`requiresAuth` / `guestOnly`)
 - **Social login** — "Continue with Google / Facebook" buttons on login & register (shown only for providers the backend reports as configured via `/api/config`), with an `/auth/callback` landing page that scrubs the token from history, signs the user in, and resumes any pending redirect. Backend setup: [`docs/SOCIAL_LOGIN_SETUP.md`](../docs/SOCIAL_LOGIN_SETUP.md)
@@ -46,7 +47,7 @@ Centralized in `tailwind.config.js` and `src/assets/main.css`:
 
 - Route-guarded (`router.beforeEach` checks `auth.isAdmin`)
 - Dashboard — real stats + 7-day sales chart
-- Products — CRUD, drag-and-drop image upload, search, pagination
+- Products — CRUD, drag-and-drop image upload, search, pagination, and a **variant editor**: define up to 3 options, generate the combinations, then set per-variant stock, price overrides, and photos (product stock is derived from the variant total)
 - Categories — CRUD with a searchable icon picker (200+ Heroicons, regenerable via `scripts/generate-category-icons.mjs`) and color choice: brand gradient presets or any custom color via a native color picker
 - Orders — searchable/paginated list, inline status updates, full order-detail modal
 - Users — searchable admin/customer list with role filter; create, edit, remove

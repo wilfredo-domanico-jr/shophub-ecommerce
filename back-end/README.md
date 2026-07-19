@@ -34,8 +34,8 @@ Customers and admins share one `users` table (an `is_admin` flag separates them)
 ```
 GET  /api/categories               # active categories, with product counts
 GET  /api/categories/{slug}
-GET  /api/products                 # ?search=&category=&sort=&featured=&flash_sale=&page=
-GET  /api/products/{slug}
+GET  /api/products                 # ?search=&category=&sort=&featured=&flash_sale=&page= (rows include variants_count)
+GET  /api/products/{slug}          # includes options + variants (per-variant stock, price/image overrides)
 GET  /api/careers                  # published job openings for the Careers page
 POST /api/newsletter/subscribe     # store email + queue a welcome mail (throttled)
 POST /api/newsletter/unsubscribe   # token from the email's unsubscribe link (throttled)
@@ -64,7 +64,8 @@ GET  /api/auth/{provider}/callback # OAuth return: find-or-create user, redirect
 ```
 POST  /api/logout
 GET   /api/me
-POST  /api/orders                  # checkout (stock-locked, server-side totals, sends confirmation email)
+POST  /api/orders                  # checkout (stock-locked, server-side totals, sends confirmation email);
+                                   # items take an optional variant_id — required for products with options
 GET   /api/my/orders               # paginated order history
 PATCH /api/profile                 # name, email, phone, default shipping address
 PATCH /api/profile/password        # requires current password
@@ -77,7 +78,9 @@ GET    /api/admin/dashboard/stats
 POST   /api/admin/uploads          # product/category image upload
 
 /api/admin/categories              # full CRUD
-/api/admin/products                # full CRUD
+/api/admin/products                # full CRUD; store/update accept nested options + variants
+                                   # (synced by id: kept ids update, missing delete, new create;
+                                   #  product stock becomes the sum of variant stocks)
 /api/admin/users                   # manage admin accounts
 /api/admin/careers                 # manage job openings (incl. unpublished)
 
@@ -100,9 +103,12 @@ User          — customers & admins (is_admin flag); phone + default shipping a
                 password is nullable (social-only accounts)
 SocialAccount — links a User to a Google/Facebook identity (provider + provider_id)
 Category      — name, slug, icon, color_class (brand gradient), product count
-Product       — belongs to Category; price, original_price, stock, flash-sale/featured flags
+Product       — belongs to Category; price, original_price, stock, flash-sale/featured flags;
+                optional JSON options (e.g. Color/Size) when the product has variations
+ProductVariant — one sellable combination (e.g. Red / M); per-variant stock, optional
+                price/image overrides, unique per product via a deterministic variant_key
 Order         — belongs to User (nullable — legacy guest orders); order_number, status, payment, totals
-OrderItem     — snapshot of product name/price at time of order
+OrderItem     — snapshot of product name/price (+ variant label, e.g. "Red / M") at time of order
 JobOpening    — careers-page posting; title, department, location, type, is_active
 Newsletter    — campaign; subject, body, optional image, draft/sent + sent_at
 NewsletterSubscriber — email, per-subscriber unsubscribe token, unsubscribed_at
@@ -238,16 +244,17 @@ Full click-by-click walkthrough, linking behavior, and known limitations: [`docs
 php artisan test
 ```
 
-120+ feature and unit tests covering:
+150+ feature and unit tests covering:
 - Auth (register/login/logout/me, admin-vs-customer access to admin routes)
 - Social login (Socialite mocked — new-user creation, email linking, repeat logins, no-email and provider-failure errors, null-password login rejection)
 - Customer accounts (profile updates, password change, password reset flow, order history isolation)
 - Public catalog (category/product filtering, search, sort, active-only visibility)
+- Product variants (options/variants in the public payload, admin sync with combination-integrity validation, variant checkout: per-variant stock/price, label snapshots, rollback on overselling)
 - Admin CRUD (categories, products, users, job openings, newsletters) including validation and authorization
 - Newsletter (subscribe/welcome mail, unsubscribe tokens, resubscribe, drafts-only editing, sends skipping unsubscribed addresses)
 - Dashboard stats aggregation
 - Checkout (including stock-locking against overselling) and order tracking (including its trimmed, PII-free response)
-- Model behavior (`Order` number generation/uniqueness, `Product` scopes)
+- Model behavior (`Order` number generation/uniqueness, `Product` scopes, `ProductVariant` key/label helpers)
 
 Tests run against an in-memory SQLite database (configured in `phpunit.xml`), so no database setup is needed to run them — including in CI.
 

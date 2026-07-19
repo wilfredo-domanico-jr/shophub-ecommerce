@@ -74,6 +74,7 @@ Both **customers** and **admins** have accounts, authenticated with Sanctum bear
 - Home page with hero carousel, flash sale section, dynamic category bar, and trending products
 - Full **product listing page** — search, category filter, sort, pagination
 - **Product detail page** with quantity picker, add-to-cart, and **Buy Now** (single-item express checkout that leaves the cart untouched)
+- **Product variations** — products can define options (Color, Size, …); the detail page shows option pickers with sold-out combinations disabled, and price/photo/stock update per selected variant. Different variants are separate cart lines, and orders record which variant was bought (e.g. "Red / M")
 - Live **search autosuggest** in the header
 - **Customer accounts** — registration, login (email/password or **Google / Facebook social login**), password reset via email, profile with saved contact & shipping details, and a My Orders history
 - Cart → **checkout** (Cash on Delivery, sign-in required, form pre-filled from the profile) → order confirmation with order number
@@ -87,6 +88,7 @@ Both **customers** and **admins** have accounts, authenticated with Sanctum bear
 
 - Dashboard with real sales/orders/products/customers stats and a 7-day sales chart
 - **Products** — full CRUD, drag-and-drop image upload, search, pagination
+- **Product variations** — define up to 3 options per product (e.g. Color × Size), one-click **"Generate combinations"**, then set per-variant stock, optional price override, and optional per-variant photo; product stock is derived automatically from the variant total
 - **Categories** — full CRUD with a searchable 200+ icon library and free color choice (brand gradients or a custom color picker)
 - **Orders** — searchable/paginated list, inline status updates, full order-detail view
 - **Users** — searchable admin/customer list with role filter; create, edit, and remove accounts
@@ -187,8 +189,8 @@ To stop: `docker compose down` (add `-v` to also wipe the database volume).
 ## 🧪 Testing
 
 ```bash
-cd back-end && php artisan test     # 120+ feature & unit tests (auth incl. social login, accounts, password reset, catalog, admin CRUD, checkout, tracking, newsletter)
-cd front-end && npm run test        # Vitest: Pinia stores (auth, cart incl. buy-now) + components
+cd back-end && php artisan test     # 150+ feature & unit tests (auth incl. social login, accounts, password reset, catalog, product variants, admin CRUD, checkout, tracking, newsletter)
+cd front-end && npm run test        # Vitest: Pinia stores (auth, cart incl. buy-now & variant lines) + components
 ```
 
 ## ⚙️ Continuous Integration
