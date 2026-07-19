@@ -56,8 +56,8 @@ export function getFeaturedProducts() {
   return getProducts({ featured: true });
 }
 
-export function getFlashSaleProducts() {
-  return getProducts({ flash_sale: true });
+export function getFlashSaleProducts(params: Omit<ProductQueryParams, "flash_sale"> = {}) {
+  return getProducts({ flash_sale: true, ...params });
 }
 
 export function getProduct(slug: string) {

@@ -3,9 +3,18 @@
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
       <div>
         <h1 class="font-display text-2xl md:text-3xl font-bold text-gray-800">
-          {{ search ? `Results for "${search}"` : "All Products" }}
+          {{ flashOnly ? "⚡ Flash Sale" : search ? `Results for "${search}"` : "All Products" }}
         </h1>
-        <p class="text-gray-500 text-sm mt-1" v-if="!loading">{{ meta.total }} products found</p>
+        <p class="text-gray-500 text-sm mt-1" v-if="!loading">
+          {{ meta.total }} products found
+          <button
+            v-if="flashOnly"
+            class="text-orange-500 hover:underline ml-1"
+            @click="flashOnly = false"
+          >
+            ✕ Clear flash sale filter
+          </button>
+        </p>
       </div>
 
       <select
@@ -90,6 +99,7 @@ const search = ref(String(route.query.search ?? ""));
 const category = ref(String(route.query.category ?? ""));
 const sort = ref(String(route.query.sort ?? ""));
 const page = ref(Number(route.query.page ?? 1));
+const flashOnly = ref(route.query.flash_sale === "1"); // "View All" from the flash sale section
 
 const products = ref<Product[]>([]);
 const categories = ref<Category[]>([]);
@@ -103,6 +113,7 @@ async function loadProducts() {
       search: search.value || undefined,
       category: category.value || undefined,
       sort: (sort.value || undefined) as "price_asc" | "price_desc" | "newest" | undefined,
+      flash_sale: flashOnly.value || undefined,
       page: page.value,
     });
 
@@ -130,16 +141,17 @@ function syncUrl() {
       ...(search.value ? { search: search.value } : {}),
       ...(category.value ? { category: category.value } : {}),
       ...(sort.value ? { sort: sort.value } : {}),
+      ...(flashOnly.value ? { flash_sale: "1" } : {}),
       ...(page.value > 1 ? { page: String(page.value) } : {}),
     },
   });
 }
 
-watch([category, sort], () => {
+watch([category, sort, flashOnly], () => {
   page.value = 1;
 });
 
-watch([search, category, sort, page], () => {
+watch([search, category, sort, flashOnly, page], () => {
   syncUrl();
   loadProducts();
 });

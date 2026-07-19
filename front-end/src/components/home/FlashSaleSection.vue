@@ -44,13 +44,24 @@
       </div>
 
       <!-- Products Grid (only while the sale is live) -->
-      <div v-if="phase === 'live'" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        <FlashSaleProductCard
-          v-for="product in products"
-          :key="product.id"
-          :product="product"
-        />
-      </div>
+      <template v-if="phase === 'live'">
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <FlashSaleProductCard
+            v-for="product in products"
+            :key="product.id"
+            :product="product"
+          />
+        </div>
+
+        <div class="text-center mt-6">
+          <router-link
+            to="/products?flash_sale=1"
+            class="inline-block bg-white text-orange-500 px-6 py-2 rounded-lg font-semibold hover:bg-orange-50 transition"
+          >
+            View All Deals →
+          </router-link>
+        </div>
+      </template>
       <p v-else class="text-white/90 text-center py-6 font-medium">
         Get ready — deals go live when the countdown hits zero!
       </p>
@@ -79,7 +90,8 @@ interface Product {
 const products = ref<Product[]>([]);
 
 async function fetchProducts() {
-  const res = await getFlashSaleProducts();
+  // The homepage shows at most 10 — "View All" links to the full list.
+  const res = await getFlashSaleProducts({ per_page: 10 });
   products.value = res.data.map((p) => {
     const price = Number(p.price);
     const originalPrice = Number(p.original_price ?? p.price);
