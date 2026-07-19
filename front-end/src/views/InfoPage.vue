@@ -14,6 +14,40 @@
       <h1 class="font-display text-3xl font-bold text-gray-800 mb-2">{{ content.title }}</h1>
       <p class="text-gray-500 mb-8">{{ content.tagline }}</p>
 
+      <!-- Job openings (careers) -->
+      <div v-if="content.jobs" class="mb-8">
+        <h2 class="font-semibold text-lg text-gray-800 mb-3">Current Openings</h2>
+        <div class="space-y-3">
+          <div
+            v-for="job in content.jobs"
+            :key="job.title"
+            class="bg-white rounded-xl shadow p-6"
+          >
+            <div class="flex flex-wrap items-start justify-between gap-3 mb-2">
+              <div>
+                <h3 class="font-semibold text-gray-800">{{ job.title }}</h3>
+                <p class="text-xs text-gray-500">{{ job.department }}</p>
+              </div>
+              <div class="flex gap-2">
+                <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-orange-100 text-orange-700">
+                  {{ job.type }}
+                </span>
+                <span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
+                  {{ job.location }}
+                </span>
+              </div>
+            </div>
+            <p class="text-sm text-gray-600 leading-relaxed mb-4">{{ job.description }}</p>
+            <a
+              :href="`mailto:careers@shophub.test?subject=${encodeURIComponent(`Application: ${job.title}`)}`"
+              class="text-sm font-medium text-orange-500 hover:text-orange-600"
+            >
+              Apply via email →
+            </a>
+          </div>
+        </div>
+      </div>
+
       <!-- FAQ style content -->
       <div v-if="content.faqs" class="space-y-3">
         <div
@@ -43,7 +77,7 @@
       </div>
 
       <!-- Section style content -->
-      <div v-else-if="content.sections" class="space-y-6">
+      <div v-if="content.sections" class="space-y-6">
         <div v-for="(section, i) in content.sections" :key="i" class="bg-white rounded-xl shadow p-6">
           <h2 class="font-semibold text-lg text-gray-800 mb-2">{{ section.heading }}</h2>
           <p class="text-sm text-gray-600 leading-relaxed">{{ section.body }}</p>

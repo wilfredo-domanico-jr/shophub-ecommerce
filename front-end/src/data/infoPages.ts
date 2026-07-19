@@ -8,11 +8,20 @@ export interface FaqItem {
   a: string;
 }
 
+export interface JobOpening {
+  title: string;
+  department: string;
+  location: string;
+  type: string;
+  description: string;
+}
+
 export interface InfoPageContent {
   title: string;
   tagline: string;
   sections?: InfoSection[];
   faqs?: FaqItem[];
+  jobs?: JobOpening[];
 }
 
 export const infoPages: Record<string, InfoPageContent> = {
@@ -22,11 +31,11 @@ export const infoPages: Record<string, InfoPageContent> = {
     faqs: [
       {
         q: "How do I place an order?",
-        a: "Browse or search for a product, add it to your cart, then click \"Proceed to Checkout.\" You don't need an account — just enter your name, email, phone number, and shipping address, and you're set.",
+        a: "Browse or search for a product, add it to your cart, then check out. You'll need a ShopHub account — sign up with your email or continue with Google or Facebook. Save your phone number and shipping address to your profile and checkout gets pre-filled every time.",
       },
       {
         q: "How do I track my order?",
-        a: "Click \"Track Order\" in the header or footer, then enter the order number from your confirmation email along with the email address you used at checkout.",
+        a: "If you're signed in, every order and its current status is under \"My Orders\" in your account. Orders placed as a guest before customer accounts existed can still be looked up via \"Track Order\" using the order number from your confirmation email plus the email you used at checkout.",
       },
       {
         q: "What payment methods do you accept?",
@@ -107,18 +116,40 @@ export const infoPages: Record<string, InfoPageContent> = {
   careers: {
     title: "Careers",
     tagline: "Help us build the next version of ShopHub.",
-    sections: [
+    jobs: [
       {
-        heading: "Current Openings",
-        body: "We don't have any open positions listed right now — but ShopHub is growing fast, and that changes often. Check back soon, or send us your resume anyway.",
+        title: "Frontend Developer (Vue)",
+        department: "Engineering",
+        location: "Manila / Remote",
+        type: "Full-time",
+        description:
+          "Build and polish the storefront and admin experiences with Vue 3, TypeScript, and Tailwind. You'll own features end to end — from UI details to API integration — and help shape how millions of future orders get placed.",
       },
+      {
+        title: "Customer Support Specialist",
+        department: "Operations",
+        location: "Manila",
+        type: "Full-time",
+        description:
+          "Be the friendly voice behind help@shophub.test — resolving order issues, coordinating returns, and turning frustrated shoppers into repeat customers.",
+      },
+      {
+        title: "Warehouse Associate",
+        department: "Fulfillment",
+        location: "Pasig",
+        type: "Part-time",
+        description:
+          "Pick, pack, and stage orders for same-day courier handoff. Your attention to detail is what keeps our delivery promise honest.",
+      },
+    ],
+    sections: [
       {
         heading: "What We Look For",
         body: "We're a small, product-obsessed team. We value curiosity, ownership, and people who care about the small details that make a store feel trustworthy.",
       },
       {
-        heading: "Get In Touch",
-        body: "Interested in working with us? Send your resume and a short note about why ShopHub excites you to careers@shophub.test — we read every message.",
+        heading: "Don't See Your Role?",
+        body: "ShopHub is growing fast and openings change often. Send your resume and a short note about why ShopHub excites you to careers@shophub.test — we read every message.",
       },
     ],
   },
@@ -146,11 +177,11 @@ export const infoPages: Record<string, InfoPageContent> = {
     sections: [
       {
         heading: "Information We Collect",
-        body: "When you place an order, we collect your name, email address, phone number, and shipping address so we can fulfill and communicate with you about your order. We don't require an account to shop with us.",
+        body: "When you create an account, we collect your name, email address, and a password. If you sign up with Google or Facebook instead, we receive the name and email address your provider shares — never your social password. To deliver your orders we also collect your phone number and shipping address, which you can save to your profile for faster checkout.",
       },
       {
         heading: "How We Use Your Information",
-        body: "Your information is used solely to process orders, send order confirmations and status updates, and provide customer support if you reach out to us.",
+        body: "Your information is used solely to operate your account, process orders, send order confirmations and status updates, and provide customer support if you reach out to us.",
       },
       {
         heading: "Data Sharing",
