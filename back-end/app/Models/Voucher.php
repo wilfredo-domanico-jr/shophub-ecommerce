@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
@@ -28,6 +29,7 @@ class Voucher extends Model
         'usage_limit',
         'per_customer_limit',
         'is_active',
+        'is_public',
     ];
 
     protected function casts(): array
@@ -42,7 +44,22 @@ class Voucher extends Model
             'per_customer_limit' => 'integer',
             'used_count' => 'integer',
             'is_active' => 'boolean',
+            'is_public' => 'boolean',
         ];
+    }
+
+    /**
+     * Public vouchers that are currently claimable: active, inside their
+     * validity window, and not exhausted.
+     */
+    public function scopeAvailable(Builder $query): Builder
+    {
+        return $query
+            ->where('is_active', true)
+            ->where('is_public', true)
+            ->where(fn ($q) => $q->whereNull('starts_at')->orWhere('starts_at', '<=', now()))
+            ->where(fn ($q) => $q->whereNull('expires_at')->orWhere('expires_at', '>', now()))
+            ->where(fn ($q) => $q->whereNull('usage_limit')->orWhereColumn('used_count', '<', 'usage_limit'));
     }
 
     /**

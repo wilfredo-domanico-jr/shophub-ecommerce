@@ -20,6 +20,7 @@ class VoucherSeeder extends Seeder
                 'type' => Voucher::TYPE_PERCENT,
                 'value' => 10,
                 'max_discount' => 200,
+                'is_public' => true,
             ],
             [
                 'code' => 'WELCOME50',
@@ -27,6 +28,7 @@ class VoucherSeeder extends Seeder
                 'type' => Voucher::TYPE_FIXED,
                 'value' => 50,
                 'per_customer_limit' => 1,
+                'is_public' => true,
             ],
             [
                 'code' => 'PAYDAY25',
@@ -35,6 +37,7 @@ class VoucherSeeder extends Seeder
                 'value' => 25,
                 'min_spend' => 2000,
                 'usage_limit' => 100,
+                'is_public' => true,
             ],
         ];
 

@@ -30,6 +30,7 @@ Route::get('/categories/{category:slug}', [CategoryController::class, 'show']);
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{product:slug}', [ProductController::class, 'show']);
 Route::get('/careers', [CareerController::class, 'index']);
+Route::get('/vouchers', [VoucherController::class, 'index']);
 Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->middleware('throttle:5,1');
 Route::post('/newsletter/unsubscribe', [NewsletterController::class, 'unsubscribe'])->middleware('throttle:10,1');
 

@@ -56,9 +56,11 @@ class VoucherController extends Controller
             'usage_limit' => ['nullable', 'integer', 'min:1'],
             'per_customer_limit' => ['nullable', 'integer', 'min:1'],
             'is_active' => ['sometimes', 'boolean'],
+            'is_public' => ['sometimes', 'boolean'],
         ]);
 
         $validated['is_active'] = $validated['is_active'] ?? true;
+        $validated['is_public'] = $validated['is_public'] ?? false;
 
         return $validated;
     }

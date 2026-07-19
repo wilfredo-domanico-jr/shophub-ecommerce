@@ -11,6 +11,27 @@ use Illuminate\Validation\ValidationException;
 class VoucherController extends Controller
 {
     /**
+     * Publicly claimable vouchers for the storefront. Only safe fields —
+     * never expose usage counters or private codes.
+     */
+    public function index()
+    {
+        return Voucher::available()
+            ->latest()
+            ->get()
+            ->map(fn (Voucher $voucher) => [
+                'code' => $voucher->code,
+                'description' => $voucher->description,
+                'type' => $voucher->type,
+                'value' => $voucher->value,
+                'max_discount' => $voucher->max_discount,
+                'min_spend' => $voucher->min_spend,
+                'expires_at' => $voucher->expires_at,
+                'per_customer_limit' => $voucher->per_customer_limit,
+            ]);
+    }
+
+    /**
      * Price a voucher against the cart before checkout. Purely cosmetic —
      * the order endpoint re-validates everything under lock, so this does
      * no locking, no stock checks, and never increments used_count.
