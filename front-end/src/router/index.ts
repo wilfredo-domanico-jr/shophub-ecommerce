@@ -31,6 +31,7 @@ import AdminOrders from "../views/Admin/Orders.vue";
 import AdminCategories from "../views/Admin/Categories.vue";
 import AdminUsers from "../views/Admin/Users.vue";
 import AdminCareers from "../views/Admin/Careers.vue";
+import AdminVouchers from "../views/Admin/Vouchers.vue";
 import AdminNewsletters from "../views/Admin/Newsletters.vue";
 
 // Misc
@@ -211,6 +212,11 @@ const routes = [
         path: "careers",
         name: "AdminCareers",
         component: AdminCareers,
+      },
+      {
+        path: "vouchers",
+        name: "AdminVouchers",
+        component: AdminVouchers,
       },
       {
         path: "newsletters",
