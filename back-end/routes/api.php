@@ -7,10 +7,13 @@ use App\Http\Controllers\Api\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Api\Admin\UploadController as AdminUploadController;
 use App\Http\Controllers\Api\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\Admin\JobOpeningController as AdminJobOpeningController;
+use App\Http\Controllers\Api\Admin\NewsletterController as AdminNewsletterController;
+use App\Http\Controllers\Api\Admin\NewsletterSubscriberController as AdminNewsletterSubscriberController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CareerController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ConfigController;
+use App\Http\Controllers\Api\NewsletterController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\ProductController;
@@ -25,6 +28,8 @@ Route::get('/categories/{category:slug}', [CategoryController::class, 'show']);
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{product:slug}', [ProductController::class, 'show']);
 Route::get('/careers', [CareerController::class, 'index']);
+Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->middleware('throttle:5,1');
+Route::post('/newsletter/unsubscribe', [NewsletterController::class, 'unsubscribe'])->middleware('throttle:10,1');
 
 // Order tracking (public — works for orders placed before accounts existed)
 Route::post('/orders/track', [OrderController::class, 'track']);
@@ -62,5 +67,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::apiResource('users', AdminUserController::class)->except(['show']);
         Route::apiResource('careers', AdminJobOpeningController::class)->except(['show']);
+
+        Route::apiResource('newsletters', AdminNewsletterController::class)->except(['show']);
+        Route::post('/newsletters/{newsletter}/send', [AdminNewsletterController::class, 'send']);
+        Route::get('/newsletter-subscribers', [AdminNewsletterSubscriberController::class, 'index']);
+        Route::delete('/newsletter-subscribers/{subscriber}', [AdminNewsletterSubscriberController::class, 'destroy']);
     });
 });

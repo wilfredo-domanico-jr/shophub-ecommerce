@@ -18,6 +18,7 @@ import Register from "../views/Auth/Register.vue";
 import ForgotPassword from "../views/Auth/ForgotPassword.vue";
 import ResetPassword from "../views/Auth/ResetPassword.vue";
 import AuthCallback from "../views/Auth/AuthCallback.vue";
+import Unsubscribe from "../views/Unsubscribe.vue";
 
 // Account Pages
 import AccountProfile from "../views/Account/Profile.vue";
@@ -30,6 +31,7 @@ import AdminOrders from "../views/Admin/Orders.vue";
 import AdminCategories from "../views/Admin/Categories.vue";
 import AdminUsers from "../views/Admin/Users.vue";
 import AdminCareers from "../views/Admin/Careers.vue";
+import AdminNewsletters from "../views/Admin/Newsletters.vue";
 
 // Misc
 import NotFound from "../views/NotFound.vue";
@@ -132,6 +134,13 @@ const routes = [
         component: AuthCallback,
         meta: { minimalChrome: true },
       },
+      {
+        // Newsletter unsubscribe links land here with ?token=.
+        path: "unsubscribe",
+        name: "Unsubscribe",
+        component: Unsubscribe,
+        meta: { minimalChrome: true },
+      },
 
       // Customer account
       {
@@ -202,6 +211,11 @@ const routes = [
         path: "careers",
         name: "AdminCareers",
         component: AdminCareers,
+      },
+      {
+        path: "newsletters",
+        name: "AdminNewsletters",
+        component: AdminNewsletters,
       },
     ],
   },

@@ -114,9 +114,10 @@
             />
             <button
               type="submit"
-              class="gradient-primary px-4 py-2 rounded-lg font-medium hover:opacity-90 transition"
+              :disabled="subscribing"
+              class="gradient-primary px-4 py-2 rounded-lg font-medium hover:opacity-90 transition disabled:opacity-50"
             >
-              Subscribe
+              {{ subscribing ? "..." : "Subscribe" }}
             </button>
           </form>
 
@@ -143,15 +144,27 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
+import { subscribeToNewsletter } from "../../services/newsletter";
+import { useToastStore } from "../../stores/toast";
 
 const emit = defineEmits<{ (e: "open-track-order"): void }>();
 
+const toast = useToastStore();
+
 const newsletterEmail = ref("");
 const subscribed = ref(false);
+const subscribing = ref(false);
 
-function subscribe() {
-  // No backend endpoint for newsletter signups yet — this is a portfolio
-  // placeholder that just confirms the interaction client-side.
-  subscribed.value = true;
+async function subscribe() {
+  subscribing.value = true;
+  try {
+    const { message } = await subscribeToNewsletter(newsletterEmail.value);
+    subscribed.value = true;
+    toast.success(message);
+  } catch {
+    toast.error("Subscription failed. Please try again.");
+  } finally {
+    subscribing.value = false;
+  }
 }
 </script>

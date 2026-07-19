@@ -37,6 +37,8 @@ GET  /api/categories/{slug}
 GET  /api/products                 # ?search=&category=&sort=&featured=&flash_sale=&page=
 GET  /api/products/{slug}
 GET  /api/careers                  # published job openings for the Careers page
+POST /api/newsletter/subscribe     # store email + queue a welcome mail (throttled)
+POST /api/newsletter/unsubscribe   # token from the email's unsubscribe link (throttled)
 ```
 
 ### Order tracking (public, for guests & legacy orders)
@@ -79,6 +81,11 @@ POST   /api/admin/uploads          # product/category image upload
 /api/admin/users                   # manage admin accounts
 /api/admin/careers                 # manage job openings (incl. unpublished)
 
+/api/admin/newsletters             # newsletter campaigns: drafts, edit, delete
+POST   /api/admin/newsletters/{id}/send   # queue the campaign to all active subscribers
+GET    /api/admin/newsletter-subscribers  # searchable subscriber list with status
+DELETE /api/admin/newsletter-subscribers/{id}
+
 GET    /api/admin/orders
 GET    /api/admin/orders/{order}
 PATCH  /api/admin/orders/{order}/status   # also sends status-update email
@@ -97,6 +104,8 @@ Product       — belongs to Category; price, original_price, stock, flash-sale/
 Order         — belongs to User (nullable — legacy guest orders); order_number, status, payment, totals
 OrderItem     — snapshot of product name/price at time of order
 JobOpening    — careers-page posting; title, department, location, type, is_active
+Newsletter    — campaign; subject, body, optional image, draft/sent + sent_at
+NewsletterSubscriber — email, per-subscriber unsubscribe token, unsubscribed_at
 
 ```
 
@@ -104,7 +113,7 @@ JobOpening    — careers-page posting; title, department, location, type, is_ac
 
 ## 📧 Email
 
-Order confirmation, status-update, and password-reset emails are sent via queued Laravel Mailables (`app/Mail/OrderConfirmationMail.php`, `OrderStatusUpdatedMail.php`, `PasswordResetMail.php`) rendered from Markdown Blade templates.
+Order confirmation, status-update, password-reset, newsletter-welcome, and newsletter campaign emails are sent via queued Laravel Mailables (`app/Mail/`) rendered from Markdown Blade templates. Newsletter emails include a per-subscriber unsubscribe link; unsubscribed addresses are never mailed again.
 
 By default `MAIL_MAILER=log` — emails are written to `storage/logs/laravel.log` instead of actually sending. To send real email (e.g. via Gmail SMTP), set in `.env`:
 
@@ -229,12 +238,13 @@ Full click-by-click walkthrough, linking behavior, and known limitations: [`docs
 php artisan test
 ```
 
-100+ feature and unit tests covering:
+120+ feature and unit tests covering:
 - Auth (register/login/logout/me, admin-vs-customer access to admin routes)
 - Social login (Socialite mocked — new-user creation, email linking, repeat logins, no-email and provider-failure errors, null-password login rejection)
 - Customer accounts (profile updates, password change, password reset flow, order history isolation)
 - Public catalog (category/product filtering, search, sort, active-only visibility)
-- Admin CRUD (categories, products, users, job openings) including validation and authorization
+- Admin CRUD (categories, products, users, job openings, newsletters) including validation and authorization
+- Newsletter (subscribe/welcome mail, unsubscribe tokens, resubscribe, drafts-only editing, sends skipping unsubscribed addresses)
 - Dashboard stats aggregation
 - Checkout (including stock-locking against overselling) and order tracking (including its trimmed, PII-free response)
 - Model behavior (`Order` number generation/uniqueness, `Product` scopes)
