@@ -9,6 +9,7 @@ This is the Laravel REST API powering [ShopHub](../README.md) — it serves JSON
 - **Laravel 12** (PHP 8.2)
 - **MySQL**
 - **Laravel Sanctum** — token-based authentication (no session/cookie coupling)
+- **Laravel Socialite** — Google & Facebook social login (stateless OAuth flow)
 - **Eloquent ORM**
 - **Queued Mail** — order confirmation & status-update emails
 
@@ -22,6 +23,7 @@ Customers and admins share one `users` table (an `is_admin` flag separates them)
 - Password reset uses hashed, single-use, expiring tokens; a successful reset revokes all of the user's tokens
 - Changing the password revokes every token except the current session's
 - `is_admin` is **not** mass-assignable — it's set explicitly in the few places allowed to grant it
+- **Social login** (Google/Facebook via Socialite, stateless): the callback finds-or-creates the user — matching a provider account already linked in `social_accounts`, else linking by verified email, else creating a passwordless user — then issues the same Sanctum token and redirects to the SPA's `/auth/callback`. Social-only (null-password) users are rejected by the password login; providers returning no email (possible on Facebook) are rejected instead of creating an email-less account. Setup: [`docs/SOCIAL_LOGIN_SETUP.md`](../docs/SOCIAL_LOGIN_SETUP.md)
 
 ---
 
@@ -49,6 +51,9 @@ POST /api/register
 POST /api/login
 POST /api/forgot-password          # emails a reset link; response never reveals whether the email exists
 POST /api/reset-password
+
+GET  /api/auth/{provider}/redirect # social login: 302 to Google/Facebook (404 if unconfigured)
+GET  /api/auth/{provider}/callback # OAuth return: find-or-create user, redirect to SPA with token
 ```
 
 ### Customer account (`auth:sanctum`)
@@ -82,11 +87,13 @@ PATCH  /api/admin/orders/{order}/status   # also sends status-update email
 ## 🗄 Data Model
 
 ```
-User        — customers & admins (is_admin flag); phone + default shipping address
-Category    — name, slug, icon, color_class (brand gradient), product count
-Product     — belongs to Category; price, original_price, stock, flash-sale/featured flags
-Order       — belongs to User (nullable — legacy guest orders); order_number, status, payment, totals
-OrderItem   — snapshot of product name/price at time of order
+User          — customers & admins (is_admin flag); phone + default shipping address;
+                password is nullable (social-only accounts)
+SocialAccount — links a User to a Google/Facebook identity (provider + provider_id)
+Category      — name, slug, icon, color_class (brand gradient), product count
+Product       — belongs to Category; price, original_price, stock, flash-sale/featured flags
+Order         — belongs to User (nullable — legacy guest orders); order_number, status, payment, totals
+OrderItem     — snapshot of product name/price at time of order
 ```
 
 ---
@@ -185,14 +192,39 @@ DEMO_CUSTOMER_PASSWORD=password
 
 ---
 
+## 🔗 Social Login (Google & Facebook)
+
+Optional — with no credentials configured, `/api/config` reports `social_providers: []` and the SPA hides the buttons entirely. To enable a provider, create OAuth credentials and set them in `.env`:
+
+```
+FRONTEND_URL=http://localhost:5173
+
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_REDIRECT_URI=http://127.0.0.1:8000/api/auth/google/callback
+
+FACEBOOK_CLIENT_ID=
+FACEBOOK_CLIENT_SECRET=
+FACEBOOK_REDIRECT_URI=http://127.0.0.1:8000/api/auth/facebook/callback
+```
+
+In short: **Google** — Cloud Console → OAuth consent screen (External, add yourself as a Test user) → Credentials → OAuth client ID (Web application) → register the callback URL above. **Facebook** — Meta for Developers → Create App with the Facebook Login use case → Facebook Login Settings → register the callback URL → copy App ID/Secret (dev mode only allows accounts with a Tester role).
+
+Full click-by-click walkthrough, linking behavior, and known limitations: [`docs/SOCIAL_LOGIN_SETUP.md`](../docs/SOCIAL_LOGIN_SETUP.md).
+
+> 🗓 The console steps are documented **as of July 2026**. Google and Meta rework their dashboards often — if a menu doesn't match, the concepts (client ID/secret, exact-match redirect URIs) still apply; check the provider's current docs.
+
+---
+
 ## 🧪 Tests
 
 ```bash
 php artisan test
 ```
 
-75+ feature and unit tests covering:
+85+ feature and unit tests covering:
 - Auth (register/login/logout/me, admin-vs-customer access to admin routes)
+- Social login (Socialite mocked — new-user creation, email linking, repeat logins, no-email and provider-failure errors, null-password login rejection)
 - Customer accounts (profile updates, password change, password reset flow, order history isolation)
 - Public catalog (category/product filtering, search, sort, active-only visibility)
 - Admin CRUD (categories, products, users) including validation and authorization

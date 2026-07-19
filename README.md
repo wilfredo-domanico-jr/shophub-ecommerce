@@ -58,6 +58,7 @@ Database (MySQL)
 Both **customers** and **admins** have accounts, authenticated with Sanctum bearer tokens:
 
 - Customers register and sign in at `/login`; adding to cart and checking out require an account (guests are redirected to login and resume where they left off — including reopening checkout)
+- **Social login** — "Continue with Google / Facebook" on `/login` and `/register` (Laravel Socialite, stateless server-side flow ending in the same Sanctum token). Accounts with a matching verified email are linked automatically; social-only accounts have no password. Buttons appear only for providers with credentials configured — see [`docs/SOCIAL_LOGIN_SETUP.md`](docs/SOCIAL_LOGIN_SETUP.md) (console steps documented as of **July 2026** — provider UIs change over time)
 - Customer account area: profile with saved contact number & default shipping address (pre-fills checkout), password change, and order history at `/account`
 - **Password reset** via an emailed link — single-use, hashed, expiring tokens
 - Auth endpoints (`login`, `register`, `forgot/reset-password`) are **rate-limited** against brute force and enumeration
@@ -74,7 +75,7 @@ Both **customers** and **admins** have accounts, authenticated with Sanctum bear
 - Full **product listing page** — search, category filter, sort, pagination
 - **Product detail page** with quantity picker, add-to-cart, and **Buy Now** (single-item express checkout that leaves the cart untouched)
 - Live **search autosuggest** in the header
-- **Customer accounts** — registration, login, password reset via email, profile with saved contact & shipping details, and a My Orders history
+- **Customer accounts** — registration, login (email/password or **Google / Facebook social login**), password reset via email, profile with saved contact & shipping details, and a My Orders history
 - Cart → **checkout** (Cash on Delivery, sign-in required, form pre-filled from the profile) → order confirmation with order number
 - **Toast notifications** for cart, auth, and admin actions
 - **Order tracking** by order number + email for guests and legacy orders (header button shown to guests only — signed-in customers use My Orders)
@@ -153,6 +154,8 @@ npm run dev
 
 Make sure `VITE_API_BASE_URL` (front-end `.env`) points at the backend's `/api` URL, and `FRONTEND_URL` (back-end `.env`) matches the frontend's dev URL for CORS.
 
+**Optional — social login:** to enable the Google/Facebook buttons, create OAuth credentials with each provider and set them in `back-end/.env`. Full walkthrough: [`docs/SOCIAL_LOGIN_SETUP.md`](docs/SOCIAL_LOGIN_SETUP.md).
+
 ### Option B — Docker
 
 ```bash
@@ -181,7 +184,7 @@ To stop: `docker compose down` (add `-v` to also wipe the database volume).
 ## 🧪 Testing
 
 ```bash
-cd back-end && php artisan test     # 75+ feature & unit tests (auth, accounts, password reset, catalog, admin CRUD, checkout, tracking)
+cd back-end && php artisan test     # 85+ feature & unit tests (auth incl. social login, accounts, password reset, catalog, admin CRUD, checkout, tracking)
 cd front-end && npm run test        # Vitest: Pinia stores (auth, cart incl. buy-now) + components
 ```
 

@@ -34,6 +34,7 @@ Centralized in `tailwind.config.js` and `src/assets/main.css`:
 - `/products/:slug` — product detail with quantity picker, add-to-cart & **Buy Now** (single-item checkout, cart untouched)
 - Live search autosuggest in the header (`SearchAutosuggest.vue`)
 - **Customer accounts** — `/login`, `/register`, `/forgot-password`, `/reset-password`, plus `/account` (profile) and `/account/orders` (order history), all backed by router guards (`requiresAuth` / `guestOnly`)
+- **Social login** — "Continue with Google / Facebook" buttons on login & register (shown only for providers the backend reports as configured via `/api/config`), with an `/auth/callback` landing page that scrubs the token from history, signs the user in, and resumes any pending redirect. Backend setup: [`docs/SOCIAL_LOGIN_SETUP.md`](../docs/SOCIAL_LOGIN_SETUP.md)
 - Add-to-cart and checkout require sign-in — guests are redirected to `/login?redirect=...` and resume where they left off (a pending checkout reopens automatically via `?checkout=1`)
 - Cart → checkout (`CheckoutModal.vue`, pre-filled from the saved profile) → order confirmation
 - Global **toast notifications** (`stores/toast.ts` + `ToastContainer.vue`) for cart, auth, and admin feedback
@@ -60,6 +61,7 @@ src/
     common/               # Header, Footer, Cart/Checkout/OrderTracking modals, ToastContainer, ProductCard, etc.
     home/                 # homepage-specific sections
     account/              # AccountNav
+    auth/                 # SocialLoginButtons
     admin/                # ImageDropzone
   stores/                 # Pinia: auth.ts, cart.ts (incl. buy-now), toast.ts
   composables/            # useAddToCart (auth-gated add-to-cart / buy-now guard)
@@ -110,7 +112,7 @@ npm run test:watch      # watch mode
 npm run test:coverage   # with coverage (v8)
 ```
 
-Tests live alongside the code they cover, in `__tests__/` folders (e.g. `src/stores/__tests__/cart.spec.ts`). Currently covers the `cart` (including buy-now semantics) and `auth` Pinia stores and the `StarRating`/`Pagination` components.
+Tests live alongside the code they cover, in `__tests__/` folders (e.g. `src/stores/__tests__/cart.spec.ts`). Currently covers the `cart` (including buy-now semantics) and `auth` (including social token login and cart-clearing logout) Pinia stores and the `StarRating`/`Pagination` components.
 
 ---
 

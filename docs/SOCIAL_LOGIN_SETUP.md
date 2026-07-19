@@ -1,5 +1,7 @@
 # Social Login Setup (Google & Facebook)
 
+> ⚠️ **Accurate as of July 19, 2026.** Google Cloud Console and Meta for Developers reorganize their UIs regularly, so the exact menu names and click paths below may have changed by the time you read this. The concepts (Client ID, Client Secret, registered redirect URIs) are stable — if a step doesn't match, search the provider's current docs for the equivalent setting.
+
 ShopHub supports "Continue with Google" and "Continue with Facebook" on `/login` and `/register`. The buttons only appear for providers whose credentials are configured — with no credentials set, the feature is invisible and nothing breaks.
 
 ## How it works (short version)
