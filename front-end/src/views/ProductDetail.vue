@@ -47,9 +47,16 @@
             {{ product.name }}
           </h1>
 
-          <div class="flex items-center gap-2 mb-4">
-            <StarRating :rating="Number(product.rating)" />
-            <span class="text-sm text-gray-500">({{ product.sold_count }} sold)</span>
+          <div class="flex flex-wrap items-center gap-2 mb-4">
+            <template v-if="product.reviews_count > 0">
+              <StarRating :rating="Number(product.rating)" />
+              <span class="text-sm text-gray-500">
+                {{ Number(product.rating).toFixed(1) }} ({{ product.reviews_count }}
+                review{{ product.reviews_count === 1 ? "" : "s" }})
+              </span>
+            </template>
+            <span v-else class="text-sm text-gray-400">No reviews yet</span>
+            <span class="text-sm text-gray-500">· {{ product.sold_count }} sold</span>
           </div>
 
           <div class="flex items-center gap-3 mb-4">
@@ -133,6 +140,8 @@
           </div>
         </div>
       </div>
+
+      <ReviewsSection :product="product" @changed="refreshProduct" />
     </div>
   </div>
 </template>
@@ -144,6 +153,7 @@ import { getProduct, type Product, type ProductVariant } from "../services/produ
 import { useAddToCart } from "../composables/useAddToCart";
 import { useCartStore } from "../stores/cart";
 import StarRating from "../components/common/StarRating.vue";
+import ReviewsSection from "../components/product/ReviewsSection.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -227,6 +237,16 @@ const discount = computed(() => {
   const original = Number(product.value.original_price ?? effectivePrice.value);
   return original > 0 ? Math.round(((original - price) / original) * 100) : 0;
 });
+
+// Refresh the header rating/count after a review is posted or removed,
+// without resetting the user's option picks the way loadProduct does.
+async function refreshProduct() {
+  try {
+    product.value = await getProduct(String(route.params.slug));
+  } catch {
+    // Keep showing the product we already have.
+  }
+}
 
 async function loadProduct() {
   loading.value = true;

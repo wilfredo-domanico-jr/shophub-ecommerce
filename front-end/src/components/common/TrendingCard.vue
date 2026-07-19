@@ -37,9 +37,12 @@
       <h4 class="font-medium text-sm mb-2 line-clamp-2 h-10">
         {{ trending.name }}
       </h4>
-      <div class="flex items-center gap-1 mb-2">
-        <StarRating :rating="trending.rating" />
-        <span class="text-xs text-gray-500">({{ trending.sold }})</span>
+      <div class="flex items-center gap-1 mb-2 h-4">
+        <template v-if="trending.reviewsCount > 0">
+          <StarRating :rating="trending.rating" />
+          <span class="text-xs text-gray-500">({{ trending.reviewsCount }})</span>
+        </template>
+        <span v-else class="text-xs text-gray-400">No reviews yet</span>
       </div>
       <div class="flex items-center gap-2">
         <span class="text-orange-500 font-bold text-lg"
@@ -68,6 +71,7 @@ interface TrendingCard {
   originalPrice: number;
   image: string;
   rating: number;
+  reviewsCount: number;
   sold: number;
   discount: number;
 }

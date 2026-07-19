@@ -50,6 +50,13 @@
                 {{ item.product_name }}
                 <span v-if="item.variant_label" class="text-gray-400">({{ item.variant_label }})</span>
                 × {{ item.quantity }}
+                <router-link
+                  v-if="order.status === 'delivered' && item.product"
+                  :to="`/products/${item.product.slug}?review=1`"
+                  class="text-orange-500 text-xs font-medium hover:underline ml-1"
+                >
+                  Write a review
+                </router-link>
               </span>
               <span>₱{{ item.subtotal }}</span>
             </li>

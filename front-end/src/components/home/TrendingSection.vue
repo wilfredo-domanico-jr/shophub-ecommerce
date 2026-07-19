@@ -48,6 +48,7 @@ interface TrendingCard {
   originalPrice: number;
   image: string;
   rating: number;
+  reviewsCount: number;
   sold: number;
   discount: number;
 }
@@ -69,6 +70,7 @@ async function fetchTrendings() {
       originalPrice,
       image: p.image ?? "",
       rating: Number(p.rating),
+      reviewsCount: p.reviews_count,
       sold: p.sold_count,
       discount,
     };

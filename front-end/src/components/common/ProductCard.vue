@@ -40,9 +40,12 @@
       <p v-if="product.category" class="text-xs text-gray-400 mb-1">{{ product.category.name }}</p>
       <h4 class="font-medium text-sm mb-2 line-clamp-2 h-10">{{ product.name }}</h4>
 
-      <div class="flex items-center gap-1 mb-2">
-        <StarRating :rating="Number(product.rating)" />
-        <span class="text-xs text-gray-500">({{ product.sold_count }})</span>
+      <div class="flex items-center gap-1 mb-2 h-4">
+        <template v-if="product.reviews_count > 0">
+          <StarRating :rating="Number(product.rating)" />
+          <span class="text-xs text-gray-500">({{ product.reviews_count }})</span>
+        </template>
+        <span v-else class="text-xs text-gray-400">No reviews yet</span>
       </div>
 
       <div class="flex items-center gap-2">

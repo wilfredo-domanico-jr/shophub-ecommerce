@@ -9,6 +9,8 @@ export interface OrderItem {
   product_price: string;
   quantity: number;
   subtotal: string;
+  /** Present on /my/orders; null when the product was deleted. */
+  product?: { id: number; slug: string } | null;
 }
 
 export interface Order {

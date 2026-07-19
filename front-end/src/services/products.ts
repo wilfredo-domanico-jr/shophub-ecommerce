@@ -35,6 +35,7 @@ export interface Product {
   sold_count: number;
   flash_sale_goal: number | null;
   rating: string;
+  reviews_count: number;
   is_active: boolean;
 }
 
