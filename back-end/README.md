@@ -188,6 +188,8 @@ DEMO_CUSTOMER_PASSWORD=password
 
 `GET /api/config` is a public endpoint that exposes these values to the frontend **only when `DEMO_MODE=true`** — with it off, the endpoint just returns `{"demo_mode": false}` and reveals nothing. `AdminUserSeeder` and `DemoCustomerSeeder` read the same env vars, so the seeded demo accounts always match whatever credentials are configured (the demo customer is only seeded while demo mode is on).
 
+While demo mode is on, the demo accounts are **protected from tampering** so the shared credentials keep working for every visitor: they can't be edited or deleted from the admin panel, their profile and password can't be changed, password resets for them are silently ignored, and checkout always uses the seeded demo identity regardless of what's typed. All of this is enforced server-side (`User::isProtectedDemoAccount()`), with the corresponding UI controls disabled. With demo mode off, the same accounts behave like any other.
+
 > ⚠️ Demo mode publishes working credentials on a public endpoint by design. Never enable it on a deployment whose admin account can reach real data.
 
 ---

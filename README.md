@@ -177,7 +177,7 @@ Seeded admin login: `admin@shophub.test` / `password`. See [`back-end/README.md`
 
 To stop: `docker compose down` (add `-v` to also wipe the database volume).
 
-**Demo mode:** set `DEMO_MODE=true` in the root `.env` (it's **off by default**) to add one-click "Try Demo Admin Login" and "Try Demo Customer Login" buttons to `/admin/login` and `/login` — portfolio visitors can explore both sides of the app without credentials. The demo customer account is only seeded while demo mode is on. See [`back-end/README.md`](back-end/README.md#-demo-mode) for details.
+**Demo mode:** set `DEMO_MODE=true` in the root `.env` (it's **off by default**) to add one-click "Try Demo Admin Login" and "Try Demo Customer Login" buttons to `/admin/login` and `/login` — portfolio visitors can explore both sides of the app without credentials. The demo customer account is only seeded while demo mode is on, and the demo accounts are protected from tampering (no edits, deletion, or password resets) so they keep working for every visitor. See [`back-end/README.md`](back-end/README.md#-demo-mode) for details.
 
 ---
 
