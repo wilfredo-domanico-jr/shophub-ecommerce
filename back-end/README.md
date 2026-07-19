@@ -38,6 +38,7 @@ GET  /api/products                 # ?search=&category=&sort=&featured=&flash_sa
 GET  /api/products/{slug}          # includes options + variants (per-variant stock, price/image overrides)
 GET  /api/careers                  # published job openings for the Careers page
 GET  /api/vouchers                 # publicly listed, currently claimable vouchers (safe fields only)
+GET  /api/flash-sale               # {sale: null | {title, starts_at, ends_at, is_live}} — current-or-next event
 POST /api/newsletter/subscribe     # store email + queue a welcome mail (throttled)
 POST /api/newsletter/unsubscribe   # token from the email's unsubscribe link (throttled)
 ```
@@ -89,6 +90,7 @@ POST   /api/admin/uploads          # product/category image upload
 /api/admin/careers                 # manage job openings (incl. unpublished)
 /api/admin/vouchers                # full CRUD for discount codes (percent/fixed, min spend,
                                    # validity window, usage + per-customer limits, active toggle)
+/api/admin/flash-sales             # schedule flash sale events (title, start/end, active toggle)
 
 /api/admin/newsletters             # newsletter campaigns: drafts, edit, delete
 POST   /api/admin/newsletters/{id}/send   # queue the campaign to all active subscribers
@@ -118,6 +120,8 @@ Order         — belongs to User (nullable — legacy guest orders); order_numb
 OrderItem     — snapshot of product name/price (+ variant label, e.g. "Red / M") at time of order
 Voucher       — discount code; percent (optional max cap) or fixed amount, min spend, validity
                 window, usage/per-customer limits, used_count, is_active, is_public (storefront listing)
+FlashSale     — scheduled homepage sale event: title, starts_at, ends_at, is_active;
+                the storefront shows the earliest active event that hasn't ended
 JobOpening    — careers-page posting; title, department, location, type, is_active
 Newsletter    — campaign; subject, body, optional image, draft/sent + sent_at
 NewsletterSubscriber — email, per-subscriber unsubscribe token, unsubscribed_at
@@ -253,13 +257,14 @@ Full click-by-click walkthrough, linking behavior, and known limitations: [`docs
 php artisan test
 ```
 
-180+ feature and unit tests covering:
+200+ feature and unit tests covering:
 - Auth (register/login/logout/me, admin-vs-customer access to admin routes)
 - Social login (Socialite mocked — new-user creation, email linking, repeat logins, no-email and provider-failure errors, null-password login rejection)
 - Customer accounts (profile updates, password change, password reset flow, order history isolation)
 - Public catalog (category/product filtering, search, sort, active-only visibility)
 - Product variants (options/variants in the public payload, admin sync with combination-integrity validation, variant checkout: per-variant stock/price, label snapshots, rollback on overselling)
 - Vouchers (discount math incl. caps and clamping, checkout redemption + used_count, every rejection rule — min spend, validity window, limits, once-per-customer — preview endpoint, admin CRUD validation)
+- Flash sales (public current-event resolution: live wins over upcoming, ended/inactive ignored; admin scheduling CRUD + validation)
 - Admin CRUD (categories, products, users, job openings, newsletters) including validation and authorization
 - Newsletter (subscribe/welcome mail, unsubscribe tokens, resubscribe, drafts-only editing, sends skipping unsubscribed addresses)
 - Dashboard stats aggregation

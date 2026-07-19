@@ -72,6 +72,7 @@ Both **customers** and **admins** have accounts, authenticated with Sanctum bear
 ### 👤 Storefront (Customer-facing)
 
 - Home page with hero carousel, flash sale section, dynamic category bar, and trending products
+- **Scheduled flash sales** — the flash sale section runs on a real admin-set schedule: a "Starts In" countdown before the sale opens (products hidden), "Ends In" while live, and the section hides itself entirely when nothing is scheduled
 - Full **product listing page** — search, category filter, sort, pagination
 - **Product detail page** with quantity picker, add-to-cart, and **Buy Now** (single-item express checkout that leaves the cart untouched)
 - **Product variations** — products can define options (Color, Size, …); the detail page shows option pickers with sold-out combinations disabled, and price/photo/stock update per selected variant. Different variants are separate cart lines, and orders record which variant was bought (e.g. "Red / M")
@@ -88,13 +89,14 @@ Both **customers** and **admins** have accounts, authenticated with Sanctum bear
 ### 🛠 Admin Panel
 
 - Dashboard with real sales/orders/products/customers stats and a 7-day sales chart
-- **Products** — full CRUD, drag-and-drop image upload, search, pagination
+- **Products** — full CRUD, drag-and-drop image upload, search, pagination, and full control of original price, featured, flash-sale (+ goal), and active flags
 - **Product variations** — define up to 3 options per product (e.g. Color × Size), one-click **"Generate combinations"**, then set per-variant stock, optional price override, and optional per-variant photo; product stock is derived automatically from the variant total
 - **Categories** — full CRUD with a searchable 200+ icon library and free color choice (brand gradients or a custom color picker)
 - **Orders** — searchable/paginated list, inline status updates, full order-detail view
 - **Users** — searchable admin/customer list with role filter; create, edit, and remove accounts
 - **Careers** — manage the job openings shown on the public Careers page (publish/hide, edit, delete)
 - **Vouchers** — create discount codes (percentage with an optional cap, or fixed amount) with minimum spend, validity dates, usage limits, once-per-customer, an on/off toggle, and a **public/private** flag controlling storefront visibility; the table tracks redemptions live
+- **Flash Sales** — schedule sale windows (title, start, end, on/off); the homepage countdown, product grid, and section visibility all follow the schedule with live/upcoming/ended status badges
 - **Newsletter** — write campaigns with an optional banner image, save drafts, send to all subscribers, and manage the subscriber list (status, search, remove)
 - Consistent ShopHub branding throughout (icons, gradients, empty/loading states)
 
@@ -191,7 +193,7 @@ To stop: `docker compose down` (add `-v` to also wipe the database volume).
 ## 🧪 Testing
 
 ```bash
-cd back-end && php artisan test     # 180+ feature & unit tests (auth incl. social login, accounts, password reset, catalog, product variants, vouchers, admin CRUD, checkout, tracking, newsletter)
+cd back-end && php artisan test     # 200+ feature & unit tests (auth incl. social login, accounts, password reset, catalog, product variants, vouchers, flash sales, admin CRUD, checkout, tracking, newsletter)
 cd front-end && npm run test        # Vitest: Pinia stores (auth, cart incl. buy-now & variant lines) + components
 ```
 

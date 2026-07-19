@@ -30,6 +30,7 @@ Centralized in `tailwind.config.js` and `src/assets/main.css`:
 ### Storefront (`/`)
 
 - Home — hero carousel, flash sale, dynamic category bar, shop-by-category, trending products
+- **Scheduled flash sale countdown** — the section follows the admin-set schedule via `GET /api/flash-sale`: "Starts In" before opening (grid hidden), "Ends In" while live, hidden entirely when nothing is scheduled; the upcoming→live flip happens client-side the second the countdown hits zero
 - `/products` — searchable, filterable, sortable, paginated product listing
 - `/products/:slug` — product detail with quantity picker, add-to-cart & **Buy Now** (single-item checkout, cart untouched)
 - **Product variations** — option pickers (Color, Size, …) on the detail page; sold-out combinations are disabled, and price, photo, and stock switch to the selected variant. Each variant is its own cart line, and quick-add on product cards routes variant products to the detail page first
@@ -48,7 +49,8 @@ Centralized in `tailwind.config.js` and `src/assets/main.css`:
 
 - Route-guarded (`router.beforeEach` checks `auth.isAdmin`)
 - Dashboard — real stats + 7-day sales chart
-- Products — CRUD, drag-and-drop image upload, search, pagination, and a **variant editor**: define up to 3 options, generate the combinations, then set per-variant stock, price overrides, and photos (product stock is derived from the variant total)
+- Products — CRUD, drag-and-drop image upload, search, pagination, a **variant editor** (define up to 3 options, generate the combinations, then set per-variant stock, price overrides, and photos — product stock is derived from the variant total), plus original price and featured / flash-sale (+ goal) / active flags
+- Flash Sales — schedule sale windows with live/upcoming/ended/disabled status badges; the homepage section follows this schedule
 - Categories — CRUD with a searchable icon picker (200+ Heroicons, regenerable via `scripts/generate-category-icons.mjs`) and color choice: brand gradient presets or any custom color via a native color picker
 - Orders — searchable/paginated list, inline status updates, full order-detail modal
 - Users — searchable admin/customer list with role filter; create, edit, remove
