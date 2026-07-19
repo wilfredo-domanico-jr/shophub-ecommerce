@@ -17,7 +17,11 @@
       />
 
       <div v-if="modelValue" class="space-y-2">
-        <img :src="modelValue" class="mx-auto h-28 w-28 object-cover rounded-lg" />
+        <img
+          :src="modelValue"
+          class="mx-auto object-cover rounded-lg"
+          :class="compact ? 'h-14 w-14' : 'h-28 w-28'"
+        />
         <button
           type="button"
           class="text-xs text-red-500 hover:underline"
@@ -27,21 +31,21 @@
         </button>
       </div>
 
-      <div v-else-if="uploading" class="py-6 text-sm text-gray-500">
+      <div v-else-if="uploading" class="text-sm text-gray-500" :class="compact ? 'py-2' : 'py-6'">
         Uploading...
       </div>
 
-      <div v-else class="py-6 text-sm text-gray-500">
-        <svg class="w-8 h-8 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div v-else class="text-sm text-gray-500" :class="compact ? 'py-2' : 'py-6'">
+        <svg v-if="!compact" class="w-8 h-8 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
         </svg>
-        <p>Drag & drop an image, or click to browse</p>
+        <p>{{ compact ? "Drop or click to upload" : "Drag & drop an image, or click to browse" }}</p>
       </div>
     </div>
 
     <p v-if="error" class="text-red-500 text-xs mt-1">{{ error }}</p>
 
-    <div class="mt-2">
+    <div v-if="!compact" class="mt-2">
       <label class="text-xs text-gray-500">Or paste an image URL</label>
       <input
         :value="modelValue"
@@ -58,7 +62,7 @@
 import { ref } from "vue";
 import { uploadImage } from "../../services/admin/upload";
 
-defineProps<{ modelValue: string }>();
+defineProps<{ modelValue: string; compact?: boolean }>();
 const emit = defineEmits<{ (e: "update:modelValue", value: string): void }>();
 
 const fileInput = ref<HTMLInputElement | null>(null);

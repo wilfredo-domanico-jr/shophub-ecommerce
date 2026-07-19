@@ -55,7 +55,15 @@
             <td class="p-4 flex items-center gap-3">
               <img :src="p.image ?? ''" class="w-10 h-10 rounded object-cover" />
               <div>
-                <p class="font-medium">{{ p.name }}</p>
+                <p class="font-medium">
+                  {{ p.name }}
+                  <span
+                    v-if="p.variants_count"
+                    class="ml-1 px-1.5 py-0.5 text-[10px] rounded-full bg-purple-100 text-purple-600 align-middle"
+                  >
+                    {{ p.variants_count }} variants
+                  </span>
+                </p>
                 <p class="text-xs text-gray-400">ID: {{ p.id }}</p>
               </div>
             </td>
@@ -125,7 +133,7 @@
       v-if="showModal"
       class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
     >
-      <div class="bg-white w-full max-w-md rounded-xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="bg-white w-full max-w-xl rounded-xl p-6 space-y-4 max-h-[90vh] overflow-y-auto">
         <h2 class="text-xl font-bold">
           {{ isEdit ? "Edit Product" : "Add Product" }}
         </h2>
@@ -167,12 +175,15 @@
           <div>
             <label class="block mb-1 text-sm font-medium text-gray-700">Stock Quantity</label>
             <input
-              v-model.number="form.stock_quantity"
+              :value="hasVariants ? variantStockTotal : form.stock_quantity"
+              :disabled="hasVariants"
               type="number"
               min="0"
               placeholder="0"
-              class="w-full border p-2 rounded focus:outline-none focus:border-orange-500"
+              class="w-full border p-2 rounded focus:outline-none focus:border-orange-500 disabled:bg-gray-50 disabled:text-gray-400"
+              @input="form.stock_quantity = Number(($event.target as HTMLInputElement).value) || 0"
             />
+            <p v-if="hasVariants" class="text-xs text-gray-400 mt-1">Derived from variant stocks.</p>
           </div>
         </div>
 
@@ -180,6 +191,115 @@
           <label class="block mb-1 text-sm font-medium text-gray-700">Product Image</label>
           <ImageDropzone v-model="form.image" />
         </div>
+
+        <!-- Variations -->
+        <div class="border-t pt-4">
+          <label class="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
+            <input v-model="hasVariants" type="checkbox" class="accent-orange-500" />
+            This product has variations (e.g. Color, Size)
+          </label>
+        </div>
+
+        <template v-if="hasVariants">
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <p class="text-sm font-medium text-gray-700">Options</p>
+              <button
+                v-if="optionRows.length < 3"
+                type="button"
+                class="text-xs text-orange-500 hover:underline"
+                @click="optionRows.push({ name: '', valuesText: '' })"
+              >
+                + Add option
+              </button>
+            </div>
+
+            <div v-for="(row, i) in optionRows" :key="i" class="flex gap-2 items-center">
+              <input
+                v-model="row.name"
+                type="text"
+                placeholder="Name (e.g. Color)"
+                class="w-32 border p-2 rounded text-sm focus:outline-none focus:border-orange-500"
+              />
+              <input
+                v-model="row.valuesText"
+                type="text"
+                placeholder="Values, comma separated (e.g. Red, Blue, Black)"
+                class="flex-1 border p-2 rounded text-sm focus:outline-none focus:border-orange-500"
+              />
+              <button
+                type="button"
+                class="text-red-400 hover:text-red-600 px-1"
+                title="Remove option"
+                @click="optionRows.splice(i, 1)"
+              >
+                ✕
+              </button>
+            </div>
+
+            <button
+              type="button"
+              class="w-full border border-dashed border-orange-300 text-orange-500 text-sm py-2 rounded-lg hover:bg-orange-50"
+              @click="generateCombinations"
+            >
+              Generate combinations
+            </button>
+            <p class="text-xs text-gray-400">
+              Regenerating keeps price, stock, and image for combinations that still match;
+              combinations that no longer exist are removed.
+            </p>
+          </div>
+
+          <div v-if="variantRows.length" class="space-y-2">
+            <p class="text-sm font-medium text-gray-700">
+              Variants ({{ variantRows.length }}) — total stock {{ variantStockTotal }}
+            </p>
+
+            <div
+              v-for="(row, i) in variantRows"
+              :key="comboKey(row.option_values)"
+              class="border rounded-lg p-3 space-y-2"
+            >
+              <div class="flex items-center justify-between">
+                <p class="text-sm font-semibold">{{ variantRowLabel(row) }}</p>
+                <button
+                  type="button"
+                  class="text-xs text-red-500 hover:underline"
+                  @click="variantRows.splice(i, 1)"
+                >
+                  Remove
+                </button>
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="text-xs text-gray-500">Price override (blank = ₱{{ form.price }})</label>
+                  <input
+                    v-model.number="row.price"
+                    type="number"
+                    min="0"
+                    :placeholder="String(form.price)"
+                    class="w-full border p-2 rounded text-sm focus:outline-none focus:border-orange-500"
+                  />
+                </div>
+                <div>
+                  <label class="text-xs text-gray-500">Stock</label>
+                  <input
+                    v-model.number="row.stock_quantity"
+                    type="number"
+                    min="0"
+                    class="w-full border p-2 rounded text-sm focus:outline-none focus:border-orange-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label class="text-xs text-gray-500">Variant image (optional — falls back to the product image)</label>
+                <ImageDropzone v-model="row.image" compact />
+              </div>
+            </div>
+          </div>
+        </template>
 
         <div class="flex justify-end gap-2 pt-2">
           <button class="px-4 py-2 text-gray-500" @click="closeModal">
@@ -199,10 +319,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import type { Product } from "../../services/products";
 import type { Category } from "../../services/categories";
-import { getAdminProducts, createProduct, updateProduct, deleteProduct } from "../../services/admin/products";
+import {
+  getAdminProducts,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  type ProductPayload,
+} from "../../services/admin/products";
 import { getAdminCategories } from "../../services/admin/categories";
 import ImageDropzone from "../../components/admin/ImageDropzone.vue";
 import Pagination from "../../components/common/Pagination.vue";
@@ -283,10 +409,92 @@ const emptyForm = (): ProductForm => ({
 
 const form = ref<ProductForm>(emptyForm());
 
+// --- Variations ---
+type OptionRow = { name: string; valuesText: string };
+type VariantRow = {
+  id?: number;
+  option_values: Record<string, string>;
+  price: number | "" | null; // "" = cleared input -> inherit product price
+  stock_quantity: number;
+  image: string;
+};
+
+const hasVariants = ref(false);
+const optionRows = ref<OptionRow[]>([]);
+const variantRows = ref<VariantRow[]>([]);
+
+const variantStockTotal = computed(() =>
+  variantRows.value.reduce((sum, row) => sum + (Number(row.stock_quantity) || 0), 0)
+);
+
+function parsedOptions() {
+  return optionRows.value
+    .map((row) => ({
+      name: row.name.trim(),
+      values: row.valuesText.split(",").map((v) => v.trim()).filter(Boolean),
+    }))
+    .filter((o) => o.name && o.values.length);
+}
+
+// Mirrors the backend's variant key: sorted, lowercased "name=value" pairs.
+function comboKey(values: Record<string, string>) {
+  return Object.entries(values)
+    .map(([name, value]) => `${name.trim().toLowerCase()}=${value.trim().toLowerCase()}`)
+    .sort()
+    .join("|");
+}
+
+function variantRowLabel(row: VariantRow) {
+  const names = parsedOptions().map((o) => o.name);
+  const ordered = names.map((n) => row.option_values[n]).filter(Boolean);
+  return (ordered.length ? ordered : Object.values(row.option_values)).join(" / ");
+}
+
+function generateCombinations() {
+  const options = parsedOptions();
+  if (!options.length) {
+    formError.value = "Add at least one option with values first.";
+    return;
+  }
+  formError.value = "";
+
+  let combos: Record<string, string>[] = [{}];
+  for (const option of options) {
+    combos = combos.flatMap((combo) =>
+      option.values.map((value) => ({ ...combo, [option.name]: value }))
+    );
+  }
+
+  const existing = new Map(variantRows.value.map((row) => [comboKey(row.option_values), row]));
+
+  variantRows.value = combos.map((combo) => {
+    const match = existing.get(comboKey(combo));
+    return match
+      ? { ...match, option_values: combo }
+      : { option_values: combo, price: null, stock_quantity: 0, image: "" };
+  });
+}
+
+function resetVariantState(product?: Product) {
+  hasVariants.value = !!product?.options?.length;
+  optionRows.value = (product?.options ?? []).map((o) => ({
+    name: o.name,
+    valuesText: o.values.join(", "),
+  }));
+  variantRows.value = (product?.variants ?? []).map((v) => ({
+    id: v.id,
+    option_values: { ...v.option_values },
+    price: v.price === null ? null : Number(v.price),
+    stock_quantity: v.stock_quantity,
+    image: v.image ?? "",
+  }));
+}
+
 function openAdd() {
   isEdit.value = false;
   formError.value = "";
   form.value = emptyForm();
+  resetVariantState();
   showModal.value = true;
 }
 
@@ -301,6 +509,7 @@ function openEdit(product: Product) {
     stock_quantity: product.stock_quantity,
     image: product.image ?? "",
   };
+  resetVariantState(product);
   showModal.value = true;
 }
 
@@ -314,13 +523,38 @@ async function saveProduct() {
     return;
   }
 
-  const payload = {
+  const payload: ProductPayload = {
     name: form.value.name,
     category_id: form.value.category_id,
     price: form.value.price,
     stock_quantity: form.value.stock_quantity,
     image: form.value.image || null,
   };
+
+  if (hasVariants.value) {
+    const options = parsedOptions();
+    if (!options.length) {
+      formError.value = "Add at least one option with values (e.g. Color: Red, Blue).";
+      return;
+    }
+    if (!variantRows.value.length) {
+      formError.value = 'Click "Generate combinations" to create the variants.';
+      return;
+    }
+
+    payload.options = options;
+    payload.variants = variantRows.value.map((row) => ({
+      id: row.id,
+      option_values: row.option_values,
+      price: row.price === null || row.price === "" ? null : Number(row.price),
+      stock_quantity: Number(row.stock_quantity) || 0,
+      image: row.image || null,
+    }));
+  } else {
+    // Explicitly clear so a formerly-variant product goes back to flat.
+    payload.options = null;
+    payload.variants = [];
+  }
 
   try {
     if (isEdit.value) {
@@ -332,8 +566,10 @@ async function saveProduct() {
     }
     closeModal();
     await loadProducts();
-  } catch {
-    formError.value = "Failed to save product.";
+  } catch (e: any) {
+    const errors = e?.response?.data?.errors;
+    const first = errors && (Object.values(errors)[0] as string[] | undefined)?.[0];
+    formError.value = first ?? "Failed to save product.";
   }
 }
 

@@ -8,12 +8,24 @@ export function getAdminProducts(params: { search?: string; page?: number } = {}
     .then((r) => r.data);
 }
 
+export interface VariantPayload {
+  id?: number;
+  option_values: Record<string, string>;
+  /** null = inherit the product price */
+  price: number | null;
+  stock_quantity: number;
+  /** null = inherit the product image */
+  image: string | null;
+}
+
 export interface ProductPayload {
   name: string;
   category_id: number;
   price: number;
   stock_quantity: number;
   image: string | null;
+  options?: { name: string; values: string[] }[] | null;
+  variants?: VariantPayload[];
 }
 
 export function createProduct(payload: ProductPayload) {
