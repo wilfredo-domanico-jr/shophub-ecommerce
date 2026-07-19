@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             ProductSeeder::class,
             JobOpeningSeeder::class,
             VoucherSeeder::class,
+            FlashSaleSeeder::class,
         ]);
     }
 }

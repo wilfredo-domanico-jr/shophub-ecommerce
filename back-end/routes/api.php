@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Api\Admin\DashboardController;
+use App\Http\Controllers\Api\Admin\FlashSaleController as AdminFlashSaleController;
 use App\Http\Controllers\Api\Admin\JobOpeningController as AdminJobOpeningController;
 use App\Http\Controllers\Api\Admin\NewsletterController as AdminNewsletterController;
 use App\Http\Controllers\Api\Admin\NewsletterSubscriberController as AdminNewsletterSubscriberController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CareerController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ConfigController;
+use App\Http\Controllers\Api\FlashSaleController;
 use App\Http\Controllers\Api\NewsletterController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PasswordResetController;
@@ -31,6 +33,7 @@ Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{product:slug}', [ProductController::class, 'show']);
 Route::get('/careers', [CareerController::class, 'index']);
 Route::get('/vouchers', [VoucherController::class, 'index']);
+Route::get('/flash-sale', [FlashSaleController::class, 'current']);
 Route::post('/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->middleware('throttle:5,1');
 Route::post('/newsletter/unsubscribe', [NewsletterController::class, 'unsubscribe'])->middleware('throttle:10,1');
 
@@ -72,6 +75,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('users', AdminUserController::class)->except(['show']);
         Route::apiResource('careers', AdminJobOpeningController::class)->except(['show']);
         Route::apiResource('vouchers', AdminVoucherController::class)->except(['show']);
+        Route::apiResource('flash-sales', AdminFlashSaleController::class)->except(['show']);
 
         Route::apiResource('newsletters', AdminNewsletterController::class)->except(['show']);
         Route::post('/newsletters/{newsletter}/send', [AdminNewsletterController::class, 'send']);
