@@ -22,6 +22,7 @@ class Product extends Model
         'original_price',
         'stock_quantity',
         'image',
+        'options',
         'is_featured',
         'is_flash_sale',
         'sold_count',
@@ -36,6 +37,7 @@ class Product extends Model
             'price' => 'decimal:2',
             'original_price' => 'decimal:2',
             'rating' => 'decimal:1',
+            'options' => 'array',
             'is_featured' => 'boolean',
             'is_flash_sale' => 'boolean',
             'is_active' => 'boolean',
@@ -50,6 +52,11 @@ class Product extends Model
     public function orderItems(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function variants(): HasMany
+    {
+        return $this->hasMany(ProductVariant::class)->orderBy('id');
     }
 
     public function scopeActive(Builder $query): Builder
