@@ -27,14 +27,15 @@ Note: Google only allows plain `http://` redirect URIs for localhost/127.0.0.1 �
 
 ## Facebook
 
-1. Go to https://developers.facebook.com/ → **My Apps → Create App** → use case **"Authenticate and request data from users with Facebook Login"**.
+1. Go to https://developers.facebook.com/ → **My Apps → Create App** → use case **"Authenticate and request data from users with Facebook Login"**. Don't pick a Business-type app — those only offer business scopes and can't request `email`.
 2. Add the **Facebook Login** product (if the use case didn't already) → **Facebook Login → Settings** → **Valid OAuth Redirect URIs**:
-   - `http://127.0.0.1:8000/api/auth/facebook/callback`
    - `http://localhost:8000/api/auth/facebook/callback`
-3. **App Settings → Basic**: copy **App ID** → `FACEBOOK_CLIENT_ID` and **App Secret** → `FACEBOOK_CLIENT_SECRET`.
-4. Caveats:
+3. **Grant the `email` permission** (skipping this causes an "Invalid Scopes: email" error): left sidebar → **Use cases** → your Facebook Login use case → **Customize** → under Permissions, click **Add** next to `email` (`public_profile` is already granted).
+4. **App Settings → Basic**: copy **App ID** → `FACEBOOK_CLIENT_ID` and **App Secret** → `FACEBOOK_CLIENT_SECRET`.
+5. Caveats:
+   - **Use `localhost`, not `127.0.0.1`**, for Facebook's redirect URI. Facebook enforces HTTPS on everything except literal `localhost` in Development Mode — with `127.0.0.1` you get "ShopHub isn't using a secure connection" and login is blocked. (Google accepts either host.)
    - In **Development Mode** (the default) only people with a role on the app can log in — add accounts under **App Roles → Testers** (they must accept the invite).
-   - Going **Live** requires a Privacy Policy URL and Data Deletion instructions URL, and enforces HTTPS redirect URIs.
+   - Going **Live** requires a Privacy Policy URL and Data Deletion instructions URL, and enforces HTTPS redirect URIs. For a local API that needs real HTTPS, a tunnel like `ngrok http 8000` works — register the tunnel's `https://` callback URL.
    - Facebook accounts registered with a phone number may have **no email** — ShopHub rejects those with a friendly error rather than creating an email-less account.
 
 ## Environment variables
@@ -50,10 +51,10 @@ GOOGLE_REDIRECT_URI=http://127.0.0.1:8000/api/auth/google/callback
 
 FACEBOOK_CLIENT_ID=
 FACEBOOK_CLIENT_SECRET=
-FACEBOOK_REDIRECT_URI=http://127.0.0.1:8000/api/auth/facebook/callback
+FACEBOOK_REDIRECT_URI=http://localhost:8000/api/auth/facebook/callback
 ```
 
-The redirect URI must match a registered one exactly and match the host you actually serve the API from (`php artisan serve` binds `127.0.0.1:8000`). Leave a provider's values empty to hide its button entirely.
+The redirect URI must match a registered one exactly (Facebook's must use `localhost` — see the caveats above). `php artisan serve` answers on both `127.0.0.1:8000` and `localhost:8000`, so both hosts work locally. Leave a provider's values empty to hide its button entirely.
 
 ## Behavior details
 

@@ -205,10 +205,10 @@ GOOGLE_REDIRECT_URI=http://127.0.0.1:8000/api/auth/google/callback
 
 FACEBOOK_CLIENT_ID=
 FACEBOOK_CLIENT_SECRET=
-FACEBOOK_REDIRECT_URI=http://127.0.0.1:8000/api/auth/facebook/callback
+FACEBOOK_REDIRECT_URI=http://localhost:8000/api/auth/facebook/callback
 ```
 
-In short: **Google** — Cloud Console → OAuth consent screen (External, add yourself as a Test user) → Credentials → OAuth client ID (Web application) → register the callback URL above. **Facebook** — Meta for Developers → Create App with the Facebook Login use case → Facebook Login Settings → register the callback URL → copy App ID/Secret (dev mode only allows accounts with a Tester role).
+In short: **Google** — Cloud Console → OAuth consent screen (External, add yourself as a Test user) → Credentials → OAuth client ID (Web application) → register the callback URL above. **Facebook** — Meta for Developers → Create App with the (consumer) Facebook Login use case → Facebook Login Settings → register the callback URL → add the `email` permission to the use case → copy App ID/Secret (dev mode only allows accounts with a Tester role). Facebook's redirect URI must use `localhost` — it doesn't exempt `127.0.0.1` from its HTTPS requirement.
 
 Full click-by-click walkthrough, linking behavior, and known limitations: [`docs/SOCIAL_LOGIN_SETUP.md`](../docs/SOCIAL_LOGIN_SETUP.md).
 
