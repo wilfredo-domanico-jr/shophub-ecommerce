@@ -13,6 +13,10 @@ class Order extends Model
     /** @use HasFactory<\Database\Factories\OrderFactory> */
     use HasFactory;
 
+    public const PAYMENT_COD = 'Cash on Delivery';
+
+    public const PAYMENT_CARD = 'Card';
+
     protected $fillable = [
         'order_number',
         'user_id',
@@ -24,6 +28,9 @@ class Order extends Model
         'status',
         'payment_method',
         'payment_status',
+        'paid_at',
+        'stripe_session_id',
+        'stripe_payment_intent_id',
         'subtotal',
         'shipping_fee',
         'voucher_code',
@@ -39,7 +46,18 @@ class Order extends Model
             'shipping_fee' => 'decimal:2',
             'discount' => 'decimal:2',
             'total' => 'decimal:2',
+            'paid_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Still awaiting online payment — the only state "Pay now" may act on.
+     */
+    public function isPayableByCard(): bool
+    {
+        return $this->payment_method === self::PAYMENT_CARD
+            && $this->payment_status === 'unpaid'
+            && $this->status === 'pending';
     }
 
     protected static function booted(): void

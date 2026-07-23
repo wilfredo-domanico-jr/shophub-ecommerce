@@ -20,6 +20,7 @@ class ConfigController extends Controller
                 ['google', 'facebook'],
                 fn ($provider) => (bool) config("services.$provider.client_id")
             )),
+            'card_payments_enabled' => (bool) config('services.stripe.secret'),
         ]);
     }
 }

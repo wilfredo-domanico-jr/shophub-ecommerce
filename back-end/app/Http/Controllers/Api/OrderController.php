@@ -22,12 +22,21 @@ class OrderController extends Controller
             'customer_phone' => ['required', 'string', 'max:30'],
             'shipping_address' => ['required', 'string'],
             'notes' => ['nullable', 'string'],
+            'payment_method' => ['nullable', 'in:'.Order::PAYMENT_COD.','.Order::PAYMENT_CARD],
             'voucher_code' => ['nullable', 'string', 'max:50'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'integer', 'exists:products,id'],
             'items.*.variant_id' => ['nullable', 'integer'],
             'items.*.quantity' => ['required', 'integer', 'min:1'],
         ]);
+
+        $paymentMethod = $validated['payment_method'] ?? Order::PAYMENT_COD;
+
+        if ($paymentMethod === Order::PAYMENT_CARD && ! config('services.stripe.secret')) {
+            throw ValidationException::withMessages([
+                'payment_method' => 'Card payments are not available right now.',
+            ]);
+        }
 
         $user = $request->user();
 
@@ -53,7 +62,7 @@ class OrderController extends Controller
             ->values()
             ->all();
 
-        $order = DB::transaction(function () use ($validated, $user) {
+        $order = DB::transaction(function () use ($validated, $user, $paymentMethod) {
             $productIds = collect($validated['items'])->pluck('product_id');
 
             // The product-row lock serializes every stock mutation for these
@@ -147,6 +156,7 @@ class OrderController extends Controller
                 'customer_phone' => $validated['customer_phone'],
                 'shipping_address' => $validated['shipping_address'],
                 'notes' => $validated['notes'] ?? null,
+                'payment_method' => $paymentMethod,
                 'subtotal' => $subtotal,
                 'shipping_fee' => $shippingFee,
                 'total' => $total,
@@ -181,7 +191,11 @@ class OrderController extends Controller
         // response matches what GET /my/orders returns for the same order.
         $order->refresh()->load('items');
 
-        Mail::to($order->customer_email)->queue(new OrderConfirmationMail($order));
+        // Card orders aren't confirmed until Stripe reports payment — the
+        // webhook queues this mail once the order is actually paid.
+        if ($order->payment_method === Order::PAYMENT_COD) {
+            Mail::to($order->customer_email)->queue(new OrderConfirmationMail($order));
+        }
 
         return response()->json($order, 201);
     }

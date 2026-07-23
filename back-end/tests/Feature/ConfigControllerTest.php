@@ -69,4 +69,13 @@ class ConfigControllerTest extends TestCase
         $response->assertOk();
         $response->assertJsonPath('social_providers', []);
     }
+
+    public function test_card_payments_flag_reflects_stripe_configuration(): void
+    {
+        config(['services.stripe.secret' => 'sk_test_fake']);
+        $this->getJson('/api/config')->assertJsonPath('card_payments_enabled', true);
+
+        config(['services.stripe.secret' => null]);
+        $this->getJson('/api/config')->assertJsonPath('card_payments_enabled', false);
+    }
 }

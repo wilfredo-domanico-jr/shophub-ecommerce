@@ -32,4 +32,9 @@ class OrderFactory extends Factory
             'total' => $subtotal,
         ];
     }
+
+    public function card(): static
+    {
+        return $this->state(fn () => ['payment_method' => Order::PAYMENT_CARD]);
+    }
 }
