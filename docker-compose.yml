@@ -25,8 +25,12 @@ services:
       - "8000:8000"
     environment:
       APP_NAME: ShopHub
-      APP_ENV: local
-      APP_DEBUG: "true"
+      # Safe-by-default: debug off unless explicitly opted into via the root
+      # .env, so a straight `docker compose up` on a real host never leaks
+      # stack traces. Set APP_ENV=local and APP_DEBUG=true in .env for local
+      # debugging (same override pattern as DEMO_MODE below).
+      APP_ENV: ${APP_ENV:-production}
+      APP_DEBUG: ${APP_DEBUG:-false}
       APP_URL: http://localhost:8000
       DB_CONNECTION: mysql
       DB_HOST: mysql

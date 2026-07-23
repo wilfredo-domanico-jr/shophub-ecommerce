@@ -55,10 +55,15 @@ class CartController extends Controller
             'product_variant_id' => $variant?->id,
         ]);
 
+        // Clamp the running total, not just this request's increment — repeated
+        // adds could otherwise push the stored quantity past the 999 ceiling
+        // the validation rule only enforces per-call.
+        $quantity = min(999, ($line->exists ? $line->quantity : 0) + ($validated['quantity'] ?? 1));
+
         $line->fill([
             'product_name' => $product->name,
             'variant_label' => $variant?->labelFor($product),
-            'quantity' => ($line->exists ? $line->quantity : 0) + ($validated['quantity'] ?? 1),
+            'quantity' => $quantity,
         ])->save();
 
         return response()->json(['items' => $this->cartItems($request)], 201);

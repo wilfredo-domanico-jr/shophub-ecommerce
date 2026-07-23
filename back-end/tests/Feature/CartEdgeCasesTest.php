@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\Category;
 use App\Models\CartItem;
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\User;
@@ -83,6 +83,23 @@ class CartEdgeCasesTest extends TestCase
             ->patchJson("/api/cart/items/{$line->id}", ['quantity' => 999])
             ->assertOk()
             ->assertJsonPath('items.0.quantity', 999);
+    }
+
+    public function test_repeated_adds_are_clamped_to_999_instead_of_accumulating_past_it(): void
+    {
+        $user = User::factory()->create();
+        $product = $this->makeProduct();
+
+        $this->actingAs($user, 'sanctum')
+            ->postJson('/api/cart/items', ['product_id' => $product->id, 'quantity' => 600])
+            ->assertCreated();
+
+        $this->actingAs($user, 'sanctum')
+            ->postJson('/api/cart/items', ['product_id' => $product->id, 'quantity' => 600])
+            ->assertCreated()
+            ->assertJsonPath('items.0.quantity', 999);
+
+        $this->assertSame(999, CartItem::first()->quantity);
     }
 
     public function test_variant_id_belonging_to_another_product_is_rejected(): void

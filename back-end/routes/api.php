@@ -65,12 +65,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
 
-    // Cart (server-side, so it survives refresh and follows the account)
-    Route::get('/cart', [CartController::class, 'index']);
-    Route::post('/cart/items', [CartController::class, 'store']);
-    Route::patch('/cart/items/{cartItem}', [CartController::class, 'update']);
-    Route::delete('/cart/items/{cartItem}', [CartController::class, 'destroy']);
-    Route::delete('/cart', [CartController::class, 'clear']);
+    // Cart (server-side, so it survives refresh and follows the account).
+    // Throttled like the other write-heavy customer routes — nothing here
+    // was rate-limited before, so a stolen/scripted token could otherwise
+    // hammer these for free.
+    Route::get('/cart', [CartController::class, 'index'])->middleware('throttle:60,1');
+    Route::post('/cart/items', [CartController::class, 'store'])->middleware('throttle:60,1');
+    Route::patch('/cart/items/{cartItem}', [CartController::class, 'update'])->middleware('throttle:60,1');
+    Route::delete('/cart/items/{cartItem}', [CartController::class, 'destroy'])->middleware('throttle:60,1');
+    Route::delete('/cart', [CartController::class, 'clear'])->middleware('throttle:60,1');
 
     // Customer account
     // Throttled: each order queues a confirmation email to a caller-chosen
