@@ -50,6 +50,13 @@ POST /api/newsletter/unsubscribe   # token from the email's unsubscribe link (th
 POST /api/orders/track             # lookup by order_number + email — returns status + items only, no personal details
 ```
 
+### Stripe webhook (public, signature-verified)
+
+```
+POST /api/webhooks/stripe          # checkout.session.completed marks the order paid (idempotent) and queues
+                                   # the confirmation email; requests are verified against STRIPE_WEBHOOK_SECRET
+```
+
 ### Auth (throttled)
 
 ```
@@ -67,9 +74,15 @@ GET  /api/auth/{provider}/callback # OAuth return: find-or-create user, redirect
 ```
 POST  /api/logout
 GET   /api/me
-POST  /api/orders                  # checkout (stock-locked, server-side totals, sends confirmation email);
-                                   # items take an optional variant_id — required for products with options;
-                                   # optional voucher_code applies a discount (re-validated under lock)
+POST  /api/orders                  # checkout (stock-locked, server-side totals); items take an optional
+                                   # variant_id — required for products with options; optional voucher_code
+                                   # applies a discount (re-validated under lock). payment_method is
+                                   # "Cash on Delivery" (default; confirmation email sent immediately) or
+                                   # "Card" (order created unpaid; email sent by the Stripe webhook on payment)
+POST  /api/orders/{id}/pay         # create a Stripe hosted-checkout session for an unpaid card order,
+                                   # returns {url}; re-callable to retry an abandoned payment
+GET   /api/my/orders/{orderNumber}/payment-status  # owner-scoped payment_status/paid_at (polled by the
+                                   # SPA's /checkout/return page after the Stripe redirect)
 POST  /api/vouchers/preview        # price a voucher against the cart before checkout (throttled, cosmetic —
                                    # never redeems; the order endpoint is the authority)
 GET   /api/my/orders               # paginated order history (items link back to the product for reviews)

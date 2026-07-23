@@ -20,10 +20,12 @@ use App\Http\Controllers\Api\FlashSaleController;
 use App\Http\Controllers\Api\NewsletterController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PasswordResetController;
+use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\SocialAuthController;
+use App\Http\Controllers\Api\StripeWebhookController;
 use App\Http\Controllers\Api\VoucherController;
 use Illuminate\Support\Facades\Route;
 
@@ -44,6 +46,10 @@ Route::post('/newsletter/unsubscribe', [NewsletterController::class, 'unsubscrib
 // Throttled: order numbers are guessable enough to brute-force otherwise.
 Route::post('/orders/track', [OrderController::class, 'track'])->middleware('throttle:15,1');
 
+// Stripe webhook (public — authenticated by signature verification against
+// STRIPE_WEBHOOK_SECRET, not by session/token).
+Route::post('/webhooks/stripe', [StripeWebhookController::class, 'handle']);
+
 // Auth
 Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
@@ -62,6 +68,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Throttled: each order queues a confirmation email to a caller-chosen
     // address — unlimited checkouts would be a mail cannon.
     Route::post('/orders', [OrderController::class, 'store'])->middleware('throttle:10,1');
+    Route::post('/orders/{order}/pay', [PaymentController::class, 'pay'])->middleware('throttle:10,1');
+    Route::get('/my/orders/{orderNumber}/payment-status', [PaymentController::class, 'paymentStatus'])->middleware('throttle:30,1');
     Route::post('/vouchers/preview', [VoucherController::class, 'preview'])->middleware('throttle:20,1');
     Route::patch('/profile', [ProfileController::class, 'update']);
     Route::patch('/profile/password', [ProfileController::class, 'updatePassword']);
