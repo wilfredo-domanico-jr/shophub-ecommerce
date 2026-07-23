@@ -8,7 +8,10 @@ class ConfigController extends Controller
 {
     public function index()
     {
-        $enabled = (bool) config('demo.enabled');
+        // Both flags required: DEMO_MODE alone (e.g. a demo env copied into
+        // production by accident) must never be enough to publish working
+        // admin credentials over this unauthenticated endpoint.
+        $enabled = (bool) config('demo.enabled') && (bool) config('demo.sandbox_confirmed');
 
         return response()->json([
             'demo_mode' => $enabled,

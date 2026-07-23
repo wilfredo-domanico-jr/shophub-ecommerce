@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Mail\OrderConfirmationMail;
 use App\Models\Order;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
@@ -24,6 +23,42 @@ class StripeWebhookEdgeCasesTest extends TestCase
         parent::setUp();
 
         config(['services.stripe.webhook_secret' => self::WEBHOOK_SECRET]);
+    }
+
+    public function test_missing_webhook_secret_fails_closed_instead_of_verifying_against_empty_string(): void
+    {
+        Mail::fake();
+        config(['services.stripe.webhook_secret' => null]);
+        $order = Order::factory()->card()->create();
+
+        $json = json_encode([
+            'id' => 'evt_test_no_secret',
+            'object' => 'event',
+            'type' => 'checkout.session.completed',
+            'data' => [
+                'object' => [
+                    'id' => 'cs_test_123',
+                    'object' => 'checkout.session',
+                    'payment_status' => 'paid',
+                    'payment_intent' => 'pi_test_456',
+                    'client_reference_id' => $order->order_number,
+                    'metadata' => ['order_id' => $order->id],
+                ],
+            ],
+        ]);
+
+        // No real secret to sign with — an empty-string signature is exactly
+        // what an attacker exploiting a misconfigured secret would send.
+        $timestamp = time();
+        $signature = hash_hmac('sha256', "{$timestamp}.{$json}", '');
+
+        $this->call('POST', '/api/webhooks/stripe', [], [], [], [
+            'HTTP_STRIPE_SIGNATURE' => "t={$timestamp},v1={$signature}",
+            'CONTENT_TYPE' => 'application/json',
+        ], $json)->assertStatus(500);
+
+        $this->assertSame('unpaid', $order->fresh()->payment_status);
+        Mail::assertNothingQueued();
     }
 
     public function test_missing_signature_header_is_rejected(): void

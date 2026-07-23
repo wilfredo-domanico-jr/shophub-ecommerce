@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Services\StripeCheckoutService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use Stripe\Exception\ApiErrorException;
 
 class PaymentController extends Controller
 {
@@ -21,7 +23,21 @@ class PaymentController extends Controller
             ]);
         }
 
-        $session = $stripe->createSession($order);
+        try {
+            $session = $stripe->createSession($order);
+        } catch (ApiErrorException $e) {
+            // Never let a Stripe outage/misconfiguration bubble up as a raw
+            // exception — that would render a debug stack trace (file paths,
+            // request internals) straight to an authenticated customer.
+            Log::error('Stripe checkout session creation failed.', [
+                'order_id' => $order->id,
+                'message' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'message' => 'Could not start the payment. Please try again in a moment.',
+            ], 502);
+        }
 
         // Each call mints a fresh session ("Pay now" retries after an
         // abandoned redirect), so the stored id is always the latest one.

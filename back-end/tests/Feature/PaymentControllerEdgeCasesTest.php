@@ -4,7 +4,9 @@ namespace Tests\Feature;
 
 use App\Models\Order;
 use App\Models\User;
+use App\Services\StripeCheckoutService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Stripe\Exception\ApiConnectionException;
 use Tests\TestCase;
 
 /**
@@ -54,6 +56,25 @@ class PaymentControllerEdgeCasesTest extends TestCase
 
             $this->assertNull($order->fresh()->stripe_session_id);
         }
+    }
+
+    public function test_pay_endpoint_returns_a_clean_error_when_stripe_api_call_fails(): void
+    {
+        $user = User::factory()->create();
+        $order = Order::factory()->card()->create(['user_id' => $user->id]);
+
+        $this->mock(StripeCheckoutService::class, function ($mock) {
+            $mock->shouldReceive('createSession')
+                ->once()
+                ->andThrow(ApiConnectionException::factory('Could not connect to Stripe.'));
+        });
+
+        $this->actingAs($user, 'sanctum')
+            ->postJson("/api/orders/{$order->id}/pay")
+            ->assertStatus(502)
+            ->assertJsonPath('message', 'Could not start the payment. Please try again in a moment.');
+
+        $this->assertNull($order->fresh()->stripe_session_id);
     }
 
     public function test_pay_endpoint_returns_404_for_a_nonexistent_order(): void

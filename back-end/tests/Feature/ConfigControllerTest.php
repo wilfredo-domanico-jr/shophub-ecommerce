@@ -22,10 +22,11 @@ class ConfigControllerTest extends TestCase
         ]);
     }
 
-    public function test_demo_credentials_are_exposed_when_demo_mode_is_enabled(): void
+    public function test_demo_credentials_are_exposed_when_demo_mode_and_sandbox_are_both_confirmed(): void
     {
         config([
             'demo.enabled' => true,
+            'demo.sandbox_confirmed' => true,
             'demo.admin_email' => 'demo@example.com',
             'demo.admin_password' => 'demo-pass',
             'demo.customer_email' => 'demo-customer@example.com',
@@ -41,6 +42,29 @@ class ConfigControllerTest extends TestCase
             'demo_admin_password' => 'demo-pass',
             'demo_customer_email' => 'demo-customer@example.com',
             'demo_customer_password' => 'demo-customer-pass',
+        ]);
+    }
+
+    public function test_demo_credentials_stay_hidden_when_sandbox_is_not_confirmed(): void
+    {
+        // DEMO_MODE alone (e.g. an env file copied from a demo box into a
+        // real deployment) must never be sufficient to publish credentials.
+        config([
+            'demo.enabled' => true,
+            'demo.sandbox_confirmed' => false,
+            'demo.admin_email' => 'demo@example.com',
+            'demo.admin_password' => 'demo-pass',
+        ]);
+
+        $response = $this->getJson('/api/config');
+
+        $response->assertOk();
+        $response->assertJson([
+            'demo_mode' => false,
+            'demo_admin_email' => null,
+            'demo_admin_password' => null,
+            'demo_customer_email' => null,
+            'demo_customer_password' => null,
         ]);
     }
 
