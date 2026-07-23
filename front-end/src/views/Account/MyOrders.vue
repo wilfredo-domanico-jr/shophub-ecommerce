@@ -32,12 +32,20 @@
                 Placed {{ new Date(order.created_at).toLocaleString() }}
               </p>
             </div>
-            <span
-              class="px-3 py-1 rounded-full text-xs font-semibold capitalize"
-              :class="statusClass(order.status)"
-            >
-              {{ order.status }}
-            </span>
+            <div class="flex items-center gap-2">
+              <span
+                class="px-3 py-1 rounded-full text-xs font-semibold"
+                :class="order.payment_status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'"
+              >
+                {{ order.payment_status === "paid" ? "Paid" : `Unpaid · ${order.payment_method}` }}
+              </span>
+              <span
+                class="px-3 py-1 rounded-full text-xs font-semibold capitalize"
+                :class="statusClass(order.status)"
+              >
+                {{ order.status }}
+              </span>
+            </div>
           </div>
 
           <ul class="text-sm divide-y">
@@ -66,6 +74,20 @@
             Discount ({{ order.voucher_code }}): −₱{{ order.discount }}
           </p>
           <p class="text-sm font-semibold text-right mt-1">Total: ₱{{ order.total }}</p>
+
+          <div
+            v-if="order.payment_method === 'Card' && order.payment_status === 'unpaid' && order.status === 'pending'"
+            class="mt-3 border-t pt-3 flex items-center justify-between gap-2"
+          >
+            <p class="text-xs text-gray-500">This order is awaiting card payment.</p>
+            <button
+              class="gradient-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold hover:opacity-90 transition disabled:opacity-50 shrink-0"
+              :disabled="payingOrderId === order.id"
+              @click="payNow(order)"
+            >
+              {{ payingOrderId === order.id ? "Redirecting..." : "Pay Now" }}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -86,7 +108,8 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { getMyOrders } from "../../services/account";
-import type { Order } from "../../services/orders";
+import { payOrder, type Order } from "../../services/orders";
+import { useToastStore } from "../../stores/toast";
 import AccountNav from "../../components/account/AccountNav.vue";
 import Pagination from "../../components/common/Pagination.vue";
 
@@ -100,6 +123,21 @@ const meta = ref({
 });
 const loading = ref(true);
 const error = ref("");
+const payingOrderId = ref<number | null>(null);
+const toast = useToastStore();
+
+async function payNow(order: Order) {
+  if (payingOrderId.value) return;
+  payingOrderId.value = order.id;
+
+  try {
+    const { url } = await payOrder(order.id);
+    window.location.href = url;
+  } catch {
+    toast.error("Could not start the payment. Please try again.");
+    payingOrderId.value = null;
+  }
+}
 
 function statusClass(status: Order["status"]): string {
   switch (status) {

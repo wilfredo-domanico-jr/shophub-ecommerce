@@ -11,6 +11,7 @@ import Shop from "../views/Shop.vue";
 import ProductDetail from "../views/ProductDetail.vue";
 import Vouchers from "../views/Vouchers.vue";
 import InfoPage from "../views/InfoPage.vue";
+import CheckoutReturn from "../views/CheckoutReturn.vue";
 
 // Auth
 import Login from "../views/Auth/Login.vue";
@@ -147,6 +148,15 @@ const routes = [
         name: "Unsubscribe",
         component: Unsubscribe,
         meta: { minimalChrome: true },
+      },
+
+      {
+        // Stripe redirects back here after hosted checkout (?order=...&
+        // session_id=... on success, ?cancelled=1 when the user backs out).
+        path: "checkout/return",
+        name: "CheckoutReturn",
+        component: CheckoutReturn,
+        meta: { requiresAuth: true },
       },
 
       // Customer account

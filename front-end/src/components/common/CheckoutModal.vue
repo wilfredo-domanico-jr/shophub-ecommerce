@@ -23,7 +23,12 @@
       <div v-if="placedOrder" class="p-6 space-y-4 text-center">
         <div class="text-5xl">✅</div>
         <p class="font-semibold">Thank you, {{ placedOrder.customer_name }}!</p>
-        <p class="text-sm text-gray-500">
+        <p v-if="payRedirectFailed" class="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-lg p-3">
+          Your order was saved, but we couldn't start the online payment. You can
+          pay it anytime from
+          <router-link to="/account/orders" class="underline font-medium" @click="close">My Orders</router-link>.
+        </p>
+        <p v-else class="text-sm text-gray-500">
           Your order has been received. A confirmation email is on its way to
           {{ placedOrder.customer_email }}.
         </p>
@@ -165,7 +170,24 @@
             <span>Total</span>
             <span class="text-orange-500">₱{{ displayTotal.toLocaleString() }}</span>
           </div>
-          <p class="text-xs text-gray-500 mt-1">Payment: Cash on Delivery</p>
+        </div>
+
+        <!-- Payment method -->
+        <div>
+          <label class="text-sm font-medium text-gray-700">Payment Method</label>
+          <div class="mt-1 space-y-2">
+            <label class="flex items-center gap-2 border rounded-lg px-3 py-2 cursor-pointer hover:border-orange-300 transition" :class="paymentMethod === 'Cash on Delivery' ? 'border-orange-500 bg-orange-50' : ''">
+              <input v-model="paymentMethod" type="radio" value="Cash on Delivery" class="accent-orange-500" />
+              <span class="text-sm">Cash on Delivery</span>
+            </label>
+            <label v-if="cardPaymentsEnabled" class="flex items-center gap-2 border rounded-lg px-3 py-2 cursor-pointer hover:border-orange-300 transition" :class="paymentMethod === 'Card' ? 'border-orange-500 bg-orange-50' : ''">
+              <input v-model="paymentMethod" type="radio" value="Card" class="accent-orange-500" />
+              <span class="text-sm">
+                Card (Stripe)
+                <span class="text-xs text-gray-400 block">You'll be redirected to Stripe's secure payment page.</span>
+              </span>
+            </label>
+          </div>
         </div>
 
         <button
@@ -173,7 +195,7 @@
           :disabled="submitting"
           class="w-full gradient-primary text-white py-3 rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50"
         >
-          {{ submitting ? "Placing Order..." : "Place Order" }}
+          {{ submitting ? "Placing Order..." : paymentMethod === "Card" ? "Continue to Payment" : "Place Order" }}
         </button>
       </form>
     </div>
@@ -185,7 +207,8 @@ import { computed, ref } from "vue";
 import { useCartStore } from "../../stores/cart";
 import { useAuthStore } from "../../stores/auth";
 import { useDemoAccount } from "../../composables/useDemoAccount";
-import { createOrder, type Order } from "../../services/orders";
+import { createOrder, payOrder, type Order, type PaymentMethod } from "../../services/orders";
+import { getAppConfig } from "../../services/config";
 import {
   getPublicVouchers,
   previewVoucher,
@@ -219,6 +242,14 @@ const form = ref({
 const submitting = ref(false);
 const error = ref("");
 const placedOrder = ref<Order | null>(null);
+const payRedirectFailed = ref(false);
+
+// Card option appears only when the backend has Stripe configured.
+const paymentMethod = ref<PaymentMethod>("Cash on Delivery");
+const cardPaymentsEnabled = ref(false);
+getAppConfig()
+  .then((config) => (cardPaymentsEnabled.value = config.card_payments_enabled))
+  .catch(() => {}); // COD-only fallback — checkout works without the flag
 
 // Voucher state is checkout-scoped: it lives and dies with this modal.
 const voucherCode = ref("");
@@ -299,11 +330,10 @@ async function submit() {
 
     const order = await createOrder({
       ...form.value,
+      payment_method: paymentMethod.value,
       ...(appliedVoucher.value ? { voucher_code: appliedVoucher.value.code } : {}),
       items: checkoutItemsPayload(),
     });
-
-    placedOrder.value = order;
 
     // Only clear what was purchased: a buy-now order leaves the cart intact.
     if (wasBuyNow) {
@@ -312,6 +342,20 @@ async function submit() {
       cartStore.clearItems();
     }
 
+    if (paymentMethod.value === "Card") {
+      try {
+        const { url } = await payOrder(order.id);
+        // Keep submitting=true — the whole page navigates to Stripe.
+        window.location.href = url;
+        return;
+      } catch {
+        // The order exists; fall through to the success panel with a
+        // pay-from-My-Orders note instead of losing it.
+        payRedirectFailed.value = true;
+      }
+    }
+
+    placedOrder.value = order;
     emit("order-placed");
   } catch (e: any) {
     error.value =

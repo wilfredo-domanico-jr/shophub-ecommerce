@@ -7,6 +7,7 @@ export interface AppConfig {
   demo_customer_email: string | null;
   demo_customer_password: string | null;
   social_providers: string[];
+  card_payments_enabled: boolean;
 }
 
 export function getAppConfig() {

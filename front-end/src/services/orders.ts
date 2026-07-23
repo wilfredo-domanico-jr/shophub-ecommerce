@@ -24,6 +24,7 @@ export interface Order {
   status: "pending" | "processing" | "shipped" | "delivered" | "cancelled";
   payment_method: string;
   payment_status: "unpaid" | "paid";
+  paid_at: string | null;
   subtotal: string;
   shipping_fee: string;
   voucher_code: string | null;
@@ -34,18 +35,39 @@ export interface Order {
   items: OrderItem[];
 }
 
+export type PaymentMethod = "Cash on Delivery" | "Card";
+
 export interface CreateOrderPayload {
   customer_name: string;
   customer_email: string;
   customer_phone: string;
   shipping_address: string;
   notes?: string;
+  payment_method?: PaymentMethod;
   voucher_code?: string;
   items: { product_id: number; variant_id?: number; quantity: number }[];
 }
 
 export function createOrder(payload: CreateOrderPayload) {
   return api.post<Order>("/orders", payload).then((r) => r.data);
+}
+
+/** Creates a fresh Stripe Checkout session for an unpaid card order. */
+export function payOrder(orderId: number) {
+  return api.post<{ url: string }>(`/orders/${orderId}/pay`).then((r) => r.data);
+}
+
+export interface PaymentStatus {
+  id: number;
+  order_number: string;
+  payment_status: Order["payment_status"];
+  paid_at: string | null;
+}
+
+export function getPaymentStatus(orderNumber: string) {
+  return api
+    .get<PaymentStatus>(`/my/orders/${orderNumber}/payment-status`)
+    .then((r) => r.data);
 }
 
 export interface TrackedOrder {
