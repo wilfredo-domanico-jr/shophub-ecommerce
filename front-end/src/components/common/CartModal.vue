@@ -55,37 +55,47 @@
             v-for="item in cartStore.items"
             :key="item.key"
             class="flex gap-4 mb-4 pb-4 border-b"
+            :class="!item.available ? 'opacity-70' : ''"
           >
             <img
               :src="item.image ?? undefined"
               :alt="item.name"
               class="w-20 h-20 object-cover rounded-lg"
+              :class="!item.available ? 'grayscale' : ''"
             />
             <div class="flex-1">
               <h4 class="font-medium text-sm mb-1">{{ item.name }}</h4>
               <p v-if="item.variant_label" class="text-xs text-gray-500 mb-1">
                 {{ item.variant_label }}
               </p>
-              <p class="text-orange-500 font-bold">
-                ₱{{ (item.price * item.quantity).toLocaleString() }}
+              <p
+                v-if="!item.available"
+                class="inline-block bg-red-50 text-red-500 text-xs font-medium px-2 py-1 rounded-full"
+              >
+                Item no longer available
               </p>
-              <div class="flex items-center gap-2 mt-2">
-                <button
-                  @click="decrease(item)"
-                  class="w-8 h-8 rounded border border-gray-300 flex items-center justify-center hover:bg-gray-100"
-                  aria-label="Decrease quantity"
-                >
-                  -
-                </button>
-                <span class="w-8 text-center">{{ item.quantity }}</span>
-                <button
-                  @click="increase(item)"
-                  class="w-8 h-8 rounded border border-gray-300 flex items-center justify-center hover:bg-gray-100"
-                  aria-label="Increase quantity"
-                >
-                  +
-                </button>
-              </div>
+              <template v-else>
+                <p class="text-orange-500 font-bold">
+                  ₱{{ (item.price * item.quantity).toLocaleString() }}
+                </p>
+                <div class="flex items-center gap-2 mt-2">
+                  <button
+                    @click="decrease(item)"
+                    class="w-8 h-8 rounded border border-gray-300 flex items-center justify-center hover:bg-gray-100"
+                    aria-label="Decrease quantity"
+                  >
+                    -
+                  </button>
+                  <span class="w-8 text-center">{{ item.quantity }}</span>
+                  <button
+                    @click="increase(item)"
+                    class="w-8 h-8 rounded border border-gray-300 flex items-center justify-center hover:bg-gray-100"
+                    aria-label="Increase quantity"
+                  >
+                    +
+                  </button>
+                </div>
+              </template>
             </div>
             <button
               @click="remove(item.key)"
@@ -120,7 +130,7 @@
         </div>
         <button
           class="w-full gradient-primary text-white py-3 rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
-          :disabled="cartStore.count() === 0"
+          :disabled="cartStore.availableItems().length === 0"
           @click="checkout"
         >
           Proceed to Checkout

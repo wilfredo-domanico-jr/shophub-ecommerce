@@ -5,6 +5,8 @@ vi.mock("../../services/api", () => ({
   default: {
     post: vi.fn(),
     get: vi.fn(),
+    patch: vi.fn(),
+    delete: vi.fn(),
   },
 }));
 
@@ -12,7 +14,12 @@ import api from "../../services/api";
 import { useAuthStore } from "../auth";
 import { useCartStore } from "../cart";
 
-const mockedApi = api as unknown as { post: ReturnType<typeof vi.fn>; get: ReturnType<typeof vi.fn> };
+const mockedApi = api as unknown as {
+  post: ReturnType<typeof vi.fn>;
+  get: ReturnType<typeof vi.fn>;
+  patch: ReturnType<typeof vi.fn>;
+  delete: ReturnType<typeof vi.fn>;
+};
 
 describe("auth store", () => {
   beforeEach(() => {
@@ -20,6 +27,8 @@ describe("auth store", () => {
     localStorage.clear();
     mockedApi.post.mockReset();
     mockedApi.get.mockReset();
+    mockedApi.patch.mockReset();
+    mockedApi.delete.mockReset();
   });
 
   it("starts logged out", () => {
@@ -107,16 +116,21 @@ describe("auth store", () => {
     expect(auth.user).toBeNull();
   });
 
-  it("logout also empties the cart", async () => {
+  it("logout empties the local cart without touching the server cart", async () => {
     mockedApi.post.mockResolvedValueOnce({ data: {} });
     const auth = useAuthStore();
     const cart = useCartStore();
-    cart.addItem({ id: 1, name: "Widget", price: 100 });
+    // Seed local state directly — the store is server-backed and addItem
+    // would consume the mocked logout response.
+    cart.items = [
+      { id: 1, key: "1:", serverId: 1, name: "Widget", price: 100, quantity: 1, available: true, stock: 10 },
+    ];
     cart.setBuyNow({ id: 2, name: "Gadget", price: 50 });
 
     await auth.logout();
 
     expect(cart.items).toHaveLength(0);
     expect(cart.buyNowItem).toBeNull();
+    expect(mockedApi.delete).not.toHaveBeenCalled();
   });
 });

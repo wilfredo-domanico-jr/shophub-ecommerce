@@ -1,5 +1,13 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+import {
+  addCartItem,
+  clearCart as clearCartRemote,
+  getCart,
+  removeCartItem,
+  updateCartItem,
+  type ServerCartItem,
+} from '../services/cart';
 
 export interface CartProduct {
   id: number;
@@ -14,6 +22,11 @@ export interface CartProduct {
 export interface CartLine extends CartProduct {
   key: string;
   quantity: number;
+  /** cart_items row id on the server. */
+  serverId: number;
+  /** false when the product is deleted, deactivated, or out of stock. */
+  available: boolean;
+  stock: number;
 }
 
 // Two variants of one product are separate cart lines, so lines are keyed
@@ -22,54 +35,125 @@ export function lineKey(product: Pick<CartProduct, 'id' | 'variant_id'>): string
   return `${product.id}:${product.variant_id ?? ''}`;
 }
 
+function toLine(item: ServerCartItem): CartLine {
+  return {
+    // A deleted product leaves a dead line: id 0, synthetic key, price 0.
+    // It can never reach checkout because it's excluded as unavailable.
+    id: item.product_id ?? 0,
+    key: item.product_id !== null
+      ? lineKey({ id: item.product_id, variant_id: item.variant_id })
+      : `gone:${item.id}`,
+    serverId: item.id,
+    name: item.name,
+    price: item.price ?? 0,
+    image: item.image,
+    slug: item.slug,
+    variant_id: item.variant_id,
+    variant_label: item.variant_label,
+    quantity: item.quantity,
+    stock: item.stock,
+    available: item.is_available,
+  };
+}
+
+// The cart lives server-side (adding requires an account), so every mutation
+// goes through the API and the response is the new local state. Only buy-now
+// stays client-side — it's a transient express checkout, not cart contents.
 export const useCartStore = defineStore('cart', () => {
   const items = ref<CartLine[]>([]);
 
   // "Buy now" checks out a single item without touching the cart.
   const buyNowItem = ref<CartLine | null>(null);
 
+  function setServerItems(serverItems: ServerCartItem[]) {
+    items.value = (serverItems ?? []).map(toLine);
+  }
+
+  /** Pulls the account's cart; called after login and on session restore. */
+  async function load() {
+    try {
+      setServerItems(await getCart());
+    } catch {
+      // Signed out or transient failure — keep whatever is shown.
+    }
+  }
+
   function setBuyNow(product: CartProduct, quantity = 1) {
-    buyNowItem.value = { ...product, key: lineKey(product), quantity };
+    buyNowItem.value = {
+      ...product,
+      key: lineKey(product),
+      quantity,
+      serverId: 0,
+      available: true,
+      stock: quantity,
+    };
   }
 
   function clearBuyNow() {
     buyNowItem.value = null;
   }
 
+  function availableItems() {
+    return items.value.filter((item) => item.available);
+  }
+
   function checkoutItems() {
-    return buyNowItem.value ? [buyNowItem.value] : items.value;
+    return buyNowItem.value ? [buyNowItem.value] : availableItems();
   }
 
   function checkoutTotal() {
     return checkoutItems().reduce((sum, item) => sum + item.price * (item.quantity || 1), 0);
   }
 
-  function addItem(product: CartProduct, quantity = 1) {
-    const key = lineKey(product);
-    const existing = items.value.find(i => i.key === key);
-    if (existing) {
-      existing.quantity = (existing.quantity || 1) + quantity;
-    } else {
-      items.value.push({ ...product, key, quantity });
-    }
+  async function addItem(product: CartProduct, quantity = 1) {
+    setServerItems(
+      await addCartItem({
+        product_id: product.id,
+        variant_id: product.variant_id ?? undefined,
+        quantity,
+      })
+    );
   }
 
+  // Local-only reset for logout — the server cart belongs to the account
+  // and must survive for the next sign-in.
   function clear() {
     items.value = [];
     buyNowItem.value = null;
   }
 
-  function clearItems() {
+  async function clearItems() {
     items.value = [];
+    try {
+      await clearCartRemote();
+    } catch {
+      // Best effort — a leftover server cart resyncs on the next load().
+    }
   }
 
-  function removeItem(key: string) {
+  async function removeItem(key: string) {
+    const line = items.value.find(i => i.key === key);
+    if (!line) return;
+
     items.value = items.value.filter(i => i.key !== key);
+    try {
+      setServerItems(await removeCartItem(line.serverId));
+    } catch {
+      await load();
+    }
   }
 
-  function updateQuantity(key: string, quantity: number) {
-    const item = items.value.find(i => i.key === key);
-    if (item) item.quantity = Math.max(1, quantity);
+  async function updateQuantity(key: string, quantity: number) {
+    const line = items.value.find(i => i.key === key);
+    if (!line) return;
+
+    const clamped = Math.max(1, quantity);
+    line.quantity = clamped;
+    try {
+      setServerItems(await updateCartItem(line.serverId, clamped));
+    } catch {
+      await load();
+    }
   }
 
   function count() {
@@ -77,14 +161,16 @@ export const useCartStore = defineStore('cart', () => {
   }
 
   function total() {
-    return items.value.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0);
+    return availableItems().reduce((sum, item) => sum + item.price * (item.quantity || 1), 0);
   }
 
   return {
     items,
     buyNowItem,
+    load,
     setBuyNow,
     clearBuyNow,
+    availableItems,
     checkoutItems,
     checkoutTotal,
     addItem,

@@ -1,4 +1,5 @@
 import { useRoute, useRouter } from "vue-router";
+import { firstValidationError } from "../services/account";
 import { useAuthStore } from "../stores/auth";
 import { useCartStore } from "../stores/cart";
 import { useToastStore } from "../stores/toast";
@@ -40,9 +41,14 @@ export function useAddToCart() {
       return false;
     }
 
-    cartStore.addItem(product, quantity);
-    toast.success(`${product.name} added to cart.`);
-    return true;
+    try {
+      await cartStore.addItem(product, quantity);
+      toast.success(`${product.name} added to cart.`);
+      return true;
+    } catch (e) {
+      toast.error(firstValidationError(e, "Could not add that item to your cart."));
+      return false;
+    }
   }
 
   return { addToCart, ensureSignedIn };

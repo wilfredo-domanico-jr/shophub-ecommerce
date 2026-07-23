@@ -336,10 +336,12 @@ async function submit() {
     });
 
     // Only clear what was purchased: a buy-now order leaves the cart intact.
+    // Awaited so the server cart is empty before any Stripe redirect leaves
+    // the page.
     if (wasBuyNow) {
       cartStore.clearBuyNow();
     } else {
-      cartStore.clearItems();
+      await cartStore.clearItems();
     }
 
     if (paymentMethod.value === "Card") {

@@ -24,6 +24,7 @@ export const useAuthStore = defineStore("auth", () => {
     localStorage.setItem("token", data.token);
     user.value = data.user;
     initialized.value = true;
+    useCartStore().load();
   }
 
   async function register(payload: {
@@ -36,6 +37,7 @@ export const useAuthStore = defineStore("auth", () => {
     localStorage.setItem("token", data.token);
     user.value = data.user;
     initialized.value = true;
+    useCartStore().load();
   }
 
   async function fetchUser() {
@@ -48,6 +50,8 @@ export const useAuthStore = defineStore("auth", () => {
     try {
       const { data } = await api.get<User>("/me");
       user.value = data;
+      // Session restored (page load / social callback) — rehydrate the cart.
+      useCartStore().load();
     } catch {
       localStorage.removeItem("token");
       user.value = null;
