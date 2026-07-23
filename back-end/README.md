@@ -74,6 +74,15 @@ GET  /api/auth/{provider}/callback # OAuth return: find-or-create user, redirect
 ```
 POST  /api/logout
 GET   /api/me
+
+GET    /api/cart                   # the account's cart; lines carry live product data (price/stock/image)
+                                   # plus is_available — false when the product is deleted, deactivated,
+                                   # or out of stock (deleted products fall back to a name snapshot)
+POST   /api/cart/items             # add/upsert a line (same product+variant increments quantity);
+                                   # variant_id required for products with options
+PATCH  /api/cart/items/{id}        # set quantity (min 1)
+DELETE /api/cart/items/{id}        # remove a line
+DELETE /api/cart                   # clear the cart (used after checkout)
 POST  /api/orders                  # checkout (stock-locked, server-side totals); items take an optional
                                    # variant_id — required for products with options; optional voucher_code
                                    # applies a discount (re-validated under lock). payment_method is
