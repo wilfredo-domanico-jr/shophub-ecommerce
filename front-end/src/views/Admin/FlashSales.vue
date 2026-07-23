@@ -77,7 +77,12 @@
             </td>
           </tr>
 
-          <tr v-if="sales.length === 0">
+          <tr v-if="loading">
+            <td colspan="5" class="text-center py-10 text-gray-400">
+              Loading flash sales...
+            </td>
+          </tr>
+          <tr v-else-if="sales.length === 0">
             <td colspan="5" class="text-center py-10 text-gray-400">
               No flash sales scheduled — the homepage section stays hidden
             </td>
@@ -168,13 +173,17 @@ const toast = useToastStore();
 const sales = ref<FlashSale[]>([]);
 const error = ref("");
 const formError = ref("");
+const loading = ref(false);
 
 async function loadSales() {
   error.value = "";
+  loading.value = true;
   try {
     sales.value = await getAdminFlashSales();
   } catch {
     error.value = "Failed to load flash sales.";
+  } finally {
+    loading.value = false;
   }
 }
 

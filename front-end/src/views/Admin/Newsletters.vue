@@ -120,7 +120,12 @@
             </td>
           </tr>
 
-          <tr v-if="newsletters.length === 0">
+          <tr v-if="loading">
+            <td colspan="4" class="text-center py-10 text-gray-400">
+              Loading newsletters...
+            </td>
+          </tr>
+          <tr v-else-if="newsletters.length === 0">
             <td colspan="4" class="text-center py-10 text-gray-400">
               No newsletters yet — write your first one
             </td>
@@ -191,7 +196,12 @@
               </td>
             </tr>
 
-            <tr v-if="subscribers.length === 0">
+            <tr v-if="subscribersLoading">
+              <td colspan="4" class="text-center py-10 text-gray-400">
+                Loading subscribers...
+              </td>
+            </tr>
+            <tr v-else-if="subscribers.length === 0">
               <td colspan="4" class="text-center py-10 text-gray-400">
                 No subscribers found
               </td>
@@ -292,15 +302,19 @@ const newsletters = ref<Newsletter[]>([]);
 const subscribersCount = ref(0);
 const error = ref("");
 const formError = ref("");
+const loading = ref(false);
 
 async function loadNewsletters() {
   error.value = "";
+  loading.value = true;
   try {
     const data = await getAdminNewsletters();
     newsletters.value = data.newsletters;
     subscribersCount.value = data.subscribers_count;
   } catch {
     error.value = "Failed to load newsletters.";
+  } finally {
+    loading.value = false;
   }
 }
 
@@ -318,7 +332,10 @@ const subscriberMeta = ref({
   to: 0 as number | null,
 });
 
+const subscribersLoading = ref(false);
+
 async function loadSubscribers() {
+  subscribersLoading.value = true;
   try {
     const res = await getAdminSubscribers({
       search: subscriberSearch.value || undefined,
@@ -334,6 +351,8 @@ async function loadSubscribers() {
     };
   } catch {
     error.value = "Failed to load subscribers.";
+  } finally {
+    subscribersLoading.value = false;
   }
 }
 

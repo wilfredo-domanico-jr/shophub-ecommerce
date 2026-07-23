@@ -146,7 +146,8 @@
                 Admin Dashboard
               </router-link>
               <button
-                class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
+                :disabled="loggingOut"
                 @click="handleLogout"
               >
                 Logout
@@ -184,6 +185,7 @@ const emit = defineEmits<{
 
 const showAccountMenu = ref(false);
 const accountMenuRef = ref<HTMLElement | null>(null);
+const loggingOut = ref(false);
 
 function handleClickOutside(event: MouseEvent) {
   if (accountMenuRef.value && !accountMenuRef.value.contains(event.target as Node)) {
@@ -195,9 +197,16 @@ onMounted(() => document.addEventListener("click", handleClickOutside));
 onBeforeUnmount(() => document.removeEventListener("click", handleClickOutside));
 
 async function handleLogout() {
+  if (loggingOut.value) return;
+
   showAccountMenu.value = false;
-  await auth.logout();
-  useToastStore().info("You have been signed out.");
-  router.push("/");
+  loggingOut.value = true;
+  try {
+    await auth.logout();
+    useToastStore().info("You have been signed out.");
+    router.push("/");
+  } finally {
+    loggingOut.value = false;
+  }
 }
 </script>

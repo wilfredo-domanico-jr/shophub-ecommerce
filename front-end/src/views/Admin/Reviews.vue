@@ -91,7 +91,7 @@
                 <button
                   :title="review.is_hidden ? 'Unhide' : 'Hide'"
                   class="w-8 h-8 flex items-center justify-center rounded-lg text-blue-500 bg-blue-50 hover:bg-blue-500 hover:text-white transition disabled:opacity-50"
-                  :disabled="togglingId === review.id"
+                  :disabled="togglingId === review.id || deletingId === review.id"
                   @click="toggleVisibility(review)"
                 >
                   <svg v-if="review.is_hidden" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -105,7 +105,8 @@
 
                 <button
                   title="Delete"
-                  class="w-8 h-8 flex items-center justify-center rounded-lg text-red-500 bg-red-50 hover:bg-red-500 hover:text-white transition"
+                  class="w-8 h-8 flex items-center justify-center rounded-lg text-red-500 bg-red-50 hover:bg-red-500 hover:text-white transition disabled:opacity-50"
+                  :disabled="togglingId === review.id || deletingId === review.id"
                   @click="remove(review.id)"
                 >
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -116,7 +117,10 @@
             </td>
           </tr>
 
-          <tr v-if="reviews.length === 0">
+          <tr v-if="loading">
+            <td colspan="8" class="text-center py-10 text-gray-400">Loading reviews...</td>
+          </tr>
+          <tr v-else-if="reviews.length === 0">
             <td colspan="8" class="text-center py-10 text-gray-400">No reviews found</td>
           </tr>
         </tbody>
@@ -156,6 +160,8 @@ const ratingFilter = ref<number | "">("");
 const page = ref(1);
 const error = ref("");
 const togglingId = ref<number | null>(null);
+const deletingId = ref<number | null>(null);
+const loading = ref(false);
 
 const meta = ref({
   current_page: 1,
@@ -167,6 +173,7 @@ const meta = ref({
 
 async function loadReviews() {
   error.value = "";
+  loading.value = true;
   try {
     const res = await getAdminReviews({
       page: page.value,
@@ -183,6 +190,8 @@ async function loadReviews() {
     };
   } catch {
     error.value = "Failed to load reviews.";
+  } finally {
+    loading.value = false;
   }
 }
 
@@ -225,13 +234,18 @@ async function toggleVisibility(review: AdminReview) {
 }
 
 async function remove(id: number) {
+  if (deletingId.value === id) return;
   if (!confirm("Delete this review? The product rating will be recalculated.")) return;
+
+  deletingId.value = id;
   try {
     await deleteAdminReview(id);
     await loadReviews();
     toast.success("Review deleted.");
   } catch {
     toast.error("Failed to delete the review.");
+  } finally {
+    deletingId.value = null;
   }
 }
 </script>

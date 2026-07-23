@@ -16,7 +16,8 @@
       </div>
       <button
         @click.prevent.stop="addToCart()"
-        class="absolute top-2 right-2 bg-white p-2 rounded-full shadow-lg hover:bg-orange-500 hover:text-white transition opacity-100 md:opacity-0 md:group-hover:opacity-100"
+        :disabled="adding"
+        class="absolute top-2 right-2 bg-white p-2 rounded-full shadow-lg hover:bg-orange-500 hover:text-white transition opacity-100 md:opacity-0 md:group-hover:opacity-100 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <svg
           class="w-5 h-5"
@@ -57,11 +58,13 @@
 </template>
 
 <script lang="ts" setup>
+import { ref } from "vue";
 import StarRating from "../common/StarRating.vue";
 
 import { useAddToCart } from "../../composables/useAddToCart";
 
 const { addToCart: addItem } = useAddToCart();
+const adding = ref(false);
 
 interface TrendingCard {
   id: number;
@@ -80,7 +83,14 @@ const props = defineProps<{
   trending: TrendingCard;
 }>();
 
-function addToCart() {
-  addItem(props.trending);
+async function addToCart() {
+  if (adding.value) return;
+
+  adding.value = true;
+  try {
+    await addItem(props.trending);
+  } finally {
+    adding.value = false;
+  }
 }
 </script>

@@ -107,7 +107,12 @@
             </td>
           </tr>
 
-          <tr v-if="users.length === 0">
+          <tr v-if="loading">
+            <td colspan="4" class="text-center py-10 text-gray-400">
+              Loading users...
+            </td>
+          </tr>
+          <tr v-else-if="users.length === 0">
             <td colspan="4" class="text-center py-10 text-gray-400">
               No users found
             </td>
@@ -214,11 +219,13 @@ const page = ref(1);
 const users = ref<AdminUser[]>([]);
 const error = ref("");
 const formError = ref("");
+const loading = ref(false);
 
 const meta = ref({ current_page: 1, last_page: 1, total: 0, from: 0 as number | null, to: 0 as number | null });
 
 async function loadUsers() {
   error.value = "";
+  loading.value = true;
   try {
     const res = await getAdminUsers({
       search: search.value || undefined,
@@ -235,6 +242,8 @@ async function loadUsers() {
     };
   } catch {
     error.value = "Failed to load users.";
+  } finally {
+    loading.value = false;
   }
 }
 

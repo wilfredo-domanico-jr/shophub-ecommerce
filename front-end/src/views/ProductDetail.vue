@@ -119,15 +119,15 @@
 
               <button
                 class="flex-1 min-w-[130px] border-2 border-orange-500 text-orange-500 py-3 rounded-lg font-semibold hover:bg-orange-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                :disabled="!canPurchase"
+                :disabled="!canPurchase || addingToCart"
                 @click="addToCart"
               >
-                {{ added ? "Added! ✓" : "Add to Cart" }}
+                {{ added ? "Added! ✓" : addingToCart ? "Adding..." : "Add to Cart" }}
               </button>
 
               <button
                 class="flex-1 min-w-[130px] gradient-primary text-white py-3 rounded-lg font-semibold hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                :disabled="!canPurchase"
+                :disabled="!canPurchase || buyingNow"
                 @click="buyNow"
               >
                 Buy Now
@@ -164,6 +164,8 @@ const product = ref<Product | null>(null);
 const loading = ref(false);
 const quantity = ref(1);
 const added = ref(false);
+const addingToCart = ref(false);
+const buyingNow = ref(false);
 
 // One value per option name, e.g. { Color: "Red", Size: "M" }
 const selected = ref<Record<string, string>>({});
@@ -274,24 +276,35 @@ function purchasePayload() {
 }
 
 async function addToCart() {
-  if (!product.value || !canPurchase.value) return;
+  if (!product.value || !canPurchase.value || addingToCart.value) return;
 
-  const ok = await addItem(purchasePayload(), quantity.value);
-  if (!ok) return;
+  addingToCart.value = true;
+  try {
+    const ok = await addItem(purchasePayload(), quantity.value);
+    if (!ok) return;
 
-  added.value = true;
-  setTimeout(() => (added.value = false), 1500);
+    added.value = true;
+    setTimeout(() => (added.value = false), 1500);
+  } finally {
+    addingToCart.value = false;
+  }
 }
 
 async function buyNow() {
-  if (!product.value || !canPurchase.value) return;
-  if (!(await ensureSignedIn("Sign in to buy this item."))) return;
+  if (!product.value || !canPurchase.value || buyingNow.value) return;
 
-  // Buy-now checks out only this item, without touching the cart.
-  cartStore.setBuyNow(purchasePayload(), quantity.value);
+  buyingNow.value = true;
+  try {
+    if (!(await ensureSignedIn("Sign in to buy this item."))) return;
 
-  // ?checkout=1 is picked up by DefaultLayout, which opens the checkout modal.
-  router.push({ path: route.path, query: { checkout: "1" } });
+    // Buy-now checks out only this item, without touching the cart.
+    cartStore.setBuyNow(purchasePayload(), quantity.value);
+
+    // ?checkout=1 is picked up by DefaultLayout, which opens the checkout modal.
+    router.push({ path: route.path, query: { checkout: "1" } });
+  } finally {
+    buyingNow.value = false;
+  }
 }
 
 watch(() => route.params.slug, loadProduct);

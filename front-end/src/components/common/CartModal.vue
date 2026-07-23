@@ -81,7 +81,8 @@
                 <div class="flex items-center gap-2 mt-2">
                   <button
                     @click="decrease(item)"
-                    class="w-8 h-8 rounded border border-gray-300 flex items-center justify-center hover:bg-gray-100"
+                    :disabled="cartStore.isPending(item.key)"
+                    class="w-8 h-8 rounded border border-gray-300 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                     aria-label="Decrease quantity"
                   >
                     -
@@ -89,7 +90,8 @@
                   <span class="w-8 text-center">{{ item.quantity }}</span>
                   <button
                     @click="increase(item)"
-                    class="w-8 h-8 rounded border border-gray-300 flex items-center justify-center hover:bg-gray-100"
+                    :disabled="cartStore.isPending(item.key)"
+                    class="w-8 h-8 rounded border border-gray-300 flex items-center justify-center hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                     aria-label="Increase quantity"
                   >
                     +
@@ -99,7 +101,8 @@
             </div>
             <button
               @click="remove(item.key)"
-              class="text-gray-400 hover:text-red-500 w-8 h-8 flex items-center justify-center shrink-0"
+              :disabled="cartStore.isPending(item.key)"
+              class="text-gray-400 hover:text-red-500 w-8 h-8 flex items-center justify-center shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
               aria-label="Remove item"
             >
               <svg

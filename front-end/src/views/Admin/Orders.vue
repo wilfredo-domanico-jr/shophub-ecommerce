@@ -87,7 +87,12 @@
             </td>
           </tr>
 
-          <tr v-if="orders.length === 0">
+          <tr v-if="loading">
+            <td colspan="6" class="text-center py-10 text-gray-400">
+              Loading orders...
+            </td>
+          </tr>
+          <tr v-else-if="orders.length === 0">
             <td colspan="6" class="text-center py-10 text-gray-400">
               No orders found
             </td>
@@ -243,6 +248,7 @@ const search = ref("");
 const page = ref(1);
 const orders = ref<AdminOrder[]>([]);
 const error = ref("");
+const loading = ref(false);
 
 const showViewModal = ref(false);
 const viewLoading = ref(false);
@@ -272,6 +278,7 @@ const meta = ref({ current_page: 1, last_page: 1, total: 0, from: 0 as number | 
 
 async function loadOrders() {
   error.value = "";
+  loading.value = true;
   try {
     const res = await getAdminOrders({ search: search.value || undefined, page: page.value });
     orders.value = res.data;
@@ -284,6 +291,8 @@ async function loadOrders() {
     };
   } catch {
     error.value = "Failed to load orders.";
+  } finally {
+    loading.value = false;
   }
 }
 

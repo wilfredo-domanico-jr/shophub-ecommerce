@@ -84,7 +84,12 @@
             </td>
           </tr>
 
-          <tr v-if="openings.length === 0">
+          <tr v-if="loading">
+            <td colspan="5" class="text-center py-10 text-gray-400">
+              Loading job openings...
+            </td>
+          </tr>
+          <tr v-else-if="openings.length === 0">
             <td colspan="5" class="text-center py-10 text-gray-400">
               No job openings yet
             </td>
@@ -198,13 +203,17 @@ const toast = useToastStore();
 const openings = ref<JobOpening[]>([]);
 const error = ref("");
 const formError = ref("");
+const loading = ref(false);
 
 async function loadOpenings() {
   error.value = "";
+  loading.value = true;
   try {
     openings.value = await getAdminJobOpenings();
   } catch {
     error.value = "Failed to load job openings.";
+  } finally {
+    loading.value = false;
   }
 }
 

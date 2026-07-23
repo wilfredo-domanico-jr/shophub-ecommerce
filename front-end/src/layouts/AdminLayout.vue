@@ -92,7 +92,8 @@
         </div>
 
         <button
-          class="w-full flex items-center justify-center gap-2 px-4 py-2 text-red-500 hover:bg-red-50 rounded-lg transition font-medium text-sm"
+          class="w-full flex items-center justify-center gap-2 px-4 py-2 text-red-500 hover:bg-red-50 rounded-lg transition font-medium text-sm disabled:opacity-50"
+          :disabled="loggingOut"
           @click="logout"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -237,9 +238,18 @@ function isActive(path: string) {
   return route.path === path;
 }
 
+const loggingOut = ref(false);
+
 async function logout() {
-  await auth.logout();
-  useToastStore().info("You have been signed out.");
-  router.push("/admin/login");
+  if (loggingOut.value) return;
+
+  loggingOut.value = true;
+  try {
+    await auth.logout();
+    useToastStore().info("You have been signed out.");
+    router.push("/admin/login");
+  } finally {
+    loggingOut.value = false;
+  }
 }
 </script>

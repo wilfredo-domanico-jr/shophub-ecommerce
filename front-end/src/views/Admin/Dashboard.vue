@@ -73,7 +73,12 @@
             <td class="font-medium">₱{{ Number(order.total).toLocaleString() }}</td>
           </tr>
 
-          <tr v-if="stats.recent_orders.length === 0">
+          <tr v-if="loading">
+            <td colspan="4" class="text-center py-6 text-gray-400">
+              Loading recent orders...
+            </td>
+          </tr>
+          <tr v-else-if="stats.recent_orders.length === 0">
             <td colspan="4" class="text-center py-6 text-gray-400">
               No orders yet
             </td>
@@ -121,40 +126,45 @@ const stats = ref<DashboardStats>({
 });
 
 const loadError = ref(false);
+const loading = ref(true);
 
 onMounted(async () => {
   try {
     stats.value = await getDashboardStats();
   } catch {
     loadError.value = true; // otherwise the dashboard shows all zeros silently
+  } finally {
+    loading.value = false;
   }
 });
 
+// "…" while loading so a brand-new store's real zeros and "still fetching"
+// don't look identical.
 const statCards = computed(() => [
   {
     label: "Total Sales",
-    value: `₱${stats.value.total_sales.toLocaleString()}`,
+    value: loading.value ? "…" : `₱${stats.value.total_sales.toLocaleString()}`,
     icon: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
     iconBg: "gradient-primary",
     textColor: "text-orange-500",
   },
   {
     label: "Orders",
-    value: stats.value.orders_count,
+    value: loading.value ? "…" : stats.value.orders_count,
     icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2",
     iconBg: "gradient-secondary",
     textColor: "text-gray-800",
   },
   {
     label: "Products",
-    value: stats.value.products_count,
+    value: loading.value ? "…" : stats.value.products_count,
     icon: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4",
     iconBg: "gradient-accent",
     textColor: "text-gray-800",
   },
   {
     label: "Customers",
-    value: stats.value.customers_count,
+    value: loading.value ? "…" : stats.value.customers_count,
     icon: "M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 10-4-4 4 4 0 004 4zm6 0a4 4 0 10-4-4",
     iconBg: "gradient-success",
     textColor: "text-gray-800",

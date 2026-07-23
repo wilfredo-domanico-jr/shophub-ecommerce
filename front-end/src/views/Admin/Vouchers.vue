@@ -96,7 +96,12 @@
             </td>
           </tr>
 
-          <tr v-if="vouchers.length === 0">
+          <tr v-if="loading">
+            <td colspan="7" class="text-center py-10 text-gray-400">
+              Loading vouchers...
+            </td>
+          </tr>
+          <tr v-else-if="vouchers.length === 0">
             <td colspan="7" class="text-center py-10 text-gray-400">
               No vouchers yet
             </td>
@@ -270,13 +275,17 @@ const toast = useToastStore();
 const vouchers = ref<Voucher[]>([]);
 const error = ref("");
 const formError = ref("");
+const loading = ref(false);
 
 async function loadVouchers() {
   error.value = "";
+  loading.value = true;
   try {
     vouchers.value = await getAdminVouchers();
   } catch {
     error.value = "Failed to load vouchers.";
+  } finally {
+    loading.value = false;
   }
 }
 

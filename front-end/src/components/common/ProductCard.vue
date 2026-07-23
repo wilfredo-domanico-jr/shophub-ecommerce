@@ -27,7 +27,8 @@
       <button
         v-else
         @click.prevent.stop="addToCart"
-        class="absolute top-2 right-2 bg-white p-2 rounded-full shadow-lg hover:bg-orange-500 hover:text-white transition opacity-100 md:opacity-0 md:group-hover:opacity-100"
+        :disabled="adding"
+        class="absolute top-2 right-2 bg-white p-2 rounded-full shadow-lg hover:bg-orange-500 hover:text-white transition opacity-100 md:opacity-0 md:group-hover:opacity-100 disabled:opacity-50 disabled:cursor-not-allowed"
         aria-label="Add to cart"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -59,7 +60,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
 import StarRating from "./StarRating.vue";
 import { useAddToCart } from "../../composables/useAddToCart";
@@ -69,24 +70,32 @@ const props = defineProps<{ product: Product }>();
 const router = useRouter();
 const { addToCart: addItem } = useAddToCart();
 
+const adding = ref(false);
+
 const discount = computed(() => {
   const price = Number(props.product.price);
   const original = Number(props.product.original_price ?? props.product.price);
   return original > 0 ? Math.round(((original - price) / original) * 100) : 0;
 });
 
-function addToCart() {
+async function addToCart() {
   // Variant products need options picked first — quick-add opens the detail page.
   if (props.product.variants_count) {
     router.push(`/products/${props.product.slug}`);
     return;
   }
+  if (adding.value) return;
 
-  addItem({
-    id: props.product.id,
-    name: props.product.name,
-    price: Number(props.product.price),
-    image: props.product.image ?? "",
-  });
+  adding.value = true;
+  try {
+    await addItem({
+      id: props.product.id,
+      name: props.product.name,
+      price: Number(props.product.price),
+      image: props.product.image ?? "",
+    });
+  } finally {
+    adding.value = false;
+  }
 }
 </script>

@@ -65,6 +65,15 @@ export const useCartStore = defineStore('cart', () => {
   // "Buy now" checks out a single item without touching the cart.
   const buyNowItem = ref<CartLine | null>(null);
 
+  // Line keys with an in-flight mutation — lets the UI disable a line's
+  // controls while its request is outstanding, so fast clicking can't fire
+  // overlapping PATCH/DELETE calls whose responses could land out of order.
+  const pendingKeys = ref<Set<string>>(new Set());
+
+  function isPending(key: string) {
+    return pendingKeys.value.has(key);
+  }
+
   function setServerItems(serverItems: ServerCartItem[]) {
     items.value = (serverItems ?? []).map(toLine);
   }
@@ -132,27 +141,35 @@ export const useCartStore = defineStore('cart', () => {
   }
 
   async function removeItem(key: string) {
+    if (pendingKeys.value.has(key)) return;
     const line = items.value.find(i => i.key === key);
     if (!line) return;
 
+    pendingKeys.value.add(key);
     items.value = items.value.filter(i => i.key !== key);
     try {
       setServerItems(await removeCartItem(line.serverId));
     } catch {
       await load();
+    } finally {
+      pendingKeys.value.delete(key);
     }
   }
 
   async function updateQuantity(key: string, quantity: number) {
+    if (pendingKeys.value.has(key)) return;
     const line = items.value.find(i => i.key === key);
     if (!line) return;
 
     const clamped = Math.max(1, quantity);
+    pendingKeys.value.add(key);
     line.quantity = clamped;
     try {
       setServerItems(await updateCartItem(line.serverId, clamped));
     } catch {
       await load();
+    } finally {
+      pendingKeys.value.delete(key);
     }
   }
 
@@ -168,6 +185,7 @@ export const useCartStore = defineStore('cart', () => {
     items,
     buyNowItem,
     load,
+    isPending,
     setBuyNow,
     clearBuyNow,
     availableItems,

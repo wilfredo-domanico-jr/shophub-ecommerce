@@ -105,7 +105,12 @@
             </td>
           </tr>
 
-          <tr v-if="categories.length === 0">
+          <tr v-if="loading">
+            <td colspan="4" class="text-center py-10 text-gray-400">
+              Loading categories...
+            </td>
+          </tr>
+          <tr v-else-if="categories.length === 0">
             <td colspan="4" class="text-center py-10 text-gray-400">
               No categories found
             </td>
@@ -275,11 +280,13 @@ const page = ref(1);
 const categories = ref<Category[]>([]);
 const error = ref("");
 const formError = ref("");
+const loading = ref(false);
 
 const meta = ref({ current_page: 1, last_page: 1, total: 0, from: 0 as number | null, to: 0 as number | null });
 
 async function loadCategories() {
   error.value = "";
+  loading.value = true;
   try {
     const res = await getAdminCategories({ search: search.value || undefined, page: page.value });
     categories.value = res.data;
@@ -292,6 +299,8 @@ async function loadCategories() {
     };
   } catch {
     error.value = "Failed to load categories.";
+  } finally {
+    loading.value = false;
   }
 }
 
