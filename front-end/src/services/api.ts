@@ -1,10 +1,10 @@
 import axios, { type AxiosInstance, type InternalAxiosRequestConfig } from "axios";
 
+// No default Content-Type: axios picks application/json for object bodies
+// and multipart/form-data for FormData; forcing JSON here would make axios
+// serialize FormData uploads to JSON, mangling attached files.
 const api: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
 });
 
 api.interceptors.request.use(
