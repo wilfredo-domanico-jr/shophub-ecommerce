@@ -78,7 +78,7 @@ Both **customers** and **admins** have accounts, authenticated with Sanctum bear
 - **Product variations** — products can define options (Color, Size, …); the detail page shows option pickers with sold-out combinations disabled, and price/photo/stock update per selected variant. Different variants are separate cart lines, and orders record which variant was bought (e.g. "Red / M")
 - Live **search autosuggest** in the header
 - **Customer accounts** — registration, login (email/password or **Google / Facebook social login**), password reset via email, profile with saved contact & shipping details, and a My Orders history
-- Cart → **checkout** (Cash on Delivery, sign-in required, form pre-filled from the profile) → order confirmation with order number
+- Cart → **checkout** (Cash on Delivery or Card via Stripe hosted checkout, sign-in required, form pre-filled from the profile) → order confirmation with order number. Card orders confirm via Stripe webhook (setup: [`back-end/README.md#stripe-payments-card-checkout`](back-end/README.md#stripe-payments-card-checkout)), with a Pay Now retry in My Orders if the payment is abandoned
 - **Product reviews & ratings** — customers with a delivered order can rate products 1–5 stars with an optional comment and up to 4 photos; product ratings are computed live from the reviews (no fake numbers), the product page shows a summary with distribution bars, and every review carries a Verified Purchase badge. Reviews are editable/deletable by their author, and My Orders links straight to the review form for delivered items
 - **Vouchers** — apply a discount code at checkout with a live preview of the savings (percentage or fixed-amount, validated server-side); the discount shows on the confirmation, order history, tracking, and email. Public codes are discoverable on a `/vouchers` page (with copy buttons) and as tap-to-apply suggestions right in checkout; private codes stay unlisted for newsletter/social campaigns
 - **Newsletter** — footer signup with a queued welcome email; every email carries a one-click **unsubscribe** link (token-based, no login needed)
@@ -210,7 +210,7 @@ Two GitHub Actions workflows ([`.github/workflows`](.github/workflows)) run on e
 
 ## Roadmap
 
-- Real payment gateway integration (currently Cash on Delivery only)
+- Live payment gateway for real Philippine transactions (Stripe card payments ship in test mode; Stripe doesn't support PH-based merchants for live payments, so a real deployment would swap in PayMongo behind the same checkout architecture)
 
 ---
 

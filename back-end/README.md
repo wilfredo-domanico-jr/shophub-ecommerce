@@ -289,6 +289,45 @@ Full click-by-click walkthrough, linking behavior, and known limitations: [`docs
 
 ---
 
+## Stripe Payments (Card Checkout)
+
+Card payments go through Stripe's **hosted Checkout** (redirect flow) alongside Cash on Delivery — see `StripeCheckoutService`, `PaymentController`, and `StripeWebhookController`. It's optional: with no key configured, `/api/config` reports `card_payments_enabled: false` and the SPA only shows Cash on Delivery.
+
+```
+STRIPE_SECRET=
+STRIPE_WEBHOOK_SECRET=
+```
+
+**Get a test key.** Sign up at [dashboard.stripe.com](https://dashboard.stripe.com) and make sure **Test mode** is on (toggle, top right). Developers → API keys → reveal the **Secret key** (`sk_test_...`) → put it in `STRIPE_SECRET`. No publishable key is needed — the app never loads Stripe.js, it just redirects to a Stripe-hosted page.
+
+**Receiving webhooks locally.** The webhook is what actually marks an order paid — the redirect back to the SPA is just a UI state, never trusted on its own. Stripe's servers can't reach `127.0.0.1`, so pick one:
+
+- **Stripe CLI** (simplest): `stripe listen --forward-to http://127.0.0.1:8000/api/webhooks/stripe`. Keep it running while you test; copy the `whsec_...` it prints into `STRIPE_WEBHOOK_SECRET` and restart `php artisan serve`. The secret changes on every run.
+- **ngrok** (closer to a real deployment, works if the CLI isn't installed): `ngrok http --url=<your-reserved-domain> 8000` (or plain `ngrok http 8000` for a random URL each time). Then in the Dashboard: Developers → Webhooks → Add endpoint → `https://<your-domain>/api/webhooks/stripe`, subscribe to `checkout.session.completed`, reveal that endpoint's signing secret, and put it in `STRIPE_WEBHOOK_SECRET`.
+
+  > ⚠️ The endpoint URL **must** be `https://` and point at the exact path with no redirects in front of it. Registering it as `http://` (ngrok's edge answers plain HTTP with an empty redirect to `https://`) makes Stripe receive a `307` and give up — Stripe does not follow redirects, so the request never reaches Laravel and the order silently stays unpaid. Sanity-check the tunnel before wiring up Stripe:
+  > ```bash
+  > curl -i https://<your-domain>/api/webhooks/stripe -X POST
+  > ```
+  > A `400 {"message":"Invalid signature."}` response is what you want — it proves the request reached the webhook controller and only the (expected, no real signature sent) verification failed.
+
+  Note the CLI's signing secret and a Dashboard endpoint's signing secret are different values — use whichever one matches the delivery method you actually have running.
+
+**Test cards** (any future expiry date, any 3-digit CVC):
+
+| Scenario | Number |
+| --- | --- |
+| Succeeds | `4242 4242 4242 4242` |
+| Declined — insufficient funds | `4000 0000 0000 9995` |
+| Declined — generic | `4000 0000 0000 0002` |
+| Requires 3D Secure, then succeeds | `4000 0025 0000 3155` |
+
+**Verifying the loop:** checkout with "Card (Stripe)" → pay with a test card → redirected to `/checkout/return`, which polls until the order flips to Paid. Confirm the tunnel/CLI window logged a `200` for `checkout.session.completed`, and check `storage/logs/laravel.log` for the queued confirmation email (`MAIL_MAILER=log` by default).
+
+> Stripe doesn't support merchants based in the Philippines for live payments — a real PH deployment would swap in PayMongo behind the same architecture (order created first, webhook is the sole writer of `payment_status`). Test mode has no such restriction.
+
+---
+
 ## Tests
 
 ```bash
