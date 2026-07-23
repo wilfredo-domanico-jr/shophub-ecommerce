@@ -220,6 +220,99 @@ class ProductReviewsTest extends TestCase
         $this->assertSame('3.0', (string) $product->rating);
     }
 
+    public function test_owner_can_add_and_remove_photos_when_updating(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create();
+        $keptPath = UploadedFile::fake()->image('kept.jpg')->store('review-photos', 'public');
+        $removedPath = UploadedFile::fake()->image('removed.jpg')->store('review-photos', 'public');
+        $review = Review::factory()->create([
+            'user_id' => $user->id,
+            'photos' => [$keptPath, $removedPath],
+        ]);
+
+        $response = $this->actingAs($user, 'sanctum')->post("/api/reviews/{$review->id}", [
+            '_method' => 'PATCH',
+            'rating' => 4,
+            'remove_photos' => [$removedPath],
+            'photos' => [UploadedFile::fake()->image('new.jpg')],
+        ], ['Accept' => 'application/json']);
+
+        $response->assertOk();
+        $this->assertCount(2, $response->json('photo_urls'));
+
+        $photos = $review->fresh()->photos;
+        $this->assertCount(2, $photos);
+        $this->assertContains($keptPath, $photos);
+        $this->assertNotContains($removedPath, $photos);
+
+        Storage::disk('public')->assertExists($keptPath);
+        Storage::disk('public')->assertMissing($removedPath);
+        foreach ($photos as $path) {
+            Storage::disk('public')->assertExists($path);
+        }
+    }
+
+    public function test_update_rejects_more_than_four_photos_combined(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create();
+        $paths = array_map(
+            fn ($i) => UploadedFile::fake()->image("photo{$i}.jpg")->store('review-photos', 'public'),
+            range(1, 3)
+        );
+        $review = Review::factory()->create(['user_id' => $user->id, 'photos' => $paths]);
+
+        $response = $this->actingAs($user, 'sanctum')->post("/api/reviews/{$review->id}", [
+            '_method' => 'PATCH',
+            'rating' => 4,
+            'photos' => [
+                UploadedFile::fake()->image('four.jpg'),
+                UploadedFile::fake()->image('five.jpg'),
+            ],
+        ], ['Accept' => 'application/json']);
+
+        $response->assertUnprocessable();
+        $response->assertJsonValidationErrors('photos');
+        $this->assertSame($paths, $review->fresh()->photos);
+        foreach ($paths as $path) {
+            Storage::disk('public')->assertExists($path);
+        }
+    }
+
+    public function test_update_ignores_photo_paths_not_on_the_review(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create();
+        $foreignPath = UploadedFile::fake()->image('foreign.jpg')->store('review-photos', 'public');
+        $ownPath = UploadedFile::fake()->image('own.jpg')->store('review-photos', 'public');
+        $review = Review::factory()->create(['user_id' => $user->id, 'photos' => [$ownPath]]);
+
+        $this->actingAs($user, 'sanctum')->post("/api/reviews/{$review->id}", [
+            '_method' => 'PATCH',
+            'rating' => 4,
+            'remove_photos' => [$foreignPath],
+        ], ['Accept' => 'application/json'])->assertOk();
+
+        $this->assertSame([$ownPath], $review->fresh()->photos);
+        Storage::disk('public')->assertExists($foreignPath);
+    }
+
+    public function test_update_without_photo_fields_leaves_photos_untouched(): void
+    {
+        Storage::fake('public');
+        $user = User::factory()->create();
+        $path = UploadedFile::fake()->image('photo.jpg')->store('review-photos', 'public');
+        $review = Review::factory()->create(['user_id' => $user->id, 'photos' => [$path]]);
+
+        $this->actingAs($user, 'sanctum')
+            ->patchJson("/api/reviews/{$review->id}", ['rating' => 2])
+            ->assertOk();
+
+        $this->assertSame([$path], $review->fresh()->photos);
+        Storage::disk('public')->assertExists($path);
+    }
+
     public function test_non_owner_cannot_update_a_review(): void
     {
         $review = Review::factory()->create(['rating' => 5]);

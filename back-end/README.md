@@ -78,7 +78,8 @@ PATCH /api/profile/password        # requires current password
 
 POST   /api/products/{slug}/reviews # post a review (1–5 stars + optional comment + up to 4 photos, multipart;
                                     # gated to customers with a delivered order for the product; throttled)
-PATCH  /api/reviews/{id}            # edit your own review (rating/comment only — photos are immutable)
+PATCH  /api/reviews/{id}            # edit your own review (rating/comment/photos; photo edits arrive as a
+                                    # method-spoofed multipart POST with photos[] to add + remove_photos[] to drop)
 DELETE /api/reviews/{id}            # delete your own review (photo files removed too)
 ```
 

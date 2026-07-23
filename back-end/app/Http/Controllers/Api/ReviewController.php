@@ -80,17 +80,40 @@ class ReviewController extends Controller
     {
         abort_unless($review->user_id === $request->user()->id, 403);
 
-        // Photos are immutable after posting — multipart bodies don't parse
-        // on PATCH, so edits cover rating and comment only.
+        // Photo edits arrive as a method-spoofed POST (PHP only parses
+        // multipart bodies on POST). Removals are expressed as remove_photos
+        // rather than a keep-list: FormData can't encode an empty array, so
+        // "remove none" and "keep all" must both map to an absent field.
         $validated = $request->validate([
             'rating' => ['required', 'integer', 'between:1,5'],
             'comment' => ['nullable', 'string', 'max:2000'],
+            'photos' => ['nullable', 'array', 'max:4'],
+            'photos.*' => ['image', 'max:4096'],
+            'remove_photos' => ['nullable', 'array'],
+            'remove_photos.*' => ['string'],
         ]);
+
+        $removed = array_intersect($review->photos ?? [], $validated['remove_photos'] ?? []);
+        $kept = array_values(array_diff($review->photos ?? [], $removed));
+        $newFiles = $request->file('photos', []);
+
+        if (count($kept) + count($newFiles) > 4) {
+            throw ValidationException::withMessages([
+                'photos' => 'A review can have at most 4 photos.',
+            ]);
+        }
+
+        $newPaths = collect($newFiles)
+            ->map(fn ($file) => $file->store('review-photos', 'public'))
+            ->all();
 
         $review->update([
             'rating' => $validated['rating'],
             'comment' => $validated['comment'] ?? null,
+            'photos' => array_merge($kept, $newPaths) ?: null,
         ]);
+
+        Storage::disk('public')->delete($removed);
 
         return $review->load('user:id,name');
     }

@@ -42,8 +42,30 @@ export function createReview(slug: string, payload: CreateReviewPayload) {
   return api.post<Review>(`/products/${slug}/reviews`, form).then((r) => r.data);
 }
 
-export function updateReview(id: number, payload: { rating: number; comment?: string }) {
-  return api.patch<Review>(`/reviews/${id}`, payload).then((r) => r.data);
+export interface UpdateReviewPayload {
+  rating: number;
+  comment?: string;
+  /** New photos to add. */
+  photos?: File[];
+  /** Storage paths (Review.photos entries) of existing photos to remove. */
+  removePhotos?: string[];
+}
+
+export function updateReview(id: number, payload: UpdateReviewPayload) {
+  // PHP only parses multipart bodies on POST, so photo edits ride a
+  // method-spoofed POST instead of a real PATCH.
+  const form = new FormData();
+  form.append("_method", "PATCH");
+  form.append("rating", String(payload.rating));
+  if (payload.comment) form.append("comment", payload.comment);
+  for (const photo of payload.photos ?? []) {
+    form.append("photos[]", photo);
+  }
+  for (const path of payload.removePhotos ?? []) {
+    form.append("remove_photos[]", path);
+  }
+
+  return api.post<Review>(`/reviews/${id}`, form).then((r) => r.data);
 }
 
 export function deleteReview(id: number) {
